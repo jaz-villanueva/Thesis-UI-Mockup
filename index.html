@@ -416,7 +416,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <button class="sw-row" data-o="nfz">No-fly zone (center)</button>
     <button class="sw-row" data-o="course">Boxes and hoops</button>
     <button class="sw-row" data-o="trails">Flight trails</button>
-    <button class="sw-row" data-o="labels">Selected unit label</button>
     <div class="fpick" role="radiogroup" aria-label="Drone camera feed">
       <span>Camera feeds</span>
       <div class="fp-row">
@@ -733,13 +732,10 @@ function renderMap(){
       g+=`<radialGradient id="${gid}"><stop offset="55%" stop-color="${c}" stop-opacity="0"/><stop offset="72%" stop-color="${c}" stop-opacity="${(0.35+0.4*lv).toFixed(2)}"/><stop offset="86%" stop-color="${c}" stop-opacity="${(0.55+0.4*lv).toFixed(2)}"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
       g+=`<circle cx="${X}" cy="${Y}" r="${R0}" fill="url(#${gid})"/>`;
       g+=`<circle cx="${X}" cy="${Y}" r="${(R0*0.84).toFixed(1)}" fill="none" stroke="${c}" stroke-opacity="${(0.55+0.45*lv).toFixed(2)}" stroke-width="${lv>0.5?2:1.2}"/>`;}
-    if(held)g+=`<circle cx="${X}" cy="${Y}" r="19.5" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".8" stroke-width="1.5"/>`;
     // heading tick
     const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+23*Math.cos(hr)}" y2="${Y+23*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
-    const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="#121712" stroke="${lostC?K.crit:gr?K.tx3:K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
-    g+=`<text x="${X}" y="${Y+5}" fill="#fff" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
-    if(foc&&OPT.labels){const lbl=`${U(d.id)}${held?"  Held":""}`,w=lbl.length*7.2+16;
-      g+=`<g transform="translate(${X+30},${Y-36})"><rect width="${w}" height="24" fill="#0B100C" stroke="#3E8F46"/><text x="8" y="16" fill="#fff" font-size="12" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text></g>`;}
+    const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="${held?K.own:"#121712"}" stroke="${lostC?K.crit:gr?K.tx3:held?"#fff":K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
+    g+=`<text x="${X}" y="${Y+5}" fill="${held?"#07120A":"#fff"}" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
     // altitude gradient bar (left of the icon)
     {const Zc=CONFIG.z,bh=40,bw=5,bx=X-30,by=Y-bh/2,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
      g+=`<clipPath id="${cid}"><rect x="${bx}" y="${ly}" width="${bw}" height="${by+bh-ly}"/></clipPath>`;
@@ -1042,7 +1038,7 @@ $("simReset").addEventListener("click",()=>{pointers.clear();resetScenario();});
 /* =====================================================================
    SETTINGS
    ===================================================================== */
-const OPT={trails:true,labels:true,feeds:false,nfz:true,course:true,lefty:false,latch:false,feedSel:{cf1:true,cf2:false,cf3:false},feed:"cf1"};
+const OPT={trails:true,feeds:false,nfz:true,course:true,lefty:false,latch:false,feedSel:{cf1:true,cf2:false,cf3:false},feed:"cf1"};
 const feedCount=()=>1;
 const STEP={
   zmin:{get:()=>CONFIG.z.min,set:v=>CONFIG.z.min=v,step:0.05,lo:0.10,hi:()=>CONFIG.z.max-0.30,fmt:v=>v.toFixed(2)+" m",name:"Minimum altitude"},
