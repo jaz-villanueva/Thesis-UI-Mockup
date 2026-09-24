@@ -265,7 +265,10 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 #fheadSlot .fhead{margin:4px 0 6px}
 #sideFeed .dfeed{flex:none;border-color:var(--line)}
 /* CV camera and drone camera are equal squares */
-#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#camVideo.mirror{transform:scaleX(-1)}
+.camsw{position:absolute;left:6px;bottom:6px;z-index:2;display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:rgba(11,16,12,.85);border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx-2);font-size:12px;font-weight:700;white-space:nowrap}
+.camsw[hidden]{display:none}
 #camSvg{position:absolute;inset:0;width:100%;height:100%}
 .cambtn{white-space:nowrap;position:absolute;right:6px;bottom:6px;z-index:2;display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:rgba(11,16,12,.85);border:1px solid var(--grn-2);border-radius:var(--r);color:var(--grn-tx);font-size:12px;font-weight:700}
 .cambtn.on{border-color:var(--line-2);color:var(--tx-2)}
@@ -358,7 +361,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
       <div class="sec" id="secCam">
         <button aria-expanded="true">Gesture Camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
         <div class="sbody">
-          <div class="feed"><video id="camVideo" playsinline muted hidden></video><svg id="camSvg" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"></svg>
+          <div class="feed"><video id="camVideo" class="mirror" playsinline muted autoplay hidden></video>
+            <button class="camsw" id="camSw" aria-label="Switch to the next camera" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg><span id="camSwTxt">Switch</span></button><svg id="camSvg" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"></svg>
             <button class="cambtn" id="camBtn" aria-label="Turn tablet camera on or off"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="1"/><path d="m16 10 5-3v10l-5-3"/></svg><span id="camBtnTxt">Enable camera</span></button>
             <span class="camnote" id="camNote" hidden></span></div>
           <div class="gstat" id="gstat"><b id="gMain">--</b><span id="gSub"></span></div>
@@ -488,17 +492,38 @@ const isHeld=d=>d.pHeld||d.latched||(S.simHold&&(d.id==="cf1"||d.id==="cf2"));
 const airborne=d=>d.z>0.08&&!S.stopped;
 const gAct=()=>S.gesture==="climb"||S.gesture==="descend";
 /* ---------- live camera + hand tracking ---------- */
-const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,label:"",score:0};
+const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
 const MP_VER="0.4.1675469240",MP_BASE=`https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MP_VER}/`;
 function camNote(t){const n=$("camNote");if(!n)return;n.hidden=!t;n.textContent=t||"";}
-async function toggleCamera(){if(CAM.on){stopCamera();return;}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camNote("Camera API not available. Open the file over https (e.g. GitHub Pages) or directly from disk.");return;}
-  try{CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});}
-  catch(err){camNote(err&&err.name==="NotAllowedError"?"Camera permission was denied. Allow camera access for this page in the browser's site settings, then tap Enable camera again.":`Camera unavailable here (${err&&err.name||"error"}). If this is the claude.ai link, open the downloaded HTML or a GitHub Pages copy instead.`);return;}
-  const v=$("camVideo");v.srcObject=CAM.stream;v.hidden=false;await v.play().catch(()=>{});CAM.on=true;
-  $("camBtnTxt").textContent="Camera on";$("camBtn").classList.add("on");camNote("");log("Tablet camera on","ok");loadHands();}
+async function toggleCamera(){if(CAM.on){stopCamera();return;}await startCamera(CAM.deviceId);}
+// open a real camera: a specific deviceId, else the front (user-facing) camera
+async function startCamera(deviceId,quiet){
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camNote("Camera needs a secure page. Open it over https (e.g. GitHub Pages) or from localhost.");return false;}
+  const video=deviceId?{deviceId:{exact:deviceId},width:{ideal:640},height:{ideal:480}}:{facingMode:"user",width:{ideal:640},height:{ideal:480}};
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video,audio:false});}
+  catch(err){const n=err&&err.name;
+    if(!quiet)camNote(n==="NotAllowedError"?"Camera permission was denied. Allow camera access for this site in the browser (address-bar camera icon or site settings), then tap Enable camera.":n==="NotFoundError"?"No camera found on this device.":n==="NotReadableError"?"The camera is in use by another app. Close it, then tap Enable camera.":`Camera unavailable (${n||"error"}).`);
+    return false;}
+  CAM.stream&&CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=stream;
+  const tr=stream.getVideoTracks()[0],st=tr.getSettings?tr.getSettings():{};
+  CAM.deviceId=st.deviceId||deviceId||null;CAM.mirror=st.facingMode?st.facingMode!=="environment":!/back|rear|environment/i.test(tr.label||"");
+  tr.addEventListener("ended",()=>{if(CAM.stream===stream){stopCamera();camNote("Camera disconnected. Tap Enable camera to reconnect.");}});
+  const v=$("camVideo");v.classList.toggle("mirror",CAM.mirror);v.srcObject=stream;v.hidden=false;await v.play().catch(()=>{});
+  const was=CAM.on;CAM.on=true;
+  $("camBtnTxt").textContent="Camera on";$("camBtn").classList.add("on");camNote("");
+  try{CAM.devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput");}catch(e){CAM.devices=[];}
+  $("camSw").hidden=CAM.devices.length<2;
+  if(!was){log(`Tablet camera on${tr.label?`, ${tr.label}`:""}`,"ok");loadHands();}else log(`Camera switched to ${tr.label||"next camera"}`);
+  return true;}
+async function switchCamera(){const L=CAM.devices||[];if(L.length<2)return;const i=L.findIndex(d=>d.deviceId===CAM.deviceId),next=L[(i+1)%L.length];CAM.lm=null;CAM.neutral=null;await startCamera(next.deviceId);}
 function stopCamera(){CAM.stream&&CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.on=false;CAM.tracking=false;CAM.lm=null;
-  const v=$("camVideo");v.srcObject=null;v.hidden=true;$("camBtnTxt").textContent="Enable camera";$("camBtn").classList.remove("on");camNote("");log("Tablet camera off");}
+  const v=$("camVideo");v.srcObject=null;v.hidden=true;$("camSw").hidden=true;$("camBtnTxt").textContent="Enable camera";$("camBtn").classList.remove("on");camNote("");log("Tablet camera off");}
+// start the camera on load; if the browser wants a tap first, the Enable camera button stays available
+async function autoCamera(){
+  let state="prompt";try{state=(await navigator.permissions.query({name:"camera"})).state;}catch(e){}
+  if(state==="denied"){camNote("Camera access is blocked for this site. Allow it in the browser's site settings, then tap Enable camera.");return;}
+  await startCamera(null,true);}
 function loadHands(){if(CAM.hands){CAM.tracking=true;handLoop();return;}
   camNote("Loading hand tracking (MediaPipe Hands)…");
   const sc=document.createElement("script");sc.src=MP_BASE+"hands.js";sc.crossOrigin="anonymous";
@@ -765,7 +790,7 @@ const FIST=[[100,130],[80,120],[74,108],[82,100],[92,98],[85,90],[84,76],[90,82]
 const BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
 const HX=40,HY=50,OFF=24,MMPX=1.6,NEUT=130-5+HY; // neutral = wrist landmark height
 function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
-  if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(1-p.x)*W,p.y*H]);  // mirrored like the preview
+  if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(CAM.mirror?1-p.x:p.x)*W,p.y*H]);  // matches the preview (mirrored for the front camera)
     if(gAct()&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1];
       s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-8}" y="${ny-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist)</text>`;
       s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
@@ -779,8 +804,7 @@ function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
 function renderCam(){
   if(CAM.on){renderLiveCam();return;}
   const g=S.gesture,wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob,conf=g==="locked"?93:96;let s="";
-  s+=`<defs><radialGradient id="cg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#5A5A5C"/><stop offset=".6" stop-color="#3A3A3C"/><stop offset="1" stop-color="#1C1C1D"/></radialGradient></defs><rect width="320" height="240" fill="url(#cg)"/>`;
-  s+=`<ellipse cx="236" cy="272" rx="100" ry="66" fill="#2A2A2B"/><circle cx="236" cy="150" r="40" fill="#2A2A2B"/>`;
+  s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${gAct()||g==="locked"?" · SIMULATED GESTURE":""}</text>`;
   if(gAct()){s+=`<line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="312" y="${NEUT-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
     const cy=NEUT+dy;s+=`<line x1="20" y1="${NEUT}" x2="20" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M14 ${cy+(dy<0?6:-6)}L20 ${cy}L26 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
   if(gAct()||g==="locked"){
@@ -792,7 +816,7 @@ function renderCam(){
     s+=`<rect x="${(x0+x1)/2-w/2}" y="${y0-24}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-11}" fill="${K.sel}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;
   }else{const lost=g==="lost";
     s+=`<rect x="80" y="100" width="160" height="38" fill="#111" stroke="${lost?K.caut:"#555"}"/>`;
-    s+=`<text x="160" y="116" fill="${lost?K.caut:"#fff"}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"No hand in frame":"Show an open palm"}</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"Held units holding altitude":"to capture a neutral point"}</text>`;}
+    s+=`<text x="160" y="116" fill="${lost?K.caut:"#fff"}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"No hand in frame":"Camera off"}</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"Held units holding altitude":"Tap Enable camera to start"}</text>`;}
   $("camSvg").innerHTML=s;
 }
 
@@ -1006,7 +1030,7 @@ function setGesture(g){if(g===S.gesture)return;const was=S.gesture;S.gesture=g;c
   if(g==="locked")log("Closed fist, altitude locked, neutral point discarded");if(g==="lost")log("Hand tracking lost, held units holding altitude","warn");
   if(g==="idle")log("Gesture idle, waiting for open palm");syncSim();}
 document.querySelectorAll("#gestSeg button").forEach(b=>b.addEventListener("click",()=>setGesture(b.dataset.g)));
-$("camBtn").addEventListener("click",toggleCamera);
+$("camBtn").addEventListener("click",toggleCamera);$("camSw").addEventListener("click",switchCamera);
 document.querySelectorAll("#settings [data-t]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.t;S[k]=!S[k];syncSim();
   if(k==="simHold")log(S.simHold?"DRONE 1 and DRONE 2 held (sim)":"DRONE 1 and DRONE 2 released (sim)");
   if(k==="degraded")log(S.degraded?"Link degraded, radio 61%, backend latency high":"Links nominal",S.degraded?"warn":"ok");
@@ -1122,7 +1146,7 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 /* =====================================================================
    INIT
    ===================================================================== */
-resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("feeds"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("feeds"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
 </script>
 </body>
 </html>
