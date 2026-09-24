@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>SwarmTouch // LIVE</title>
+<style>
+/* =====================================================================
+   TYPE: Helvetica / Arial system stack throughout (no web fonts).
+   TOKENS — modeled on the reference C2 screenshot:
+   neutral charcoal (no blue tint), neo-grotesk UI text, monospace for
+   time/telemetry, green affiliation chip, amber-yellow primary action.
+   ===================================================================== */
+:root{
+  --bg:#0C0F0C; --panel:#181C18; --panel-2:#1F241F; --panel-3:#283028;
+  --line:#2C342C; --line-2:#3E483D;
+  --tx:#E1E8DF; --tx-2:#9DAA9B; --tx-3:#687566;
+  --grn:#5FD068; --grn-2:#3E8F46; --grn-dim:#1B2E1D; --grn-tx:#B4EDB8; /* tactical green */
+  --friend:#5FD068; --friend-bg:#16301A;    /* affiliation / online */
+  --own:#25C6E8;                            /* own units, commands */
+  --sel:#F5D90A;                            /* detection box / selection */
+  --task:#4CB957;                           /* primary action (green) */
+  --caut:#FF9A1F; --crit:#F2453D;
+  --f:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --fm:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --r:4px; --touch:48px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overscroll-behavior:none;background:var(--bg);color:var(--tx);font-family:var(--f);font-size:14px;line-height:1.35;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--grn);outline-offset:1px}
+.m{font-family:var(--fm);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.mut{color:var(--tx-2)} .dim{color:var(--tx-3)}
+.ico{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-numeric:tabular-nums}
+
+/* =====================================================================
+   LAYOUT
+   ===================================================================== */
+/* ===== Target display: 11" tablet, 2560 x 1600 px (WQXGA, 16:10).
+   Designed on a fixed 1280 x 800 CSS-px stage = exactly 2560 x 1600 physical px at devicePixelRatio 2.
+   On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
+html,body{background:#000}
+.stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
+.app{display:grid;height:800px;grid-template-rows:40px 1fr 64px;grid-template-columns:44px 284px 108px 216px 1fr;grid-template-areas:"top top top top top" "rail side alt feeds main" "plan plan plan plan plan";position:relative}
+.top{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
+.top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.online{font-family:var(--fm);font-size:13px}
+.online b{color:var(--friend);font-weight:500;margin-right:8px}
+.lk{font-family:var(--fm);font-size:12px;color:var(--tx-2);display:flex;align-items:center;gap:6px}
+.lk i{width:7px;height:7px;border-radius:0;background:var(--grn)}
+.lk[data-s="warn"]{color:var(--caut)} .lk[data-s="warn"] i{background:var(--caut)}
+.tbtn{height:30px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r);font-size:12px;color:var(--tx-2)}
+.tbtn[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
+
+.rail{grid-area:rail;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:8px;border-right:1px solid var(--line)}
+.rail button{width:40px;height:40px;display:grid;place-items:center;color:var(--tx-2);border-radius:var(--r)}
+.rail button[aria-expanded="true"]{color:var(--grn);background:var(--grn-dim);box-shadow:inset 3px 0 0 var(--grn)}
+
+/* =====================================================================
+   SIDE PANEL (entity + camera)
+   ===================================================================== */
+.side{grid-area:side;padding:4px 0 4px 4px;display:flex;min-height:0}
+.card{flex:1;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.hdr{display:flex;align-items:center;height:40px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.hdr>*{height:100%;display:flex;align-items:center}
+.hdr .ib{width:40px;justify-content:center;color:var(--tx-2);border-right:1px solid var(--line)}
+.hdr .ib:last-child{border-right:0;border-left:1px solid var(--line);margin-left:auto}
+.hdr .nm{gap:8px;padding:0 12px;font-size:15px}
+.unitTabs{display:flex;border-bottom:1px solid var(--line)}
+.unitTabs button{flex:1;height:36px;font-family:var(--fm);font-size:13px;color:var(--tx-2);border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:6px}
+.unitTabs button:last-child{border-right:0}
+.unitTabs button[aria-pressed="true"]{color:var(--grn);background:var(--grn-dim);box-shadow:inset 0 -3px 0 var(--grn)}
+.unitTabs i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--own)}
+.unitTabs .h i{background:var(--own)}
+.scroll{flex:1;overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:#3A3A3E transparent}
+.ent{padding:10px 12px;border-bottom:1px solid var(--line)}
+.ent-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.crumb{font-size:15px;font-weight:500;line-height:1.3}
+.chip{min-width:104px;padding:5px 10px;border:1px solid var(--friend);background:var(--friend-bg);color:var(--friend);font-size:13px;text-align:center;line-height:1.2}
+.chip.held{border-color:var(--own);background:#0C2A30;color:var(--own)}
+.ent h1{font-size:20px;font-weight:600;margin:8px 0 6px;letter-spacing:-.005em}
+.meta{font-size:13px;color:var(--tx-2);line-height:1.5}
+.meta b{color:var(--tx);font-weight:600}
+.sec{border-bottom:1px solid var(--line)}
+.sec>button{width:100%;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--panel-2);color:var(--grn-tx);border-left:3px solid var(--grn-2);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.sec>button svg{transition:transform .15s}
+.sec.closed>button svg{transform:rotate(180deg)}
+.sec.closed .sbody{display:none}
+.sbody{padding:0 12px 12px}
+.srcRow{display:flex;align-items:center;gap:8px;height:34px;font-size:13px;font-weight:600;letter-spacing:.02em}
+.srcRow .m{font-weight:400;color:var(--tx-2);font-size:12px}
+.feed{aspect-ratio:1/1;background:#000;border:1px solid var(--line);position:relative;overflow:hidden}
+.feed svg{display:block;width:100%;height:100%}
+.feedbar{display:flex;align-items:center;justify-content:space-between;height:32px;font-family:var(--fm);font-size:12px;color:var(--tx-2)}
+.feedbar b{color:var(--friend);font-weight:500}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.kv>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv .k{font-size:13px;color:var(--tx-2)}
+.kv .v{font-size:15px;font-weight:500;color:var(--grn-tx)}
+.kv .v small{font-size:12px;color:var(--tx-3);font-weight:400;margin-left:3px}
+.gsum{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.gsum>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.act{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.more{width:40px;height:var(--touch);background:var(--panel-3);border-radius:var(--r);display:grid;place-items:center;color:var(--tx-2)}
+.primary{flex:1;height:var(--touch);background:var(--task);color:#07120A;border-radius:var(--r);font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.primary:hover{background:#5CCB67} .primary:active{background:#3E9A48}
+.primary[disabled]{background:var(--panel-3);color:var(--tx-3);cursor:not-allowed}
+
+/* =====================================================================
+   MAP
+   ===================================================================== */
+.main{grid-area:main;padding:4px;display:flex;min-width:0;min-height:0}
+.mapcard{flex:1;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--panel);min-width:0;min-height:0}
+.mtool{display:flex;align-items:center;height:34px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.mtool>*{height:100%;display:flex;align-items:center;padding:0 10px;border-right:1px solid var(--line);white-space:nowrap}
+.mtool .tab{font-weight:700;font-size:14px;color:var(--grn);box-shadow:inset 0 -3px 0 var(--grn)}
+.mtool .coord{min-width:170px;gap:8px;color:var(--tx-2);font-family:var(--fm);font-size:13px}
+.mtool .sp{flex:1;border-right:0}
+.mtool .dd{border-left:1px solid var(--line);border-right:0;font-size:13px;color:var(--tx-2);gap:8px}
+.mapbody{position:relative;flex:1;min-height:0;background:#0A0E0B}
+#mapSvg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none}
+.ov{position:absolute;background:rgba(24,28,24,.95);border:1px solid var(--line)}
+.altcol{grid-area:alt;padding:4px 0 4px 4px;display:flex;min-height:0}
+.alt{flex:1;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);min-height:0}
+/* Drone camera column */
+.feeds{grid-area:feeds;padding:4px 0 4px 4px;display:flex;flex-direction:column;gap:4px;min-height:0}
+.dfeed{flex:1 1 0;min-height:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);text-align:left;padding:0}
+.dfeed.on{border-color:var(--grn);box-shadow:inset 0 0 0 1px var(--grn)}
+.dfeed .fh{height:26px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--grn-tx)}
+.dfeed .fh .num{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--own);display:grid;place-items:center;font-size:10px;color:#fff}
+.dfeed .fh .simtag{font-size:9px;font-weight:600;color:var(--tx-3);border:1px solid var(--line-2);padding:0 3px;letter-spacing:.06em}
+.dfeed.held svg{box-shadow:inset 0 0 0 2px var(--own)}
+.dfeed{position:relative}
+.dfeed.held::after{content:"";position:absolute;left:0;right:0;top:26px;bottom:0;border:2px solid var(--own);pointer-events:none}
+.dfeed .fh .st{margin-left:auto;font-weight:500;font-size:11px;color:var(--tx-2);letter-spacing:0}
+.dfeed svg{flex:1;min-height:0;width:100%;display:block;background:#262826;overflow:hidden}
+.alt .h{color:var(--grn-tx);background:var(--panel-2);height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px;font-weight:600;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+#tapeSvg{flex:1;width:100%;min-height:0}
+.dimchip{position:absolute;left:10px;top:10px;height:30px;padding:0 10px;display:flex;align-items:center;font-family:var(--fm);font-size:13px}
+.hud{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;align-items:stretch}
+.hud>div{background:rgba(18,18,19,.94);border:1px solid var(--line);padding:6px 10px;font-family:var(--fm);font-size:12px;display:flex;align-items:center;gap:6px}
+.scale{flex-direction:column;align-items:flex-end!important;gap:2px!important;background:none!important;border:0!important;padding:0 4px!important}
+.scale i{display:block;width:60px;height:6px;border:1px solid var(--tx-2);border-top:0}
+.hint{position:absolute;left:10px;bottom:10px;font-size:12px;color:var(--tx-3)}
+.blink{animation:blink 1s steps(2,end) infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* ---------------- Responsive modes (set by layout()) ---------------- */
+.top .gear2{display:none}
+.app[data-mode="portrait"] .feeds{padding:0 4px 4px 4px}
+.app[data-mode="compact"] .dfeed svg{flex:none;height:auto;aspect-ratio:4/3}
+.app[data-mode="portrait"] .side{padding:0 0 4px 4px}
+.app[data-mode="portrait"] .altcol{padding:4px 4px 4px 0}
+.app[data-mode="portrait"] .main{padding:4px}
+.app[data-mode="compact"]{height:auto;min-height:100dvh}
+html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{overflow:auto;height:auto}
+.app[data-mode="compact"] .rail{display:none}
+.app[data-mode="compact"] .top .gear2{display:grid;width:40px;height:40px;place-items:center;color:var(--tx-2);margin-left:4px}
+.app[data-mode="compact"] .side,.app[data-mode="compact"] .feeds,.app[data-mode="compact"] .altcol,.app[data-mode="compact"] .main{padding:4px}
+.app[data-mode="compact"] .scroll{overflow:visible;flex:none}
+.app[data-mode="compact"] .feeds{flex-direction:row;height:auto;align-items:flex-start}
+.app[data-mode="compact"] .dfeed{flex:1 1 0;min-width:0;overflow:hidden}
+.app[data-mode="compact"] .dfeed .fh .simtag,.app[data-mode="compact"] .dfeed .fstat .m{display:none}
+.dfeed .fh{overflow:hidden;white-space:nowrap}
+.app[data-mode="compact"] .plan{position:sticky;bottom:0;grid-template-columns:1fr;grid-template-rows:auto auto;height:auto;padding:4px 0;gap:4px}
+.app[data-mode="compact"] .plan-l,.app[data-mode="compact"] .plan-r{border:0}
+.app[data-mode="compact"] .plan .tl{display:none}
+.app[data-mode="compact"] .settings{position:fixed;left:0;right:0;width:auto;top:40px;bottom:0}
+@media (max-width:1100px){.lk span{font-size:11px}}
+@media (max-width:900px){.lk{display:none}}
+#secCam .sbody{padding:0 4px 4px}
+#secCam .feedbar{padding:0 6px}
+/* drone feed status overlay: signal + battery */
+.fstat{position:absolute;right:4px;top:30px;display:flex;align-items:center;gap:4px;padding:2px 5px;background:rgba(0,0,0,.62);font-size:10px;color:var(--tx);pointer-events:none}
+.fstat .sig{display:flex;align-items:flex-end;gap:1px;height:10px}
+.fstat .sig i{width:2.5px;background:#4a524a}.fstat .sig i:nth-child(1){height:3px}.fstat .sig i:nth-child(2){height:5px}.fstat .sig i:nth-child(3){height:7.5px}.fstat .sig i:nth-child(4){height:10px}
+.fstat .sig i.on{background:var(--grn)} .fstat .sig.warn i.on{background:var(--caut)} .fstat .sig.crit i.on{background:var(--crit)}
+.fstat .bat{position:relative;width:18px;height:9px;border:1.2px solid var(--tx-2);margin-left:4px}
+.fstat .bat::after{content:"";position:absolute;right:-3.5px;top:2px;width:2px;height:3px;background:var(--tx-2)}
+.fstat .bat i{position:absolute;left:1px;top:1px;bottom:1px;background:var(--grn)}
+.fstat .bat.warn i{background:var(--caut)} .fstat .bat.crit i{background:var(--crit)}
+.fstat .m.warn{color:var(--caut)} .fstat .m.crit{color:var(--crit)}
+/* map corner chip (scale + cursor) */
+.mapchip{position:absolute;left:6px;bottom:4px;z-index:2;display:flex;align-items:center;gap:10px;height:20px;padding:0 6px;background:rgba(10,14,11,.85);border:1px solid var(--line);font-size:11px;color:var(--tx-2);pointer-events:none}
+.mapchip .scale{display:flex;align-items:center;gap:5px}
+.mapchip .scale i{display:block;height:6px;border:1px solid var(--grn);border-top:0}
+/* side panel: info beside the CV camera when there is room */
+.side.wide .scroll{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-template-areas:"ent ent" "cam alt" "cam trk";align-content:start}
+.side.wide .ent{grid-area:ent} .side.wide #secCam{grid-area:cam;border-right:1px solid var(--line)} .side.wide #secAlt{grid-area:alt} .side.wide #secTrk{grid-area:trk}
+.side.wide #secAlt .gsum{grid-template-columns:1fr}
+.side.wide #secTrk .kv{grid-template-columns:1fr 1fr}
+.side.wide #secCam{align-self:start}
+/* drone connection indicators (top bar) */
+.conn{display:flex;gap:6px;margin-left:6px}
+.cn{display:flex;align-items:center;gap:6px;height:26px;padding:0 9px;border:1px solid var(--line-2);background:var(--bg);font-size:12px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.cn i{width:8px;height:8px;border-radius:50%;background:var(--grn);box-shadow:0 0 6px var(--grn)}
+.cn small{font-weight:500;font-size:11px;color:var(--tx-2)}
+.cn.weak{border-color:var(--caut)} .cn.weak i{background:var(--caut);box-shadow:0 0 6px var(--caut)} .cn.weak small{color:var(--caut)}
+.cn.lost{border-color:var(--crit);background:#2A0B09} .cn.lost i{background:var(--crit);box-shadow:none;animation:blink 1s steps(2,end) infinite} .cn.lost small{color:var(--crit)}
+@media (max-width:1100px){.cn small{display:none}}
+/* essential gesture status under the CV camera */
+.gstat{display:flex;flex-direction:column;gap:2px;padding:8px 6px 4px}
+.gstat b{font-size:17px;font-weight:700;letter-spacing:.02em}
+.gstat span{font-size:13px;color:var(--tx-2)}
+.gstat[data-k="ok"] b{color:var(--own)} .gstat[data-k="warn"] b{color:var(--caut)} .gstat[data-k="lock"] b{color:var(--tx)} .gstat[data-k="idle"] b{color:var(--tx-2)}
+/* camera feed picker */
+.fpick{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r);font-size:13px}
+.fp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fp-row:last-child{grid-template-columns:1fr 1fr}
+.cb{height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line-2);background:var(--panel);border-radius:var(--r);font-weight:700;font-size:13px;color:var(--tx-2)}
+.cb::before{content:"";width:16px;height:16px;border:1.5px solid var(--tx-3);border-radius:2px;box-sizing:border-box}
+.cb[aria-checked="true"]{color:var(--grn-tx);border-color:var(--grn-2)}
+.cb[aria-checked="true"]::before{background:var(--grn) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%230C0F0C' stroke-width='2.2'/%3E%3C/svg%3E") center/100% no-repeat;border-color:var(--grn)}
+.fp-all{height:36px;border:1px solid var(--line-2);background:var(--panel);border-radius:var(--r);font-size:12px;color:var(--tx-2)}
+.fp-all:active{border-color:var(--grn)}
+.dfeed.off{display:none}
+.feeds.few .dfeed{flex:none} .feeds.few .dfeed svg{flex:none;height:auto;aspect-ratio:4/3}
+.dispinfo{font-size:12px;color:var(--tx-2);line-height:1.5;padding:6px 10px;border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r)}
+/* left-handed mirror */
+.app.lefty .plan{direction:rtl} .app.lefty .plan>*{direction:ltr}
+.app.lefty .plan-l .estop{margin-left:0;margin-right:6px}
+.app.lefty .settings{left:auto;right:44px;border-right:0;border-left:1px solid var(--grn-2)}
+.app.lefty .rail{border-right:0;border-left:1px solid var(--line)}
+.app.lefty .rail button[aria-expanded="true"]{box-shadow:inset -3px 0 0 var(--grn)}
+.app.lefty .side{padding:4px 4px 4px 0}
+.app.lefty .altcol{padding:4px 4px 4px 0}
+.app.lefty .feeds{padding:4px 0 4px 4px}
+/* E-stop in the top bar */
+.top .right .estop{width:250px;height:46px;flex:none}
+.top .right .estop strong{font-size:15px}
+/* feed selector is single-choice (radio): selected = filled, no checkbox */
+.cbs::before,.cb::before{display:none}
+.cbs{min-width:52px}
+.cbs[aria-checked="true"],.cb[aria-checked="true"]{background:var(--grn);color:#07120A;border-color:var(--grn)}
+.cbs[aria-checked="true"]::before,.cb[aria-checked="true"]::before{display:none}
+/* drone on/off status dot on selector buttons */
+.sd{width:9px;height:9px;border-radius:50%;background:var(--grn);box-shadow:0 0 0 2px rgba(0,0,0,.35);flex:none}
+.sd.weak{background:var(--caut)}
+.sd.lost{background:var(--crit);animation:blink 1s steps(2,end) infinite}
+.cbs,.cb{gap:7px}
+/* Settings drawer */
+.settings{position:absolute;left:44px;top:56px;bottom:64px;width:320px;z-index:20;background:var(--panel);border-right:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(0,0,0,.45)}
+.settings[hidden]{display:none}
+.set-h{height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 14px;background:var(--panel-2);border-bottom:1px solid var(--line);font-weight:700;color:var(--grn)}
+.set-h button{width:40px;height:40px;display:grid;place-items:center;color:var(--tx-2)}
+.set-b{flex:1;overflow:auto;padding:4px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.set-b>*{flex:none}
+.set-g{margin-top:10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--grn-tx)}
+.stp{display:grid;grid-template-columns:1fr 44px 64px 44px;align-items:center;gap:4px;font-size:13px}
+.stp button{height:44px;border:1px solid var(--line-2);background:var(--panel-2);font-size:18px;border-radius:var(--r)}
+.stp button:active{border-color:var(--grn)}
+.stp b{text-align:center;font-weight:500;color:var(--grn-tx);font-size:14px}
+.sw-row{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r);font-size:13px;text-align:left}
+.sw-row::after{content:"";width:34px;height:18px;border-radius:9px;background:var(--panel-3);box-shadow:inset 0 0 0 1px var(--line-2),inset 18px 0 0 -2px var(--tx-3)}
+.sw-row[aria-pressed="true"]::after{background:var(--grn-2);box-shadow:inset -16px 0 0 -2px var(--grn-tx)}
+.sw-row.reset{justify-content:center;color:var(--tx-2)} .sw-row.reset::after{display:none}
+.settings .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.settings .seg button{height:40px;border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r);font-size:12px;color:var(--tx-2)}
+.settings .seg button[aria-pressed="true"]{color:var(--grn);border-color:var(--grn)}
+.app.nofeeds .feeds{display:none}
+#fheadSlot .fhead{margin:4px 0 6px}
+#sideFeed .dfeed{flex:none;border-color:var(--line)}
+/* CV camera and drone camera are equal squares */
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#camSvg{position:absolute;inset:0;width:100%;height:100%}
+.cambtn{white-space:nowrap;position:absolute;right:6px;bottom:6px;z-index:2;display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:rgba(11,16,12,.85);border:1px solid var(--grn-2);border-radius:var(--r);color:var(--grn-tx);font-size:12px;font-weight:700}
+.cambtn.on{border-color:var(--line-2);color:var(--tx-2)}
+.camnote{position:absolute;left:6px;right:6px;top:6px;z-index:2;padding:4px 6px;background:rgba(0,0,0,.72);font-size:10.5px;line-height:1.35;color:var(--caut)}
+#sideFeed .dfeed{flex:none}
+#sideFeed .dfeed svg{flex:none;height:auto;aspect-ratio:1/1}
+.side .gstat{padding:4px 4px 2px;gap:0}
+.side #secCam>button{height:30px}
+.side #secCam .sbody{padding:0 4px 2px}
+.side .gstat b{font-size:15px}
+.side .gstat span{font-size:12px}
+#fheadSlot .fhead{height:34px;margin:3px 0 4px}
+#fheadSlot .cbs{height:28px}
+#sideFeed .dfeed .fh{height:24px}
+/* feed checkbox bar */
+.fhead{flex:none;display:flex;align-items:center;gap:4px;height:40px;padding:0 4px 0 8px;background:var(--panel);border:1px solid var(--line)}
+.fhead .fl{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--grn-tx);margin-right:auto}
+.cbs{height:32px;min-width:44px;padding:0 8px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-2);background:var(--panel-2);border-radius:var(--r);font-weight:700;font-size:13px;color:var(--tx-2)}
+.cbs::before{content:"";width:14px;height:14px;border:1.5px solid var(--tx-3);border-radius:2px;box-sizing:border-box}
+.cbs[aria-checked="true"]{color:var(--grn-tx);border-color:var(--grn-2)}
+.cbs[aria-checked="true"]::before{background:var(--grn) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%230C0F0C' stroke-width='2.2'/%3E%3C/svg%3E") center/100% no-repeat;border-color:var(--grn)}
+/* all feeds off: column collapses to a slim strip that keeps the checkboxes */
+/* Sim controls (mockup only) */
+.sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
+.sim.open{display:flex}
+.sim .lbl{font-size:11px;color:var(--tx-3);letter-spacing:.06em;text-transform:uppercase}
+.sim .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.sim button{min-height:30px;padding:4px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);font-size:12px;color:var(--tx-2);text-align:left}
+.sim button[aria-pressed="true"]{color:var(--grn);border-color:var(--grn)}
+
+/* =====================================================================
+   PLAN / TIMELINE STRIP
+   ===================================================================== */
+.plan{grid-area:plan;border-top:2px solid var(--grn-2);display:grid;grid-template-rows:1fr;grid-template-columns:auto minmax(0,1fr);background:var(--bg);position:relative;z-index:5}
+.plan-h{grid-column:1/4;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-weight:600;font-size:14px;border-bottom:1px solid var(--line)}
+.plan-l{display:flex;align-items:center;gap:8px;padding:0 10px;border-right:1px solid var(--line)}
+.sbtn{flex:1;height:48px;border:1px solid var(--grn-2);background:var(--grn-dim);color:var(--grn-tx);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-weight:600;font-size:14px}
+.sbtn small{font-family:var(--fm);font-size:11px;color:var(--tx-3);font-weight:400}
+.sbtn:hover{background:#22402A} .sbtn:active{border-color:var(--grn);background:#2A4F32}
+.tl{position:relative;min-width:0}
+#tlSvg{position:absolute;inset:0;width:100%;height:100%}
+.tl-evt{position:absolute;left:10px;right:10px;bottom:2px;height:24px;display:flex;align-items:center;gap:10px;font-size:13px;text-align:left;background:none}
+.tl-evt .ln{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-evt .t{font-family:var(--fm);font-size:12px;color:var(--grn);margin-right:8px}
+.plan-r{display:flex;align-items:center;padding:0 10px;border-left:1px solid var(--line)}
+.plan-l .sbtn{flex:none;width:150px}
+.estop{width:100%;height:52px;border-radius:var(--r);background:#2A0E0C;border:2px solid var(--crit);display:flex;align-items:center;gap:10px;padding:0 10px;color:#fff;user-select:none;touch-action:none;text-align:left}
+.estop:hover{background:#3A1310} .estop:active{background:var(--crit)}
+.estop strong{display:block;font-size:15px;font-weight:700;letter-spacing:.02em}
+.estop small{white-space:nowrap;font-family:var(--fm);font-size:11px;color:#FCA5A0}
+.estop.fired{background:var(--crit)}
+.estop.fired small{color:#fff}
+.rbg{stroke:rgba(242,69,61,.35)} .rfg{stroke:var(--crit);transition:stroke-dashoffset 60ms linear}
+.estop:active .rfg,.estop.fired .rfg{stroke:#fff}
+.logpop{position:absolute;left:0;right:0;bottom:calc(100% + 2px);height:0;overflow:hidden;background:var(--panel);border-top:1px solid var(--line-2);z-index:8;transition:height .18s}
+.log-open .logpop{height:220px}
+.logpop ol{list-style:none;height:100%;overflow:auto;padding:4px 12px}
+.logpop li{display:grid;grid-template-columns:110px 12px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
+.logpop .t{font-family:var(--fm);font-size:12px;color:var(--tx-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--tx-3)}
+.dot[data-k="ok"]{background:var(--friend)} .dot[data-k="warn"]{background:var(--caut)} .dot[data-k="crit"]{background:var(--crit)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<div class="app" id="app">
+
+<!-- =============================== TOP BAR =============================== -->
+<header class="top">
+  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L21 19 H3 Z" fill="none" stroke="#EDEDEE" stroke-width="1.6"/><path d="M12 9 L16 16 H8 Z" fill="#EDEDEE"/></svg>
+  <div class="right">
+    <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
+      <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
+      <span><strong id="estopTitle">Emergency stop</strong><small id="estopSub">Hold 1 s, cuts all motors</small></span>
+    </button>
+    <button class="gear2" id="setBtn2" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
+  </div>
+</header>
+
+<!-- =============================== ICON RAIL =============================== -->
+<nav class="rail" aria-label="Settings">
+  <button id="setBtn" aria-expanded="false" aria-controls="settings" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
+</nav>
+
+<!-- =============================== SIDE PANEL =============================== -->
+<aside class="side" id="side">
+  <section class="card" aria-label="Selected unit">
+    <div class="scroll">
+      <div class="sec" id="secCam">
+        <button aria-expanded="true">Gesture Camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
+        <div class="sbody">
+          <div class="feed"><video id="camVideo" playsinline muted hidden></video><svg id="camSvg" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"></svg>
+            <button class="cambtn" id="camBtn" aria-label="Turn tablet camera on or off"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="1"/><path d="m16 10 5-3v10l-5-3"/></svg><span id="camBtnTxt">Enable camera</span></button>
+            <span class="camnote" id="camNote" hidden></span></div>
+          <div class="gstat" id="gstat"><b id="gMain">--</b><span id="gSub"></span></div>
+          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Drone camera feed"><span class="fl">DRONE CAM</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 camera feed">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 camera feed">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 camera feed">3</button></div></div>
+          <div id="sideFeed"></div>
+        </div>
+      </div>
+
+
+    </div>
+    <div class="act">
+      <button class="primary" id="btnLandSel">Land DRONE 1</button>
+    </div>
+  </section>
+</aside>
+
+<!-- =============================== ALTITUDE (beside CV feed) =============================== -->
+<aside class="altcol" aria-label="Altitude">
+  <div class="alt"><div class="h">ALT<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
+</aside>
+
+<!-- =============================== MAP =============================== -->
+<main class="main">
+  <section class="mapcard" aria-label="Arena map">
+    <div class="mapbody">
+      <div class="mapchip"><span class="scale"><i id="scaleBar"></i><span class="m">1 m</span></span><span class="m" id="cursor">--</span></div>
+      <svg id="mapSvg" viewBox="0 0 600 600" preserveAspectRatio="none" role="application" aria-label="Tap a unit to select, hold and drag to set target"><g id="mapStatic"></g><g id="mapDyn"></g></svg>
+    </div>
+  </section>
+</main>
+
+<!-- =============================== DRONE CAMERA FEEDS (right) =============================== -->
+<aside class="feeds" aria-label="Drone camera feeds" id="feeds"></aside>
+
+<!-- =============================== SETTINGS DRAWER =============================== -->
+<section class="settings" id="settings" aria-label="Settings" hidden>
+  <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="set-b">
+    <div class="set-g">Flight limits</div>
+    <div class="stp" data-k="zmin"><span>Minimum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="zmax"><span>Maximum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="takeoff"><span>Takeoff height</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="rate"><span>Gesture climb rate</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="aw"><span>Volume width (x)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="ad"><span>Volume depth (y)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="nfzr"><span>No-fly size</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="prox"><span>Proximity warning</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="set-g">Display</div>
+    <button class="sw-row" data-o="lefty">Left-handed layout</button>
+    <button class="sw-row" data-o="latch">Tap to hold (mouse testing)</button>
+    <button class="sw-row" data-o="nfz">No-fly zone (center)</button>
+    <button class="sw-row" data-o="course">Boxes and hoops</button>
+    <button class="sw-row" data-o="trails">Flight trails</button>
+    <button class="sw-row" data-o="labels">Selected unit label</button>
+    <div class="fpick" role="radiogroup" aria-label="Drone camera feed">
+      <span>Camera feeds</span>
+      <div class="fp-row">
+        <button class="cb" data-fs="cf1" role="radio">DRONE 1</button>
+        <button class="cb" data-fs="cf2" role="radio">DRONE 2</button>
+        <button class="cb" data-fs="cf3" role="radio">DRONE 3</button>
+      </div>
+
+    </div>
+    <div class="set-g">Simulation (mockup only)</div>
+    <div class="seg" id="gestSeg"><button data-g="idle">Idle</button><button data-g="climb">Active climb</button><button data-g="descend">Active descend</button><button data-g="locked">Locked</button><button data-g="lost" style="grid-column:span 2">Tracking lost</button></div>
+    <button class="sw-row" data-t="simHold">Hold DRONE 1 + DRONE 2</button>
+    <button class="sw-row" data-t="degraded">Link degraded</button>
+    <button class="sw-row" data-t="lowBatt">DRONE 3 low battery</button>
+    <button class="sw-row" data-t="cf3Lost">DRONE 3 disconnected</button>
+    <button class="sw-row" data-t="proximity">Proximity scenario</button>
+    <button class="sw-row reset" id="simReset">Reset scenario</button>
+    <div class="set-g">Display target</div>
+    <div class="dispinfo m" id="dispInfo">--</div>
+    <button class="sw-row reset" id="fsBtn">Enter fullscreen (hide browser bars)</button>
+  </div>
+</section>
+
+<!-- =============================== PLAN STRIP =============================== -->
+<footer class="plan">
+  <div class="plan-l">
+    <button class="sbtn" id="btnTakeoff">Take off all<small id="toLbl">to 0.60 m</small></button>
+    <button class="sbtn" id="btnLand">Land all</button>
+  </div>
+  <div class="tl">
+    <div class="logpop" id="logPop"><ol id="logList"></ol></div>
+    <svg id="tlSvg" preserveAspectRatio="none"></svg>
+    <button class="tl-evt" id="logToggle" aria-expanded="false" aria-controls="logPop"><span class="dot" id="lastDot"></span><span class="ln" id="logLatest"></span></button>
+  </div>
+</footer>
+</div>
+</div>
+
+<script>
+/* =====================================================================
+   MOCK DATA
+   ===================================================================== */
+const CONFIG={
+  arena:{xMin:0,xMax:5.31,yMin:0,yMax:3.55,margin:0.20},   // Miguel 409: 531 x 355 cm, origin at room corner (Fig. 5)
+  z:{min:0.50,max:1.75,displayMax:2.00},   // 0.5 m floor (SO2); 175 cm cam #5 ceiling (Fig. 5)
+  nfz:{x:2.655,y:1.775,h:0.59},   // 118 cm square, room centre
+  boxes:[{id:"O1",x:1.31,y:1.56,hx:0.265,hy:0.255,h:1.02},{id:"O2",x:2.60,y:2.71,hx:0.265,hy:0.255,h:1.53}],   // balikbayan stacks 53x51 cm
+  hoops:[{id:"H1",x:1.31,y:2.70,type:"horizontal",z:1.00,r:0.20},{id:"H2",x:3.99,y:2.70,ang:90,z:0.50,r:0.20},{id:"H3",x:3.99,y:1.49,ang:90,z:1.50,r:0.20}],   // 40 cm hoops
+  dbuf:0.15,   // interface-level collision buffer (d_buf)
+  gestureRate:0.15,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  sessionStart:12*60+31,timelineSec:300,
+  drones:[
+    {id:"cf1",n:1,x:2.36,y:0.45,z:0.60,batt:86,volt:3.94,link:98,yaw:20},
+    {id:"cf2",n:2,x:2.66,y:0.45,z:0.60,batt:81,volt:3.90,link:97,yaw:350},
+    {id:"cf3",n:3,x:2.96,y:0.45,z:0.60,batt:77,volt:3.87,link:96,yaw:95}],
+  initialLog:[[-151,"Session start, participant P07, trial 3","info"],[-148,"MoCap lock, 3 of 3 rigid bodies","ok"],[-140,"Take off all, target 0.60 m","info"],
+    [-9,"Drones hovering at start row D1–D3, 30 cm spacing","ok"]]
+};
+const K={bg:"#0A0E0B",panel:"#181C18",line:"#2C342C",line2:"#3E483D",tx:"#E1E8DF",tx2:"#9DAA9B",tx3:"#687566",grn:"#5FD068",grnDim:"#1B2E1D",friend:"#5FD068",own:"#25C6E8",sel:"#F5D90A",caut:"#FF9A1F",crit:"#F2453D"};
+
+/* =====================================================================
+   STATE + HELPERS
+   ===================================================================== */
+const S={liveRate:0,obsNear:{},obsHi:{},t:CONFIG.sessionStart,gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,focus:"cf1"};
+let drones=[];const pointers=new Map();
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const sg=(v,d=2)=>(v>=0?"+":"−")+Math.abs(v).toFixed(d);
+const fmtT=s=>{s=Math.max(0,Math.floor(s));return[s/3600,s%3600/60,s%60].map(n=>String(Math.floor(n)).padStart(2,"0")).join(":")};
+const U=s=>/^cf\d$/i.test(s)?`DRONE ${s.slice(2)}`:s.toUpperCase();
+let SC=128,OX=300,OY=300,VW=600,VH=600;const px=x=>OX+x*SC,py=y=>OY-y*SC;
+const isHeld=d=>d.pHeld||d.latched||(S.simHold&&(d.id==="cf1"||d.id==="cf2"));
+const airborne=d=>d.z>0.08&&!S.stopped;
+const gAct=()=>S.gesture==="climb"||S.gesture==="descend";
+/* ---------- live camera + hand tracking ---------- */
+const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,label:"",score:0};
+const MP_VER="0.4.1675469240",MP_BASE=`https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MP_VER}/`;
+function camNote(t){const n=$("camNote");if(!n)return;n.hidden=!t;n.textContent=t||"";}
+async function toggleCamera(){if(CAM.on){stopCamera();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camNote("Camera API not available. Open the file over https (e.g. GitHub Pages) or directly from disk.");return;}
+  try{CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});}
+  catch(err){camNote(err&&err.name==="NotAllowedError"?"Camera permission was denied. Allow camera access for this page in the browser's site settings, then tap Enable camera again.":`Camera unavailable here (${err&&err.name||"error"}). If this is the claude.ai link, open the downloaded HTML or a GitHub Pages copy instead.`);return;}
+  const v=$("camVideo");v.srcObject=CAM.stream;v.hidden=false;await v.play().catch(()=>{});CAM.on=true;
+  $("camBtnTxt").textContent="Camera on";$("camBtn").classList.add("on");camNote("");log("Tablet camera on","ok");loadHands();}
+function stopCamera(){CAM.stream&&CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.on=false;CAM.tracking=false;CAM.lm=null;
+  const v=$("camVideo");v.srcObject=null;v.hidden=true;$("camBtnTxt").textContent="Enable camera";$("camBtn").classList.remove("on");camNote("");log("Tablet camera off");}
+function loadHands(){if(CAM.hands){CAM.tracking=true;handLoop();return;}
+  camNote("Loading hand tracking (MediaPipe Hands)…");
+  const sc=document.createElement("script");sc.src=MP_BASE+"hands.js";sc.crossOrigin="anonymous";
+  sc.onload=async()=>{try{const H=new window.Hands({locateFile:f=>MP_BASE+f});
+      H.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:0.6,minTrackingConfidence:0.5});
+      H.onResults(r=>{CAM.lm=r.multiHandLandmarks&&r.multiHandLandmarks[0]||null;CAM.fc++;});
+      await H.initialize();CAM.hands=H;CAM.tracking=true;camNote("");log("Hand tracking running","ok");handLoop();}
+    catch(e){camNote("Live video only: hand tracking could not load here (needs internet, and may be blocked on the claude.ai link). Gestures stay on the simulation controls.");}};
+  sc.onerror=()=>camNote("Live video only: hand tracking could not load here (needs internet, and may be blocked on the claude.ai link). Gestures stay on the simulation controls.");
+  document.head.appendChild(sc);}
+async function handLoop(){if(!CAM.on||!CAM.tracking)return;const v=$("camVideo"),now=performance.now();
+  if(!CAM.busy&&v.readyState>=2&&now-CAM.last>=45){CAM.busy=true;CAM.last=now;try{await CAM.hands.send({image:v});}catch(e){}CAM.busy=false;}
+  if(now-CAM.ft>1000){CAM.fps=CAM.fc;CAM.fc=0;CAM.ft=now;}
+  requestAnimationFrame(handLoop);}
+// classify + drive the altitude channel from real landmarks (same rules as the simulation)
+function liveGesture(){if(!CAM.tracking)return;const L=CAM.lm;
+  if(!L){if(gAct())setGesture("lost");CAM.label="";return;}
+  const W=L[0],dd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let ext=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(dd(L[t],W)>dd(L[p],W)*1.12)ext++;});
+  const open=ext>=4,fist=ext<=1;CAM.label=open?"Open Palm":fist?"Closed Fist":"";CAM.score=open||fist?0.95:0.6;
+  if(fist){if(S.gesture!=="locked"){CAM.neutral=null;setGesture("locked");}return;}
+  if(open){ if(!gAct()){CAM.neutral=W.y;S.liveRate=0;setGesture("climb");}
+    const disp=CAM.neutral-W.y;S.liveRate=clamp(disp*1.6,-2*CONFIG.gestureRate,2*CONFIG.gestureRate); // proportional, up to a max rate
+    S.gesture=S.liveRate>=0?"climb":"descend";}}
+const rateCmd=()=>CAM.tracking&&gAct()?S.liveRate:S.gesture==="climb"?CONFIG.gestureRate:S.gesture==="descend"?-CONFIG.gestureRate:0;
+const focusD=()=>drones.find(d=>d.id===S.focus);
+function log(text,k="info"){S.log.push({t:S.t,text,k});renderLog();}
+function dtgZ(){const d=new Date(),mo=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"],dw=["SUN","MON","TUE","WED","THU","FRI","SAT"],p=n=>String(n).padStart(2,"0");
+  return{long:`${dw[d.getUTCDay()]} ${mo[d.getUTCMonth()]} ${p(d.getUTCDate())} ${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} ZULU`,
+         hms:`${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}Z`};}
+
+function resetScenario(){
+  drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[]}));
+  Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),focus:"cf1"});
+  S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
+  $("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";
+  syncSim();renderLog();buildTabs();buildFeeds();if(window.__ready)applyFeeds();
+}
+// square no-fly zone: anything inside (plus a buffer) is pushed out through the nearest edge
+function outsideNFZ(x,y,buf){const N=CONFIG.nfz;if(!OPT.nfz)return{x,y,moved:false};const H=N.h+buf,dx=x-N.x,dy=y-N.y;
+  if(Math.abs(dx)>=H||Math.abs(dy)>=H)return{x,y,moved:false};
+  if(H-Math.abs(dx)<H-Math.abs(dy))return{x:N.x+(dx>=0?H:-H),y,moved:true,nx:dx>=0?1:-1,ny:0};return{x,y:N.y+(dy>=0?H:-H),moved:true,nx:0,ny:dy>=0?1:-1};}
+function outsideRect(x,y,cx,cy,hx,hy,buf){const HX=hx+buf,HY=hy+buf,dx=x-cx,dy=y-cy;
+  if(Math.abs(dx)>=HX||Math.abs(dy)>=HY)return{x,y,moved:false};
+  if(HX-Math.abs(dx)<HY-Math.abs(dy))return{x:cx+(dx>=0?HX:-HX),y,moved:true,nx:dx>=0?1:-1,ny:0};return{x,y:cy+(dy>=0?HY:-HY),moved:true,nx:0,ny:dy>=0?1:-1};}
+// boxes only block drones flying lower than the box top (plus clearance)
+function clearBoxes(d,x,y,buf){let r={x,y,moved:false,box:null};if(!OPT.course)return r;
+  CONFIG.boxes.forEach(b=>{const o=outsideRect(r.x,r.y,b.x,b.y,b.hx,b.hy,buf);if(o.moved)r={x:o.x,y:o.y,moved:true,box:b.id,nx:o.nx,ny:o.ny};});return r;}
+const rectDist=(x,y,cx,cy,hx,hy)=>Math.hypot(Math.max(Math.abs(x-cx)-hx,0),Math.max(Math.abs(y-cy)-hy,0));
+const OBS_WARN=0.30,OBS_CRIT=0.08; // d_buf edge (0.15 m) reads amber, not red
+function obstacleList(){const L=[];if(OPT.course)CONFIG.boxes.forEach(b=>L.push({id:b.id,name:b.id,x:b.x,y:b.y,hx:b.hx,hy:b.hy}));
+  if(OPT.nfz){const N=CONFIG.nfz;L.push({id:"NFZ",name:"No-fly zone",x:N.x,y:N.y,hx:N.h,hy:N.h});}return L;}
+function detectObstacles(){const near={};
+  obstacleList().forEach(o=>{let best=null;drones.forEach(d=>{if(!airborne(d))return;const dist=rectDist(d.x,d.y,o.x,o.y,o.hx,o.hy);
+      if(dist<OBS_WARN&&(!best||dist<best.dist))best={dist,d};
+      const key=d.id+"|"+o.id,was=S.obsNear[key];
+      if(dist<OBS_WARN&&!was){S.obsNear[key]=true;log(`${U(d.id)} near ${o.name}, ${dist.toFixed(2)} m`,dist<OBS_CRIT?"crit":"warn");}
+      else if(dist>=OBS_WARN+0.05&&was)delete S.obsNear[key];});
+    if(best)near[o.id]={...o,dist:best.dist,drone:best.d};});
+  S.obsHi=near;}
+// green (clear) -> amber (near) -> red (contact / collision)
+function threatColor(t){const L=(a,b,k)=>Math.round(a+(b-a)*k),A=[95,208,104],B=[255,154,31],C=[242,69,61];
+  const [p,q,k]=t<0.5?[A,B,t/0.5]:[B,C,(t-0.5)/0.5];return `rgb(${L(p[0],q[0],k)},${L(p[1],q[1],k)},${L(p[2],q[2],k)})`;}
+// Restricted = obstacle/no-fly footprint + d_buf, plus d_buf around other drones.
+function dragBlocked(d,x,y){const B=CONFIG.dbuf;
+  for(const o of obstacleList())if(Math.abs(x-o.x)<o.hx+B&&Math.abs(y-o.y)<o.hy+B)return o.name;
+  for(const e of drones){if(e===d||!airborne(e))continue;if(Math.hypot(x-e.x,y-e.y)<B+0.05||Math.hypot(x-e.tx,y-e.ty)<B+0.05)return U(e.id);}
+  return null;}
+function dragPathBlocked(d,ax,ay,bx,by){const B=CONFIG.dbuf;for(const o of obstacleList())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;return dragBlocked(d,bx,by);}
+// rounded path through points: quadratic curves between midpoints, no corners
+function smoothPath(P){if(P.length<3)return `M${P[0][0]} ${P[0][1]} L${P[1][0]} ${P[1][1]}`;let d=`M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for(let i=1;i<P.length-1;i++){const m=[(P[i][0]+P[i+1][0])/2,(P[i][1]+P[i+1][1])/2];d+=` Q${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${i===P.length-2?P[i+1][0].toFixed(1):m[0].toFixed(1)} ${i===P.length-2?P[i+1][1].toFixed(1):m[1].toFixed(1)}`;}return d;}
+function segHitsRect(ax,ay,bx,by,cx,cy,hx,hy){let t0=0,t1=1;const dx=bx-ax,dy=by-ay;
+  const P=[-dx,dx,-dy,dy],Q=[ax-(cx-hx),(cx+hx)-ax,ay-(cy-hy),(cy+hy)-ay];
+  for(let i=0;i<4;i++){if(Math.abs(P[i])<1e-9){if(Q[i]<0)return false;}else{const r=Q[i]/P[i];if(P[i]<0){if(r>t1)return false;if(r>t0)t0=r;}else{if(r<t0)return false;if(r<t1)t1=r;}}}
+  return t1-t0>1e-4;}
+// simple route planner: if the straight line to the target crosses an inflated obstacle, fly via its best corner
+function waypoint(d){const INF=0.17,EPS=0.02;let best=null;
+  for(const o of obstacleList()){const hx=o.hx+INF,hy=o.hy+INF;if(!segHitsRect(d.x,d.y,d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS))continue;
+    const C=[[o.x-hx,o.y-hy],[o.x+hx,o.y-hy],[o.x+hx,o.y+hy],[o.x-hx,o.y+hy]];
+    for(const c of C){if(Math.hypot(c[0]-d.x,c[1]-d.y)<0.06)continue;if(segHitsRect(d.x,d.y,c[0],c[1],o.x,o.y,hx-EPS,hy-EPS))continue;const blocked=segHitsRect(c[0],c[1],d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS);let c2=null,L;
+      if(blocked){for(const e of C){if(e===c||segHitsRect(c[0],c[1],e[0],e[1],o.x,o.y,hx-EPS,hy-EPS)||segHitsRect(e[0],e[1],d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS))continue;
+          const l2=Math.hypot(e[0]-c[0],e[1]-c[1])+Math.hypot(d.tx-e[0],d.ty-e[1]);if(!c2||l2<c2.l)c2={x:e[0],y:e[1],l:l2};}
+        L=Math.hypot(c[0]-d.x,c[1]-d.y)+(c2?c2.l:5+Math.hypot(d.tx-c[0],d.ty-c[1]));}
+      else L=Math.hypot(c[0]-d.x,c[1]-d.y)+Math.hypot(d.tx-c[0],d.ty-c[1]);
+      if(!best||L<best.L)best={x:c[0],y:c[1],L,next:c2};}}
+  return best;}
+function segCross(ax,ay,bx,by,cx,cy,dx,dy){const d1=(dx-cx)*(ay-cy)-(dy-cy)*(ax-cx),d2=(dx-cx)*(by-cy)-(dy-cy)*(bx-cx),d3=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax),d4=(bx-ax)*(dy-ay)-(by-ay)*(dx-ax);return d1*d2<0&&d3*d4<0;}
+function checkHoops(d,x0,y0,z0){if(!OPT.course)return;CONFIG.hoops.forEach(h=>{
+  if(h.type==="horizontal"){ // pass by climbing/descending through the ring
+    if((z0-h.z)*(d.z-h.z)<0){const r=Math.hypot(d.x-h.x,d.y-h.y);if(r<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");else if(r<=h.r+0.10)log(`${U(d.id)} hit ${h.id} rim`,"warn");}return;}
+  const a=h.ang*Math.PI/180,ux=Math.cos(a)*h.r,uy=Math.sin(a)*h.r;
+  if(segCross(x0,y0,d.x,d.y,h.x-ux,h.y-uy,h.x+ux,h.y+uy)){
+    if(Math.abs(d.z-h.z)<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");else log(`${U(d.id)} missed ${h.id}, altitude ${d.z.toFixed(2)} m vs ${h.z.toFixed(2)} m`,"warn");}});}
+function flightState(d){
+  if(S.stopped)return["Motors cut","crit"];
+  if(connState(d)==="lost")return["No link","crit"];
+  if(d.landing)return d.z>0.02?["Landing","own"]:["Grounded",""];
+  if(d.z<=0.02&&d.zTarget==null)return["Grounded",""];
+  if(d.zTarget!=null)return["Taking off","own"];
+  if(isHeld(d)&&S.gesture==="lost")return["Holding altitude","caut"];
+  const mv=Math.hypot(d.tx-d.x,d.ty-d.y)>0.03||(isHeld(d)&&gAct()&&!(d.clampMax&&rateCmd()>0)&&!(d.clampMin&&rateCmd()<0));
+  return mv?["Moving","own"]:["Hovering","ok"];
+}
+
+/* =====================================================================
+   MAP
+   ===================================================================== */
+/* Fit the arena to the largest square the map body allows (minus the altitude overlay),
+   and extend the grid across the whole viewport so no space is left empty. */
+function fitMap(){
+  const rr=document.querySelector(".mapbody").getBoundingClientRect(),r={width:rr.width/SCALE,height:rr.height/SCALE};
+  VW=Math.max(300,r.width);VH=Math.max(300,r.height);
+  const padL=24,padT=20,padB=26,rightReserve=0,availW=VW-rightReserve-padL-8,availH=VH-padT-padB;
+  const A=CONFIG.arena,aw=A.xMax-A.xMin,ad=A.yMax-A.yMin;SC=Math.min(availW/aw,availH/ad);
+  OX=padL+availW/2-((A.xMax+A.xMin)/2)*SC;OY=padT+availH/2+((A.yMax+A.yMin)/2)*SC;
+  $("mapSvg").setAttribute("viewBox",`0 0 ${VW} ${VH}`);
+  $("scaleBar").style.width=SC.toFixed(0)+"px";
+  buildMapStatic();
+}
+function buildMapStatic(){
+  const a=CONFIG.arena;let g=`<rect x="0" y="0" width="${VW}" height="${VH}" fill="${K.bg}"/>`;
+  // extended background grid (outside the capture volume, dimmer)
+  const gx0=Math.floor((0-OX)/SC*2)/2,gx1=Math.ceil((VW-OX)/SC*2)/2,gy0=Math.floor((OY-VH)/SC*2)/2,gy1=Math.ceil(OY/SC*2)/2;
+  for(let v=gx0;v<=gx1;v+=0.5)g+=`<line x1="${px(v)}" y1="0" x2="${px(v)}" y2="${VH}" stroke="#101A12"/>`;
+  for(let v=gy0;v<=gy1;v+=0.5)g+=`<line x1="0" y1="${py(v)}" x2="${VW}" y2="${py(v)}" stroke="#101A12"/>`;
+  g+=`<rect x="${px(a.xMin)}" y="${py(a.yMax)}" width="${(a.xMax-a.xMin)*SC}" height="${(a.yMax-a.yMin)*SC}" fill="${K.bg}"/>`;
+  for(let v=Math.ceil(a.xMin*2)/2;v<=a.xMax+1e-6;v+=0.5){const mj=Math.abs(v%1)<1e-6;
+    g+=`<line x1="${px(v)}" y1="${py(a.yMax)}" x2="${px(v)}" y2="${py(a.yMin)}" stroke="${mj?"#1F3A24":"#14231A"}"/>`;
+    if(mj)g+=`<text x="${px(v)}" y="${py(a.yMax)-8}" fill="${K.grn}" fill-opacity=".75" font-size="10" text-anchor="middle">${v.toFixed(0)}</text>`;}
+  for(let v=Math.ceil(a.yMin*2)/2;v<=a.yMax+1e-6;v+=0.5){const mj=Math.abs(v%1)<1e-6;
+    g+=`<line x1="${px(a.xMin)}" y1="${py(v)}" x2="${px(a.xMax)}" y2="${py(v)}" stroke="${mj?"#1F3A24":"#14231A"}"/>`;
+    if(mj){g+=`<text x="${px(a.xMin)-8}" y="${py(v)+3}" fill="${K.grn}" fill-opacity=".75" font-size="10" text-anchor="end">${v.toFixed(0)}</text>`;}}
+  const m=a.margin;
+  g+=`<rect x="${px(a.xMin)}" y="${py(a.yMax)}" width="${(a.xMax-a.xMin)*SC}" height="${(a.yMax-a.yMin)*SC}" fill="none" stroke="#3E8F46" stroke-width="1.5"/>`;
+  g+=`<rect x="${px(a.xMin+m)}" y="${py(a.yMax-m)}" width="${(a.xMax-a.xMin-2*m)*SC}" height="${(a.yMax-a.yMin-2*m)*SC}" fill="none" stroke="${K.caut}" stroke-opacity=".5" stroke-dasharray="6 5"/>`;
+  g+=`<text x="${px(a.xMin+m)+6}" y="${py(a.yMax-m)+14}" fill="${K.caut}" fill-opacity=".8" font-size="10">Geofence ${m.toFixed(2)} m</text>`;
+  // altitude gradient (bottom → top: below-min caution, safe band green, above-max caution)
+  const Z=CONFIG.z,p=z=>(1-z/Z.displayMax)*100;
+  g+=`<defs><linearGradient id="altGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5FD068" stop-opacity=".9"/><stop offset="40%" stop-color="#F5D90A" stop-opacity=".82"/><stop offset="70%" stop-color="#FF9A1F" stop-opacity=".78"/><stop offset="100%" stop-color="#F2453D" stop-opacity=".75"/></linearGradient></defs>`;
+  g+=`<defs><linearGradient id="altGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="${K.caut}"/><stop offset="${p(Z.max)}%" stop-color="${K.caut}"/>
+    <stop offset="${p(Z.max)+0.01}%" stop-color="#C8F7CF"/><stop offset="${(p(Z.max)+p(Z.min))/2}%" stop-color="${K.grn}"/>
+    <stop offset="${p(Z.min)}%" stop-color="#2F6B37"/><stop offset="${p(Z.min)+0.01}%" stop-color="${K.caut}"/><stop offset="100%" stop-color="${K.caut}"/></linearGradient>
+    <pattern id="nfzHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="${K.crit}" stroke-opacity=".45" stroke-width="3"/></pattern></defs>`;
+  // obstacles: boxes (footprint + height) and hoops (gate line, posts, centre height)
+  if(OPT.course){
+    g+=`<defs><pattern id="boxHatch" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7L7 0" stroke="#C9D1C7" stroke-opacity=".35" stroke-width="1.2"/></pattern></defs>`;
+    CONFIG.boxes.forEach(b=>{const X=px(b.x-b.hx),Y=py(b.y+b.hy),W=2*b.hx*SC,H=2*b.hy*SC;
+      g+=`<rect x="${X+4}" y="${Y+4}" width="${W}" height="${H}" fill="#000" opacity=".35"/>`;
+      g+=`<rect x="${X}" y="${Y}" width="${W}" height="${H}" fill="#2B312B" stroke="#C9D1C7" stroke-width="1.5"/><rect x="${X}" y="${Y}" width="${W}" height="${H}" fill="url(#boxHatch)"/>`;
+      g+=`<text x="${px(b.x)}" y="${py(b.y)-2}" fill="#E1E8DF" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${b.id}</text>`;
+      g+=`<text x="${px(b.x)}" y="${py(b.y)+11}" fill="#9DAA9B" font-size="9" text-anchor="middle">h ${b.h.toFixed(2)} m</text>`;});
+    CONFIG.hoops.forEach(h=>{if(h.type==="horizontal"){const cx=px(h.x),cy=py(h.y),r=h.r*SC;
+        g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${K.sel}" fill-opacity=".06" stroke="${K.sel}" stroke-width="3.5"/><circle cx="${cx}" cy="${cy}" r="2.5" fill="${K.sel}"/>`;
+        g+=`<text x="${cx}" y="${cy-r-8}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">z ${h.z.toFixed(2)} m, fly up</tspan></text>`;return;}
+      const a=h.ang*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),x1=px(h.x-ux*h.r),y1=py(h.y-uy*h.r),x2=px(h.x+ux*h.r),y2=py(h.y+uy*h.r),cx=px(h.x),cy=py(h.y),nx=-uy,ny=ux,L=16;
+      g+=`<line x1="${cx-nx*L}" y1="${cy+ny*L}" x2="${cx+nx*L}" y2="${cy-ny*L}" stroke="${K.sel}" stroke-opacity=".5" stroke-dasharray="3 3"/>`;
+      g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${K.sel}" stroke-width="4" stroke-linecap="round"/>`;
+      g+=`<circle cx="${x1}" cy="${y1}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/><circle cx="${x2}" cy="${y2}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/>`;
+      g+=`<text x="${cx+nx*22}" y="${cy-ny*22+(ny>0.5?0:4)}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="${nx<-0.5?"end":nx>0.5?"start":"middle"}" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">z ${h.z.toFixed(2)} m</tspan></text>`;});
+  }
+  // d_buf ring around restricted zones (where drags stop)
+  obstacleList().forEach(o=>{const B=CONFIG.dbuf;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" rx="${B*SC}" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="1" stroke-dasharray="2 4"/>`;});
+  // no-fly zone
+  const N=CONFIG.nfz;
+  if(OPT.nfz){const s0=N.h*SC;
+    g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="${K.crit}" fill-opacity=".10"/>`;
+    g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" stroke="${K.crit}" stroke-width="2.5"/>`;
+    g+=`<rect x="${px(N.x)-38}" y="${py(N.y)-10}" width="76" height="20" fill="#1A0605" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">NO-FLY</text>`;
+    g+=`<text x="${px(N.x)}" y="${py(N.y)+N.h*SC+14}" fill="${K.crit}" font-size="10" text-anchor="middle">${(2*N.h).toFixed(2)} × ${(2*N.h).toFixed(2)} m</text>`;}
+  if(!OPT.nfz)g+=`<g stroke="${K.grn}" stroke-opacity=".7"><circle cx="${OX}" cy="${OY}" r="5" fill="none"/><path d="M${OX-12} ${OY}H${OX-7}M${OX+7} ${OY}H${OX+12}M${OX} ${OY-12}V${OY-7}M${OX} ${OY+7}V${OY+12}"/></g>`;
+  g+=`<text x="${px(a.xMax)+6}" y="${OY+3}" fill="${K.tx3}" font-size="10">+X</text><text x="${OX}" y="${py(a.yMax)-20}" fill="${K.tx3}" font-size="10" text-anchor="middle">+Y</text>`;
+  $("mapStatic").innerHTML=g;
+}
+function renderMap(){
+  let g="";
+  // short comet trail: points live 0.7 s and fade out by age
+  drones.forEach(d=>{const T=d.trail;if(!OPT.trails||T.length<2)return;const LIFE=0.7;
+    for(let i=1;i<T.length;i++){const age=S.t-T[i][2];if(age>LIFE)continue;const a=1-age/LIFE;
+      g+=`<line x1="${px(T[i-1][0]).toFixed(1)}" y1="${py(T[i-1][1]).toFixed(1)}" x2="${px(T[i][0]).toFixed(1)}" y2="${py(T[i][1]).toFixed(1)}" stroke="${K.grn}" stroke-width="${(0.8+2.6*a).toFixed(2)}" stroke-opacity="${(0.75*a*a).toFixed(3)}" stroke-linecap="round"/>`;}});
+  // obstacle detection highlight
+  Object.values(S.obsHi||{}).forEach(o=>{const crit=o.dist<OBS_CRIT,col=crit?K.crit:K.caut,X=px(o.x-o.hx)-4,Y=py(o.y+o.hy)-4,W=2*o.hx*SC+8,H=2*o.hy*SC+8;
+    g+=`<rect class="blink" x="${X}" y="${Y}" width="${W}" height="${H}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="7 4"/>`;
+    const tx=px(o.x),ty=Y-8;g+=`<g transform="translate(${tx},${ty})"><rect x="-58" y="-12" width="116" height="18" fill="#0B100C" stroke="${col}"/><text x="0" y="1.5" fill="${col}" font-size="10" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${crit?"CONTACT RISK":"OBSTACLE"} ${o.dist.toFixed(2)} m</text></g>`;
+    const D=o.drone,cx=clamp(D.x,o.x-o.hx,o.x+o.hx),cy=clamp(D.y,o.y-o.hy,o.y+o.hy);g+=`<line x1="${px(D.x)}" y1="${py(D.y)}" x2="${px(cx)}" y2="${py(cy)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;});
+  S.prox.forEach((dist,key)=>{const[a,b]=key.split("|").map(id=>drones.find(d=>d.id===id)),crit=dist<CONFIG.proxCrit,col=crit?K.crit:K.caut,mx=(px(a.x)+px(b.x))/2,my=(py(a.y)+py(b.y))/2;
+    g+=`<line x1="${px(a.x)}" y1="${py(a.y)}" x2="${px(b.x)}" y2="${py(b.y)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+    [a,b].forEach(d=>g+=`<circle class="blink" cx="${px(d.x)}" cy="${py(d.y)}" r="30" fill="none" stroke="${col}" stroke-width="2"/>`);
+    g+=`<g transform="translate(${mx},${my-50})"><rect x="-80" y="-12" width="160" height="22" fill="#111" stroke="${col}"/><text x="0" y="3" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${crit?"Collision risk":"Proximity warning"} ${dist.toFixed(2)} m</text></g>`;});
+  drones.forEach(d=>{
+    const X=px(d.x),Y=py(d.y),held=isHeld(d),foc=d.id===S.focus,gr=d.z<=0.02||S.stopped,dist=Math.hypot(d.tx-d.x,d.ty-d.y);
+    if(dist>0.03){const TX=px(d.tx),TY=py(d.ty);
+      // soft wisp to the target: curved, fading in from the drone, with a faint glow underlay
+      {const gid=`wisp-${d.id}`,ex=d.wp?px(d.wp.x):TX,ey=d.wp?py(d.wp.y):TY,L=Math.hypot(TX-X,TY-Y),nx=-(TY-Y)/(L||1),ny=(TX-X)/(L||1),bend=Math.min(18,L*0.08)*Math.sin(S.t*1.3+d.n);
+       const cx=d.wp?px(d.wp.x):(X+TX)/2+nx*bend,cy=d.wp?py(d.wp.y):(Y+TY)/2+ny*bend,path=d.wp?smoothPath([[X,Y],[cx,cy],...(d.wp.next?[[px(d.wp.next.x),py(d.wp.next.y)]]:[]),[TX,TY]]):`M${X.toFixed(1)} ${Y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${TX.toFixed(1)} ${TY.toFixed(1)}`;
+       g+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${X}" y1="${Y}" x2="${TX}" y2="${TY}"><stop offset="0" stop-color="${K.own}" stop-opacity="0"/><stop offset=".45" stop-color="${K.own}" stop-opacity=".22"/><stop offset="1" stop-color="${K.own}" stop-opacity=".55"/></linearGradient>`;
+       g+=`<path d="${path}" fill="none" stroke="url(#${gid})" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>`;
+       g+=`<path d="${path}" fill="none" stroke="url(#${gid})" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;}
+      g+=`<circle cx="${TX}" cy="${TY}" r="11" fill="${K.own}" fill-opacity=".07"/><circle cx="${TX}" cy="${TY}" r="6" fill="none" stroke="${K.own}" stroke-opacity=".55" stroke-width="1.2"/><circle cx="${TX}" cy="${TY}" r="1.8" fill="${K.own}" fill-opacity=".8"/>`;
+      g+=`<text x="${TX+13}" y="${TY+4}" fill="${K.own}" fill-opacity=".75" font-size="10">${dist.toFixed(2)} m</text>`;}
+    if(d.blockPt){const BX=px(d.blockPt[0]),BY=py(d.blockPt[1]),TX=px(d.tx),TY=py(d.ty),gb=`blk-${d.id}`;
+      g+=`<linearGradient id="${gb}" gradientUnits="userSpaceOnUse" x1="${TX}" y1="${TY}" x2="${BX}" y2="${BY}"><stop offset="0" stop-color="${K.crit}" stop-opacity=".6"/><stop offset="1" stop-color="${K.crit}" stop-opacity="0"/></linearGradient>`;
+      g+=`<path d="M${TX} ${TY} L${BX} ${BY}" stroke="url(#${gb})" stroke-width="6" stroke-linecap="round" opacity=".5"/><circle cx="${TX}" cy="${TY}" r="10" fill="none" stroke="${K.crit}" stroke-opacity=".7" stroke-width="1.5"/>`;
+      g+=`<text x="${TX}" y="${TY-15}" fill="${K.crit}" font-size="10" font-weight="700" text-anchor="middle">BLOCKED: ${d.blocked}</text>`;}
+    g+=`<g data-drone="${d.id}" style="cursor:pointer"><circle cx="${X}" cy="${Y}" r="28" fill="transparent"/>`;
+    {const lv=gr?0:(d.threat||0),c=threatColor(lv),gid=`tr-${d.id}`,R0=lv>0.98?29+Math.sin(S.t*14)*2:28;
+      g+=`<radialGradient id="${gid}"><stop offset="55%" stop-color="${c}" stop-opacity="0"/><stop offset="72%" stop-color="${c}" stop-opacity="${(0.35+0.4*lv).toFixed(2)}"/><stop offset="86%" stop-color="${c}" stop-opacity="${(0.55+0.4*lv).toFixed(2)}"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
+      g+=`<circle cx="${X}" cy="${Y}" r="${R0}" fill="url(#${gid})"/>`;
+      g+=`<circle cx="${X}" cy="${Y}" r="${(R0*0.84).toFixed(1)}" fill="none" stroke="${c}" stroke-opacity="${(0.55+0.45*lv).toFixed(2)}" stroke-width="${lv>0.5?2:1.2}"/>`;}
+    if(held)g+=`<circle cx="${X}" cy="${Y}" r="19.5" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".8" stroke-width="1.5"/>`;
+    // heading tick
+    const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+23*Math.cos(hr)}" y2="${Y+23*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
+    const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="#121712" stroke="${lostC?K.crit:gr?K.tx3:K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
+    g+=`<text x="${X}" y="${Y+5}" fill="#fff" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
+    if(foc&&OPT.labels){const lbl=`${U(d.id)}${held?"  Held":""}`,w=lbl.length*7.2+16;
+      g+=`<g transform="translate(${X+30},${Y-36})"><rect width="${w}" height="24" fill="#0B100C" stroke="#3E8F46"/><text x="8" y="16" fill="#fff" font-size="12" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text></g>`;}
+    // altitude gradient bar (left of the icon)
+    {const Zc=CONFIG.z,bh=40,bw=5,bx=X-30,by=Y-bh/2,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
+     g+=`<clipPath id="${cid}"><rect x="${bx}" y="${ly}" width="${bw}" height="${by+bh-ly}"/></clipPath>`;
+     g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="#FFFFFF" fill-opacity=".07" stroke="#FFFFFF" stroke-opacity=".22" stroke-width=".8"/>`;
+     g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="url(#altGlass)" clip-path="url(#${cid})"/>`;
+     g+=`<path d="M${bx-2} ${zy(Zc.max)}H${bx+bw+2}M${bx-2} ${zy(Zc.min)}H${bx+bw+2}" stroke="${K.caut}" stroke-opacity=".7" stroke-width="1"/>`;
+     g+=`<circle cx="${bx+bw/2}" cy="${ly}" r="6" fill="#fff" fill-opacity=".12"/><circle cx="${bx+bw/2}" cy="${ly}" r="3" fill="#fff" fill-opacity=".95"/>`;}
+    g+=`<text x="${X}" y="${Y+34}" fill="${K.tx2}" font-size="10" text-anchor="middle">${d.z.toFixed(2)} m</text></g>`;
+  });
+  $("mapDyn").innerHTML=g;
+}
+
+/* =====================================================================
+   ALTITUDE OVERLAY
+   ===================================================================== */
+let TW=100,TH=600;
+function renderTapes(){
+  const svgT=$("tapeSvg");svgT.setAttribute("viewBox",`0 0 ${TW} ${TH}`);
+  const Z=CONFIG.z,top=44,bot=TH-44,h=bot-top,zy=z=>bot-(z/Z.displayMax)*h;let s="";
+  // battery-style heat gradient: red (low) → orange → yellow → green (high)
+  s+=`<defs><linearGradient id="heatT" gradientUnits="userSpaceOnUse" x1="0" y1="${bot}" x2="0" y2="${top}"><stop offset="0" stop-color="#F2453D"/><stop offset=".3" stop-color="#FF9A1F"/><stop offset=".6" stop-color="#F5D90A"/><stop offset="1" stop-color="#5FD068"/></linearGradient></defs>`;
+  const slot=(TW-32)/3,TWD=Math.max(14,Math.min(40,slot-8)),XS=[0,1,2].map(i=>28+slot*i+(slot-TWD)/2);
+  s+=`<defs><pattern id="hx" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${K.caut}" stroke-opacity=".35" stroke-width="1.4"/></pattern></defs>`;
+  for(let i=0;i<=20;i++){const v=i/10,mj=i%5===0;s+=`<line x1="${mj?17:20}" y1="${zy(v)}" x2="24" y2="${zy(v)}" stroke="${mj?K.grn:K.tx3}"/>`;if(mj)s+=`<text x="15" y="${zy(v)+3}" fill="${K.grn}" font-size="9" text-anchor="end">${v.toFixed(1)}</text>`;}
+  XS.forEach((x,i)=>{const d=drones[i],held=isHeld(d),foc=d.id===S.focus,col=held?K.own:K.tx2,W=TWD,cz=clamp(d.z,0,Z.displayMax);
+    s+=`<g opacity="${held||foc?1:.55}">`;
+    s+=`<rect x="${x}" y="${top}" width="${W}" height="${h}" fill="#0B100C" stroke="${foc?"#fff":K.line2}"/>`;
+    s+=`<rect x="${x+1}" y="${top+1}" width="${W-2}" height="${zy(Z.max)-top-1}" fill="url(#hx)"/><rect x="${x+1}" y="${zy(Z.min)}" width="${W-2}" height="${bot-zy(Z.min)-1}" fill="url(#hx)"/>`;
+    s+=`<line x1="${x}" y1="${zy(Z.max)}" x2="${x+W}" y2="${zy(Z.max)}" stroke="${K.caut}" stroke-width="1.5"/><line x1="${x}" y1="${zy(Z.min)}" x2="${x+W}" y2="${zy(Z.min)}" stroke="${K.caut}" stroke-width="1.5"/>`;
+    s+=`<rect x="${x+W*0.2}" y="${zy(cz)}" width="${W*0.6}" height="${bot-zy(cz)}" fill="url(#heatT)" opacity=".9"/>`;
+    s+=`<path d="M${x-2} ${zy(cz)}L${x+6} ${zy(cz)-6}H${x+W+2}V${zy(cz)+6}H${x+6}Z" fill="#0B100C" stroke="${col}" stroke-width="1.5"/>`;
+    const r=held&&gAct()&&!S.stopped?rateCmd():0,blk=(r>0&&d.clampMax)||(r<0&&d.clampMin);
+    if(r&&!blk){const cx=x+W/2,dir=r>0?-1:1;for(let k=0;k<2;k++){const ay=zy(cz)+dir*(16+k*8);s+=`<path d="M${cx-6} ${ay-dir*3}L${cx} ${ay+dir*3}L${cx+6} ${ay-dir*3}" fill="none" stroke="${K.own}" stroke-width="2"/>`;}}
+    if(d.clampMax&&r>0)s+=`<text x="${x+W/2}" y="${zy(Z.max)-5}" fill="${K.caut}" font-size="9" font-weight="600" text-anchor="middle">MAX</text>`;
+    if(d.clampMin&&r<0)s+=`<text x="${x+W/2}" y="${zy(Z.min)+12}" fill="${K.caut}" font-size="9" font-weight="600" text-anchor="middle">MIN</text>`;
+    s+=`<text x="${x+W/2}" y="${top-24}" fill="#fff" font-size="${Math.min(11,slot/2.6).toFixed(1)}" text-anchor="middle">${d.z.toFixed(2)}</text>`;
+    s+=`<circle cx="${x+W/2}" cy="${top-10}" r="7" fill="#121712" stroke="${d.z>0.02&&!S.stopped?K.own:K.tx3}" stroke-width="1.5"/><text x="${x+W/2}" y="${top-6.5}" fill="#fff" font-size="9" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
+    s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${slot<30?(held?"H":"F"):(held?"Held":"Free")}</text></g>`;});
+  s+=`<text x="${TW/2}" y="${bot+34}" fill="${K.tx3}" font-size="9" text-anchor="middle">lim ${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m</text>`;
+  $("tapeSvg").innerHTML=s;
+}
+
+/* =====================================================================
+   CAMERA FEED (grayscale sensor look, yellow detection box)
+   ===================================================================== */
+const PALM=[[100,130],[80,120],[66,105],[56,92],[48,80],[85,90],[82,68],[80,54],[79,42],[100,88],[100,63],[100,48],[100,35],[114,90],[117,67],[119,53],[120,42],[126,96],[133,79],[137,68],[140,58]];
+const FIST=[[100,130],[80,120],[74,108],[82,100],[92,98],[85,90],[84,76],[90,82],[92,92],[100,88],[100,74],[104,82],[104,92],[114,90],[114,76],[116,84],[114,93],[126,96],[128,84],[128,92],[124,98]];
+const BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
+const HX=40,HY=50,OFF=24,MMPX=1.6,NEUT=130-5+HY; // neutral = wrist landmark height
+function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
+  if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(1-p.x)*W,p.y*H]);  // mirrored like the preview
+    if(gAct()&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1];
+      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-8}" y="${ny-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist)</text>`;
+      s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
+    s+=`<g stroke="${K.own}" stroke-width="2" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}</g>`;
+    P.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===0?3.5:2.4}" fill="${K.friend}"/>`);
+    if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label,w=lbl.length*6.3+12;
+      s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${K.sel}" stroke-width="2"/><rect x="${(x0+x1)/2-w/2}" y="${y0-22}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-9}" fill="${K.sel}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;}}
+  else if(CAM.tracking&&g==="lost"){s+=`<rect x="80" y="100" width="160" height="38" fill="#111" fill-opacity=".85" stroke="${K.caut}"/><text x="160" y="116" fill="${K.caut}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">No hand in frame</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">Held units holding altitude</text>`;}
+  if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">MediaPipe ${CAM.fps} fps</text>`;
+  $("camSvg").innerHTML=s;}
+function renderCam(){
+  if(CAM.on){renderLiveCam();return;}
+  const g=S.gesture,wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob,conf=g==="locked"?93:96;let s="";
+  s+=`<defs><radialGradient id="cg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#5A5A5C"/><stop offset=".6" stop-color="#3A3A3C"/><stop offset="1" stop-color="#1C1C1D"/></radialGradient></defs><rect width="320" height="240" fill="url(#cg)"/>`;
+  s+=`<ellipse cx="236" cy="272" rx="100" ry="66" fill="#2A2A2B"/><circle cx="236" cy="150" r="40" fill="#2A2A2B"/>`;
+  if(gAct()){s+=`<line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="312" y="${NEUT-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
+    const cy=NEUT+dy;s+=`<line x1="20" y1="${NEUT}" x2="20" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M14 ${cy+(dy<0?6:-6)}L20 ${cy}L26 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
+  if(gAct()||g==="locked"){
+    const pts=(g==="locked"?FIST:PALM).map(([x,y])=>[x+HX,y-5+HY+(g==="locked"?wob:dy)]);
+    s+=`<g stroke="${K.own}" stroke-width="1.5" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}"/>`).join("")}</g>`;
+    pts.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===9?3:2.2}" fill="${K.friend}"/>`);
+    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=`${g==="locked"?"Closed Fist":"Open Palm"} ${conf}%`,w=lbl.length*6.3+12;
+    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${K.sel}" stroke-width="2"/>`;
+    s+=`<rect x="${(x0+x1)/2-w/2}" y="${y0-24}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-11}" fill="${K.sel}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;
+  }else{const lost=g==="lost";
+    s+=`<rect x="80" y="100" width="160" height="38" fill="#111" stroke="${lost?K.caut:"#555"}"/>`;
+    s+=`<text x="160" y="116" fill="${lost?K.caut:"#fff"}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"No hand in frame":"Show an open palm"}</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"Held units holding altitude":"to capture a neutral point"}</text>`;}
+  $("camSvg").innerHTML=s;
+}
+
+/* =====================================================================
+   DRONE CAMERA FEEDS (simulated forward camera; needs camera deck hardware)
+   ===================================================================== */
+function buildFeeds(){
+  $("fheadSlot").appendChild($("fhead"));$("sideFeed").innerHTML="";
+  $("feeds").innerHTML=drones.map(d=>`<button class="dfeed" data-f="${d.id}" aria-label="Select ${d.id} and view its camera">
+    <span class="fh"><span class="num">${d.n}</span>${U(d.id)}<span class="simtag">SIM</span><span class="st" id="fst-${d.id}">--</span></span>
+    <svg id="fv-${d.id}" viewBox="0 0 240 190" preserveAspectRatio="xMidYMid meet" style="overflow:hidden"></svg>
+    <span class="fstat"><span class="sig" id="fsig-${d.id}" title="Signal"><i></i><i></i><i></i><i></i></span><span class="m" id="fsigv-${d.id}">--</span>
+      <span class="bat" id="fbat-${d.id}" title="Battery"><i></i></span><span class="m" id="fbatv-${d.id}">--</span></span></button>`).join("");
+  $("feeds").querySelectorAll(".dfeed").forEach(b=>b.addEventListener("click",()=>{S.focus=b.dataset.f;renderSide();}));
+}
+const FS={};
+function renderFeed(d){
+  const box=FS[d.id]||{w:240,h:190},W=240,H=190,cx=W/2,z=Math.max(0.06,d.z),yr=d.yaw*Math.PI/180;
+  const lat=d.x*Math.cos(yr)-d.y*Math.sin(yr),fwd=d.x*Math.sin(yr)+d.y*Math.cos(yr);
+  const hy=H/2+d.pitch*4,F=150;let s="";
+  const cut=S.stopped&&d.z<0.02;
+  s+=`<g transform="rotate(${-d.roll} ${cx} ${H/2})">`;
+  s+=`<rect x="-900" y="-900" width="2040" height="${hy+900}" fill="#3A3D3A"/><rect x="-900" y="${hy}" width="2040" height="1200" fill="#262826"/>`;
+  // wall panel seams (move with yaw)
+  const yo=((d.yaw%30)+30)%30;for(let k=-22;k<34;k++){const wx=k*40-yo*40/30;s+=`<line x1="${wx}" y1="${hy-70}" x2="${wx}" y2="${hy}" stroke="#4A4E4A" stroke-width="1"/>`;}
+  s+=`<rect x="-900" y="${hy-74}" width="2040" height="4" fill="#2E312E"/>`;
+  // floor grid in perspective, 0.5 m pitch
+  const lo=((lat%0.5)+0.5)%0.5;
+  for(let k=-24;k<=24;k++){const X=(k*0.5-lo);const bx=cx+X*F/z*0.8;s+=`<line x1="${cx+(bx-cx)*0.02}" y1="${hy}" x2="${cx+(bx-cx)*3}" y2="${hy+3*F*0.35}" stroke="#555A55" stroke-width=".8"/>`;}
+  const fo=((fwd%0.5)+0.5)%0.5;
+  for(let n=1;n<14;n++){const D=n*0.5-fo+0.25;const y=hy+F*z/D*0.9;if(y>H+40)continue;s+=`<line x1="-900" y1="${y}" x2="1140" y2="${y}" stroke="#555A55" stroke-width=".8"/>`;}
+  s+=`</g>`;
+  // link degradation → sensor noise
+  if(S.degraded){for(let i=0;i<14;i++){const y=Math.random()*H;s+=`<rect x="0" y="${y}" width="${W}" height="${1+Math.random()*2}" fill="#fff" opacity="${.05+Math.random()*.12}"/>`;}}
+  if(connState(d)==="lost")s+=`<rect x="-900" y="-900" width="2040" height="2040" fill="#000" opacity=".82"/><text x="${cx}" y="${H/2+4}" fill="#F2453D" font-size="13" font-weight="700" text-anchor="middle">NO SIGNAL</text>`;
+  else if(cut)s+=`<rect width="${W}" height="${H}" fill="#000" opacity=".7"/><text x="${cx}" y="${H/2+4}" fill="#F2453D" font-size="12" text-anchor="middle">MOTORS CUT</text>`;
+  // HUD
+  s+=`<g stroke="#E1E8DF" stroke-width="1.2" fill="none" opacity=".85"><path d="M${cx-18} ${H/2}H${cx-6}M${cx+6} ${H/2}H${cx+18}M${cx} ${H/2-12}V${H/2-4}M${cx} ${H/2+4}V${H/2+12}"/></g>`;
+  s+=`<g stroke="${K.grn}" stroke-width="1.4" fill="none" transform="rotate(${-d.roll} ${cx} ${H/2})"><path d="M${cx-60} ${H/2+d.pitch*4}H${cx-30}M${cx+30} ${H/2+d.pitch*4}H${cx+60}"/></g>`;
+  const lk=S.degraded?61:d.link;
+  if(lk<70)s+=`<rect x="0" y="${H-18}" width="${W}" height="18" fill="#000" opacity=".55"/><text x="6" y="${H-5}" fill="${K.caut}" font-size="11">LINK ${lk}%</text>`;
+  if(connState(d)==="lost")s+=`<rect x="-900" y="-900" width="2040" height="2040" fill="#050505"/><text x="${cx}" y="${H/2+4}" fill="#F2453D" font-size="13" font-weight="700" text-anchor="middle">NO SIGNAL</text>`;
+  // widen/heighten the viewBox so the scene fills the tile without letterboxing
+  const ar=box.w/box.h;let vb;
+  if(ar>W/H){const vw=H*ar;vb=`${(W-vw)/2} 0 ${vw} ${H}`;}else{const vh=W/ar;vb=`0 ${(H-vh)/2} ${W} ${vh}`;}
+  const el=$("fv-"+d.id);el.setAttribute("viewBox",vb);el.innerHTML=s;
+  updFeedStat(d);
+  const[st,k]=flightState(d),e=$("fst-"+d.id);e.textContent=st;e.style.color={ok:K.grn,own:K.own,caut:K.caut,crit:K.crit,"":K.tx2}[k];
+}
+function updFeedStat(d){
+  const low=S.lowBatt&&d.id==="cf3",bat=low?12:Math.round(d.batt),lost=connState(d)==="lost",lk=lost?0:S.degraded?61:d.link;
+  const bk=bat<10?"crit":bat<CONFIG.lowBatt?"warn":"",lkk=lk<50?"crit":lk<70?"warn":"",bars=lost?0:lk>90?4:lk>70?3:lk>45?2:1;
+  const sg_=$("fsig-"+d.id);sg_.className="sig "+lkk;[...sg_.children].forEach((i,n)=>i.classList.toggle("on",n<bars));
+  const sv=$("fsigv-"+d.id);sv.textContent=lk+"%";sv.className="m "+lkk;
+  const bt=$("fbat-"+d.id);bt.className="bat "+bk;bt.firstElementChild.style.width=Math.max(4,bat)*0.14+"px";
+  const bv=$("fbatv-"+d.id);bv.textContent=bat+"%";bv.className="m "+bk;
+}
+function renderFeeds(){drones.forEach(d=>{const t=document.querySelector(`.dfeed[data-f="${d.id}"]`);if(t&&!t.classList.contains("off"))renderFeed(d);});document.querySelectorAll(".dfeed").forEach(b=>{b.classList.toggle("on",b.dataset.f===S.focus);b.classList.toggle("held",isHeld(drones.find(x=>x.id===b.dataset.f)));});}
+
+/* =====================================================================
+   SIDE PANEL
+   ===================================================================== */
+function buildTabs(){
+}
+function renderSide(){
+  const d=focusD();
+  if(window.__ready&&OPT.feed!==d.id){OPT.feed=d.id;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===d.id);applyFeeds();}
+  // Essential only: what the gesture is commanding, and to which drones
+  const g=S.gesture,hl=drones.filter(isHeld).map(x=>U(x.id)),to=hl.length?hl.join(" + "):"no drone held";let main,sub,k;
+  if(g==="climb"||g==="descend"){if(hl.length){main=Math.abs(rateCmd())<0.01?"Palm at neutral, holding":`${g==="climb"?"▲ Climbing":"▼ Descending"} ${Math.abs(rateCmd()).toFixed(2)} m/s`;sub=to;k="ok";}else{main="Hold a drone to use altitude";sub="Gesture active";k="idle";}}
+  else if(g==="locked"){main="Altitude locked";sub=to;k="lock";}
+  else if(g==="lost"){main="Hand lost, holding altitude";sub=to;k="warn";}
+  else{main="Show open palm to start";sub="";k="idle";}
+  const gs=$("gstat");gs.dataset.k=k;$("gMain").textContent=main;$("gSub").textContent=sub;
+  const btn=$("btnLandSel");btn.textContent=`Land ${U(d.id)}`;btn.disabled=d.z<=0.02||d.landing||S.stopped;
+}
+
+/* =====================================================================
+   TOP BAR + TIMELINE
+   ===================================================================== */
+function renderTop(){
+  const deg=S.degraded,z=dtgZ();
+  // on/off status dot on each drone selector button (DRONE CAM + Settings)
+  document.querySelectorAll("[data-fs]").forEach(b=>{const d=drones.find(x=>x.id===b.dataset.fs);if(!d)return;const c=connState(d);
+    let dot=b.querySelector(".sd");if(!dot){dot=document.createElement("i");dot.className="sd";b.prepend(dot);}
+    dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
+}
+function connState(d){if(S.cf3Lost&&d.id==="cf3")return"lost";return S.degraded?"weak":"ok";}
+function setLk(id,s,t){const e=$(id);e.dataset.s=s;e.querySelector("span").textContent=t;}
+function renderTimeline(){
+  const el=$("tlSvg"),W=el.clientWidth||600,H=el.clientHeight||76,span=CONFIG.timelineSec,t1=S.t,t0=t1-span,x=t=>8+(W-16)*(t-t0)/span;
+  el.setAttribute("viewBox",`0 0 ${W} ${H}`);let s=`<rect x="0" y="2" width="${W}" height="20" fill="#0B100C"/>`;
+  for(let t=Math.ceil(t0/10)*10;t<=t1;t+=10){const mj=t%60===0;s+=`<line x1="${x(t)}" y1="${mj?4:13}" x2="${x(t)}" y2="22" stroke="${mj?K.grn:"#2E4A33"}"/>`;
+    if(mj)s+=`<text x="${x(t)}" y="33" fill="${K.grn}" font-size="10" text-anchor="middle">${fmtT(t).slice(3)}</text>`;}
+  S.log.forEach(e=>{if(e.t<t0)return;const c={ok:K.friend,warn:K.caut,crit:K.crit,info:K.own}[e.k];s+=`<rect x="${x(e.t)-1.5}" y="3" width="3" height="10" fill="${c}"/>`;});
+  s+=`<line x1="${x(t1)}" y1="2" x2="${x(t1)}" y2="22" stroke="${K.friend}" stroke-width="2"/>`;
+  el.innerHTML=s;
+}
+function renderLog(){
+  const L=S.log[S.log.length-1];
+  $("logLatest").innerHTML=L?`<span class="t">T+${fmtT(L.t)}</span>${L.text}`:"";$("lastDot").dataset.k=L?L.k:"";
+  $("logList").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");
+}
+function toggleLog(){const o=$("app").classList.toggle("log-open");$("logToggle").setAttribute("aria-expanded",o);}
+$("logToggle").addEventListener("click",toggleLog);
+document.querySelectorAll(".sec>button").forEach(b=>b.addEventListener("click",()=>{const c=b.parentElement.classList.toggle("closed");b.setAttribute("aria-expanded",!c);}));
+
+/* =====================================================================
+   SIMULATION LOOP
+   ===================================================================== */
+function update(dt){
+  S.t+=dt;liveGesture();S.wob+=dt*2.2;const Z=CONFIG.z;
+  drones.forEach(d=>{
+    const x0=d.x,y0=d.y,z0=d.z;d.batt=Math.max(5,d.batt-dt*0.004);
+    if(S.stopped){d.z=Math.max(0,d.z-dt*2.2);d.mvx=d.mvy=0;}
+    else{
+      if(d.zTarget!=null){const dz=d.zTarget-d.z,st=0.35*dt;if(Math.abs(dz)<=st){d.z=d.zTarget;d.zTarget=null;if(d.landing){d.landing=false;d.z=0;log(`${U(d.id)} landed`,"ok");}}else d.z+=Math.sign(dz)*st;}
+      else if(airborne(d)&&isHeld(d)&&gAct()){const nz=clamp(d.z+rateCmd()*dt,Z.min,Z.max);
+        if(nz>=Z.max&&d.z<Z.max){d.clampMax=true;log(`${U(d.id)} clamped at z max ${Z.max.toFixed(2)} m`,"warn");}
+        if(nz<=Z.min&&d.z>Z.min){d.clampMin=true;log(`${U(d.id)} clamped at z min ${Z.min.toFixed(2)} m`,"warn");}d.z=nz;}
+      if(d.z<Z.max-1e-3)d.clampMax=false;if(d.z>Z.min+1e-3)d.clampMin=false;
+      if(airborne(d)){ // velocity with inertia: turns become smooth curves instead of sharp corners
+        const wp=waypoint(d);d.wp=wp;const gx=wp?wp.x:d.tx,gy=wp?wp.y:d.ty,dx=gx-d.x,dy=gy-d.y,hl=Math.hypot(dx,dy),dist=hl+(wp?Math.hypot(d.tx-wp.x,d.ty-wp.y):0),sp=Math.min(CONFIG.hSpeed,dist*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
+        d.mvx=(d.mvx||0)+(dvx-(d.mvx||0))*k;d.mvy=(d.mvy||0)+(dvy-(d.mvy||0))*k;d.x+=d.mvx*dt;d.y+=d.mvy*dt;
+        // on contact: cancel velocity into the obstacle and slide along its edge toward the target
+        const slide=o=>{const vn=d.mvx*o.nx+d.mvy*o.ny;if(vn<0){d.mvx-=vn*o.nx;d.mvy-=vn*o.ny;}const tx_=-o.ny,ty_=o.nx,side=Math.sign((d.tx-d.x)*tx_+(d.ty-d.y)*ty_)||1;
+          d.mvx+=tx_*side*CONFIG.hSpeed*0.12;d.mvy+=ty_*side*CONFIG.hSpeed*0.12;const v=Math.hypot(d.mvx,d.mvy),vmax=CONFIG.hSpeed;if(v>vmax){d.mvx*=vmax/v;d.mvy*=vmax/v;}};
+        if(OPT.nfz){const o=outsideNFZ(d.x,d.y,0.02);if(o.moved){d.x=o.x;d.y=o.y;slide(o);}}
+        {const o=clearBoxes(d,d.x,d.y,0.12);if(o.moved){d.x=o.x;d.y=o.y;slide(o);if(!d.boxFlag){d.boxFlag=o.box;log(`${U(d.id)} stopped at obstacle ${o.box}`,"warn");}}else d.boxFlag=null;}
+        checkHoops(d,x0,y0,z0);}
+    }
+    const a=Math.min(1,dt*6);d.vx+=((d.x-x0)/dt-d.vx)*a;d.vy+=((d.y-y0)/dt-d.vy)*a;d.vz+=((d.z-z0)/dt-d.vz)*a;
+    const yr=d.yaw*Math.PI/180,fwd=d.vx*Math.sin(yr)+d.vy*Math.cos(yr),rgt=d.vx*Math.cos(yr)-d.vy*Math.sin(yr),air=airborne(d)?1:0;
+    d.pitch=air*(-fwd*9+Math.sin(S.wob*1.3+d.x)*0.6);d.roll=air*(rgt*9+Math.cos(S.wob*1.1+d.y)*0.6);
+  });
+  const now=new Map();
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const a=drones[i],b=drones[j],dd=Math.hypot(a.x-b.x,a.y-b.y);
+    if(airborne(a)&&airborne(b)&&dd<CONFIG.proxWarn){const key=a.id+"|"+b.id,was=S.prox.get(key);now.set(key,dd);
+      if(was==null)log(`Proximity warning, ${U(a.id)} and ${U(b.id)} at ${dd.toFixed(2)} m`,"warn");
+      else if(dd<CONFIG.proxCrit&&was>=CONFIG.proxCrit)log(`Collision risk, ${U(a.id)} and ${U(b.id)} at ${dd.toFixed(2)} m`,"crit");}}
+  S.prox=now;
+  drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
+  // threat level per drone (0 = clear, 1 = contact/collision) from nearest obstacle or other drone
+  drones.forEach(d=>{let lv=0;if(airborne(d)){
+      obstacleList().forEach(o=>{const r=rectDist(d.x,d.y,o.x,o.y,o.hx,o.hy);lv=Math.max(lv,clamp((OBS_WARN-r)/(OBS_WARN-OBS_CRIT),0,1));});
+      drones.forEach(e=>{if(e===d||!airborne(e))return;const r=Math.hypot(d.x-e.x,d.y-e.y);lv=Math.max(lv,clamp((CONFIG.proxWarn-r)/(CONFIG.proxWarn-CONFIG.proxCrit),0,1));});}
+    d.threat=d.threat==null?lv:d.threat+(lv-d.threat)*0.25;});
+  detectObstacles();
+}
+let last=performance.now(),acc=0,frames=0,fpsAcc=0;
+let fN=0;
+function frame(now){const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
+  frames++;fpsAcc+=dt;acc+=dt;
+  if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();}
+  requestAnimationFrame(frame);}
+
+/* =====================================================================
+   INPUT
+   ===================================================================== */
+const svg=$("mapSvg");
+function toM(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[(q.x-OX)/SC,(OY-q.y)/SC];}
+
+svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);S.focus=d.id;
+  if(!airborne(d)){log(`${U(d.id)} is grounded, take off before positioning`,"warn");return;}
+  if([...pointers.values()].includes(d.id))return;
+  e.preventDefault();pointers.set(e.pointerId,d.id);svg.setPointerCapture(e.pointerId);
+  d.dragStart=[e.clientX,e.clientY];d.dragMoved=false;
+  if(OPT.latch&&d.latched){/* tapping a latched drone releases it on pointerup (unless dragged) */}
+  else{d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);}});
+svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
+  $("cursor").textContent=inside?t:"--";
+  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d,d.tx,d.ty,cx,cy);
+  if(!hit){d.tx=cx;d.ty=cy;d.blocked=null;}
+  else{ // slide the target up to the edge of the restricted zone, never into it
+    let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d,d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
+    d.tx+=(cx-d.tx)*lo;d.ty+=(cy-d.ty)*lo;
+    if(d.blocked!==hit){d.blocked=hit;log(`${U(d.id)} drag blocked by ${hit}`,"warn");}}
+  d.blockPt=hit?[cx,cy]:null;});
+svg.addEventListener("pointerleave",()=>{$("cursor").textContent="--";});
+function release(e){const id=pointers.get(e.pointerId);if(!id)return;pointers.delete(e.pointerId);const d=drones.find(x=>x.id===id);d.nfzFlag=false;d.blocked=null;d.blockPt=null;
+  if(OPT.latch){ if(d.latched&&!d.pHeld&&!d.dragMoved){d.latched=false;log(`${U(d.id)} released`);} d.pHeld=false; if(d.dragMoved)log(`${U(d.id)} target ${sg(d.tx)}, ${sg(d.ty)} m`); return; }
+  d.pHeld=false;log(`${U(d.id)} released, target ${sg(d.tx)}, ${sg(d.ty)} m`);}
+svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",release);
+
+/* =====================================================================
+   COMMANDS
+   ===================================================================== */
+function landOne(d){if(d.z<=0.02||S.stopped)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
+$("btnLandSel").addEventListener("click",()=>landOne(focusD()));
+$("btnLand").addEventListener("click",()=>{if(S.stopped)return;log("Land all");drones.forEach(d=>{if(d.z>0.02){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;}});});
+$("btnTakeoff").addEventListener("click",()=>{
+  if(S.stopped){S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";log("Emergency stop cleared by operator","ok");}
+  const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
+const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
+function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} / 1.0 s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
+function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
+function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s, cuts all motors";}
+function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="Motors cut";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
+estop.addEventListener("pointerdown",e=>{estop.setPointerCapture(e.pointerId);start();});
+estop.addEventListener("pointerup",cancel);estop.addEventListener("pointercancel",cancel);
+estop.addEventListener("keydown",e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat&&hs==null){e.preventDefault();start();}});
+estop.addEventListener("keyup",e=>{if(e.key===" "||e.key==="Enter")cancel();});
+
+/* =====================================================================
+   SIM CONTROLS (mockup only)
+   ===================================================================== */
+function syncSim(){document.querySelectorAll("#gestSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===S.gesture));document.querySelectorAll("#settings [data-t]").forEach(b=>b.setAttribute("aria-pressed",!!S[b.dataset.t]));}
+function setGesture(g){if(g===S.gesture)return;const was=S.gesture;S.gesture=g;const wa=was==="climb"||was==="descend";
+  if(gAct()&&!wa)log("Open palm confirmed, neutral point captured","ok");
+  if(g==="climb"||g==="descend")log(`Rate command ${sg(rateCmd())} m/s, shared by held units`);
+  if(g==="locked")log("Closed fist, altitude locked, neutral point discarded");if(g==="lost")log("Hand tracking lost, held units holding altitude","warn");
+  if(g==="idle")log("Gesture idle, waiting for open palm");syncSim();}
+document.querySelectorAll("#gestSeg button").forEach(b=>b.addEventListener("click",()=>setGesture(b.dataset.g)));
+$("camBtn").addEventListener("click",toggleCamera);
+document.querySelectorAll("#settings [data-t]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.t;S[k]=!S[k];syncSim();
+  if(k==="simHold")log(S.simHold?"DRONE 1 and DRONE 2 held (sim)":"DRONE 1 and DRONE 2 released (sim)");
+  if(k==="degraded")log(S.degraded?"Link degraded, radio 61%, backend latency high":"Links nominal",S.degraded?"warn":"ok");
+  if(k==="lowBatt"&&S.lowBatt)log("DRONE 3 battery 12%, below 20%, land DRONE 3","warn");
+  if(k==="cf3Lost")log(S.cf3Lost?"DRONE 3 connection lost":"DRONE 3 reconnected",S.cf3Lost?"crit":"ok");
+  if(k==="proximity"){const c2=drones[1],c3=drones[2];if(S.proximity){c3.tx=c2.x+0.17;c3.ty=c2.y+0.02;log("DRONE 3 target set near DRONE 2 (sim)");}else{c3.tx=2.96;c3.ty=0.45;}}}));
+$("simReset").addEventListener("click",()=>{pointers.clear();resetScenario();});
+
+/* =====================================================================
+   SETTINGS
+   ===================================================================== */
+const OPT={trails:true,labels:true,feeds:false,nfz:true,course:true,lefty:false,latch:false,feedSel:{cf1:true,cf2:false,cf3:false},feed:"cf1"};
+const feedCount=()=>1;
+const STEP={
+  zmin:{get:()=>CONFIG.z.min,set:v=>CONFIG.z.min=v,step:0.05,lo:0.10,hi:()=>CONFIG.z.max-0.30,fmt:v=>v.toFixed(2)+" m",name:"Minimum altitude"},
+  zmax:{get:()=>CONFIG.z.max,set:v=>CONFIG.z.max=v,step:0.05,lo:()=>CONFIG.z.min+0.30,hi:2.00,fmt:v=>v.toFixed(2)+" m",name:"Maximum altitude"},
+  takeoff:{get:()=>CONFIG.takeoffZ,set:v=>CONFIG.takeoffZ=v,step:0.05,lo:()=>CONFIG.z.min,hi:()=>CONFIG.z.max,fmt:v=>v.toFixed(2)+" m",name:"Takeoff height"},
+  rate:{get:()=>CONFIG.gestureRate,set:v=>CONFIG.gestureRate=v,step:0.05,lo:0.05,hi:0.40,fmt:v=>v.toFixed(2)+" m/s",name:"Gesture climb rate"},
+  aw:{get:()=>CONFIG.arena.xMax-CONFIG.arena.xMin,set:v=>{CONFIG.arena.xMin=0;CONFIG.arena.xMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Volume width"},
+  ad:{get:()=>CONFIG.arena.yMax-CONFIG.arena.yMin,set:v=>{CONFIG.arena.yMin=0;CONFIG.arena.yMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Volume depth"},
+  nfzr:{get:()=>CONFIG.nfz.h*2,set:v=>CONFIG.nfz.h=v/2,step:0.10,lo:0.30,hi:1.60,fmt:v=>v.toFixed(2)+" m",name:"No-fly size"},
+  prox:{get:()=>CONFIG.proxWarn,set:v=>CONFIG.proxWarn=v,step:0.05,lo:()=>CONFIG.proxCrit+0.05,hi:1.00,fmt:v=>v.toFixed(2)+" m",name:"Proximity warning"}
+};
+const val=x=>typeof x==="function"?x():x;
+function syncSettings(){
+  document.querySelectorAll(".stp").forEach(r=>{const c=STEP[r.dataset.k];r.querySelector("b").textContent=c.fmt(c.get());});
+  document.querySelectorAll("[data-o]").forEach(b=>b.setAttribute("aria-pressed",OPT[b.dataset.o]));
+  document.querySelectorAll("[data-fs]").forEach(b=>b.setAttribute("aria-checked",b.dataset.fs===OPT.feed));
+  $("toLbl").textContent=`to ${CONFIG.takeoffZ.toFixed(2)} m`;
+}
+document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.closest(".stp").dataset.k,c=STEP[k],v=Math.round((c.get()+(+b.dataset.d)*c.step)*100)/100,nv=clamp(v,val(c.lo),val(c.hi));
+  if(nv!==c.get()){c.set(nv);log(`${c.name} set to ${c.fmt(nv)}`);}
+  if(k==="zmin"||k==="zmax")CONFIG.takeoffZ=clamp(CONFIG.takeoffZ,CONFIG.z.min,CONFIG.z.max);
+  if(k==="aw"||k==="ad")layout();else buildMapStatic();
+  syncSettings();}));
+document.querySelectorAll("[data-o]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.o;OPT[k]=!OPT[k];
+  if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="course"){buildMapStatic();log(OPT.course?"Course obstacles shown":"Course obstacles hidden");}if(k==="nfz"){buildMapStatic();log(OPT.nfz?"No-fly zone enabled":"No-fly zone disabled",OPT.nfz?"info":"warn");}syncSettings();}));
+// 0–1 feeds: checkbox bar + the single feed sit under the CV camera (default).
+// 2–3 feeds: bar and feeds move into their own column, sized to fill its height.
+function placeFeeds(){
+  const n=feedCount(),col=$("feeds"),tiles=drones.map(d=>document.querySelector(`.dfeed[data-f="${d.id}"]`)).filter(Boolean);
+  if(n>=2){col.prepend($("fhead"));tiles.forEach(t=>col.appendChild(t));}
+  else{$("fheadSlot").appendChild($("fhead"));tiles.forEach(t=>{if(n===1&&OPT.feedSel[t.dataset.f])$("sideFeed").appendChild(t);else col.appendChild(t);});}
+}
+function applyFeeds(){
+  OPT.feeds=feedCount()>=2;
+  document.querySelectorAll(".dfeed").forEach(t=>t.classList.toggle("off",!OPT.feedSel[t.dataset.f]));
+  $("feeds").classList.remove("few");
+  placeFeeds();
+  $("app").classList.toggle("nofeeds",!OPT.feeds);syncSettings();layout();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;OPT.feed=k;S.focus=k;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===k);log(`Camera feed: ${U(k)}`);applyFeeds();renderSide();});
+$("fsBtn").addEventListener("click",()=>{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el);setTimeout(layout,300);});
+function toggleSettings(open){const o=open??$("settings").hidden;$("settings").hidden=!o;$("setBtn").setAttribute("aria-expanded",o);}
+$("setBtn").addEventListener("click",()=>toggleSettings());$("setBtn2").addEventListener("click",()=>toggleSettings());$("setClose").addEventListener("click",()=>toggleSettings(false));
+
+/* =====================================================================
+   RESPONSIVE LAYOUT
+   Landscape: size side columns so the map body is as close to square as
+   possible (no dead bands); spare width is shared by the side columns.
+   Portrait: map + altitude on top, unit panel + feeds below.
+   Compact (phones): single scrolling column, controls pinned at bottom.
+   ===================================================================== */
+const STAGE={w:1280,h:800};let SCALE=1;
+function fitStage(){
+  SCALE=Math.min(innerWidth/STAGE.w,innerHeight/STAGE.h);
+  $("stage").style.transform=`translate(-50%,-50%) scale(${SCALE})`;
+  const dpr=window.devicePixelRatio||1,phys=[Math.round(STAGE.w*SCALE*dpr),Math.round(STAGE.h*SCALE*dpr)];
+  const exact=Math.abs(SCALE-1)<0.005&&Math.abs(dpr-2)<0.01;
+  const el=$("dispInfo");if(el)el.innerHTML=`Target 11" 16:10, 2560 × 1600 px<br>Stage 1280 × 800 CSS px @2x<br>This screen: ${phys[0]} × ${phys[1]} px, scale ${SCALE.toFixed(3)}, DPR ${dpr}<br><span style="color:${exact?"var(--grn)":"var(--caut)"}">${exact?"Exact 1:1 match":"Scaled to fit this window"}</span>`;
+}
+function layout(){
+  fitStage();
+  const vw=STAGE.w,vh=STAGE.h,app=$("app"),fOn=OPT.feeds;
+  const mode=vw<700?"compact":(vw/vh<1.15?"portrait":"landscape");app.dataset.mode=mode;
+  const st=app.style;
+  if(mode==="landscape"){
+    const topH=56,botH=vh<700?56:64,bodyH=vh-topH-botH-8-2,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),squareMainW=(bodyH-46)*AR+42;
+    const nF=feedCount(),altW=96,feedW=fOn?Math.round(((bodyH-48-8)/3-28)*4/3+6):0; // fixed narrow column (three-feed width) so the map stays dominant
+    // width left for the side panel if the map were exactly square
+    const rest=vw-44-altW-feedW-squareMainW;
+    // wide (info beside camera) only when it fits without shrinking the map below square
+    const wide=false, sideW=Math.max(250,Math.min(380,rest));
+    $("side").classList.toggle("wide",wide);
+    st.gridTemplateRows=`${topH}px 1fr ${botH}px`;
+    const cols=["44px",`${sideW|0}px`,`${altW}px`,`${feedW}px`,"minmax(0,1fr)"],areas=["rail","side","alt","feeds","main"];
+    if(OPT.lefty){cols.reverse();areas.reverse();}   // mirror for left-handed operators: map on the left
+    st.gridTemplateColumns=cols.join(" ");
+    st.gridTemplateAreas=`"top top top top top" "${areas.join(" ")}" "plan plan plan plan plan"`;
+  }else if(mode==="portrait"){
+    $("side").classList.remove("wide");
+    const altW=Math.max(104,Math.min(130,vw*0.12)),mapW=vw-44-altW-10,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),rowMap=Math.min((mapW-32)/AR+56,(vh-104)*0.64);
+    st.gridTemplateRows=`40px ${rowMap|0}px 1fr 64px`;
+    st.gridTemplateColumns=OPT.lefty?`${altW|0}px 1fr 1fr 44px`:`44px 1fr 1fr ${altW|0}px`;
+    st.gridTemplateAreas=OPT.lefty?(fOn?`"top top top top" "alt main main rail" "feeds feeds side rail" "plan plan plan plan"`:`"top top top top" "alt main main rail" "side side side rail" "plan plan plan plan"`):fOn?`"top top top top" "rail main main alt" "rail side feeds feeds" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side side side" "plan plan plan plan"`;
+  }else{
+    $("side").classList.remove("wide");
+    st.gridTemplateRows=`40px ${Math.min(vw,vh*0.62)|0}px 240px auto auto auto`;
+    st.gridTemplateColumns="minmax(0,1fr)";
+    st.gridTemplateAreas=`"top" "main" "alt" "side" "feeds" "plan"`;
+  }
+  requestAnimationFrame(()=>{fitMap();measure();});
+}
+function measure(){
+  const t=$("tapeSvg").getBoundingClientRect();TW=Math.max(60,t.width/SCALE);TH=Math.max(200,t.height/SCALE);
+  drones.forEach(d=>{const e=$("fv-"+d.id);if(e){const r=e.getBoundingClientRect();FS[d.id]={w:Math.max(40,r.width/SCALE),h:Math.max(30,r.height/SCALE)};}});
+}
+const ro=new ResizeObserver(()=>{fitMap();measure();});
+window.addEventListener("resize",layout);
+window.addEventListener("orientationchange",()=>setTimeout(layout,150));
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("feeds"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
