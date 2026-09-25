@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Thesis UI">
+<meta name="theme-color" content="#181C18">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Thesis UI Mockup</title>
 <style>
 /* =====================================================================
@@ -1143,6 +1149,8 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
    INIT
    ===================================================================== */
 resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("feeds"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
+// PWA: offline support + home-screen install
+if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Service worker not registered",e));
 </script>
 </body>
 </html>
