@@ -644,11 +644,11 @@ function checkHoops(d,x0,y0,z0){if(!OPT.course)return;CONFIG.hoops.forEach(h=>{
 function flightState(d){
   if(S.stopped)return["Motors cut","crit"];
   if(connState(d)==="lost")return["No link","crit"];
+  if(d.hoopHold&&d.z>0.02)return[`Stopped at ${d.hoopHold}`,"caut"];
   if(d.landing)return d.z>0.02?["Landing","own"]:["Grounded",""];
   if(d.z<=0.02&&d.zTarget==null)return["Grounded",""];
   if(d.zTarget!=null)return["Taking off","own"];
   if(isHeld(d)&&S.gesture==="lost")return["Holding altitude","caut"];
-  if(d.hoopHold)return[`Stopped at ${d.hoopHold}`,"caut"];
   const mv=Math.hypot(d.tx-d.x,d.ty-d.y)>0.03||(isHeld(d)&&gAct()&&!(d.clampMax&&rateCmd()>0)&&!(d.clampMin&&rateCmd()<0));
   return mv?["Moving","own"]:["Hovering","ok"];
 }
