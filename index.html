@@ -521,7 +521,7 @@ async function startCamera(deviceId,quiet){
   $("camSw").hidden=CAM.devices.length<2;
   if(!was){log(`Tablet camera on${tr.label?`, ${tr.label}`:""}`,"ok");loadHands();}else log(`Camera switched to ${tr.label||"next camera"}`);
   return true;}
-async function switchCamera(){const L=CAM.devices||[];if(L.length<2)return;const i=L.findIndex(d=>d.deviceId===CAM.deviceId),next=L[(i+1)%L.length];CAM.lm=null;CAM.palmY=null;await startCamera(next.deviceId);}
+async function switchCamera(){const L=CAM.devices||[];if(L.length<2)return;const i=L.findIndex(d=>d.deviceId===CAM.deviceId),next=L[(i+1)%L.length];CAM.lm=null;CAM.neutral=null;await startCamera(next.deviceId);}
 function stopCamera(){CAM.stream&&CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.on=false;CAM.tracking=false;CAM.lm=null;
   const v=$("camVideo");v.srcObject=null;v.hidden=true;$("camSw").hidden=true;$("camBtnTxt").textContent="Enable camera";$("camBtn").classList.remove("on");camNote("");log("Tablet camera off");}
 // start the camera on load; if the browser wants a tap first, the Enable camera button stays available
@@ -548,25 +548,10 @@ function liveGesture(){if(!CAM.tracking)return;const L=CAM.lm;
   if(!L){if(gAct())setGesture("lost");CAM.label="";return;}
   const W=L[0],dd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let ext=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(dd(L[t],W)>dd(L[p],W)*1.12)ext++;});
   const open=ext>=4,fist=ext<=1;CAM.label=open?"Open Palm":fist?"Closed Fist":"";CAM.score=open||fist?0.95:0.6;
-  CAM.palmY=null;
-  if(fist){S.liveRate=0;if(S.gesture!=="locked")setGesture("locked");return;}
-  if(!open){S.liveRate=0;return;}   // half-open hand: hold, don't keep the last rate
-  CAM.palmY=palmY(L);S.liveRate=zoneRate(CAM.palmY);
-  if(!gAct())setGesture(S.liveRate<0?"descend":"climb");else if(S.liveRate)S.gesture=S.liveRate>0?"climb":"descend";}
-// Screen zones: palm in the centre band = hold, upper half = ascend, lower half = descend.
-// Rate grows with distance from the centre and reaches the "Gesture climb rate" setting at GZ.full.
-const GZ={db:0.08,full:0.35}; // fractions of frame height from the centre line
-const palmY=L=>(L[0].y+L[5].y+L[9].y+L[13].y+L[17].y)/5; // palm centre: wrist + finger bases
-function zoneRate(y){const off=0.5-y,a=Math.abs(off);if(a<=GZ.db)return 0;return Math.sign(off)*CONFIG.gestureRate*(0.3+0.7*Math.min(1,(a-GZ.db)/(GZ.full-GZ.db)));}
-// zone overlay on the gesture camera (viewBox 320x240; x 40..280 is what the square panel shows)
-function camZones(py,rate){const H=240,c=H/2,b=GZ.db*H,up=rate>0.001,dn=rate<-0.001,hold=py!=null&&!up&&!dn,F='font-family="Helvetica Neue,Helvetica,Arial,sans-serif"';let s="";
-  s+=`<rect x="0" y="0" width="320" height="${c-b}" fill="${K.grn}" fill-opacity="${up?.18:.05}"/><rect x="0" y="${c+b}" width="320" height="${H-c-b}" fill="${K.caut}" fill-opacity="${dn?.18:.05}"/><rect x="0" y="${c-b}" width="320" height="${2*b}" fill="#fff" fill-opacity="${hold?.14:.04}"/>`;
-  s+=`<g stroke="#fff" stroke-dasharray="4 4"><line x1="0" y1="${c-b}" x2="320" y2="${c-b}" stroke-opacity=".35"/><line x1="0" y1="${c+b}" x2="320" y2="${c+b}" stroke-opacity=".35"/><line x1="0" y1="${c}" x2="320" y2="${c}" stroke-opacity=".7" stroke-dasharray="2 3"/></g>`;
-  s+=`<text x="48" y="${c-b-7}" fill="${K.grn}" fill-opacity="${up?1:.55}" font-size="11" font-weight="700" ${F}>▲ ASCEND</text>`;
-  s+=`<text x="48" y="${c+4}" fill="#fff" fill-opacity="${hold?1:.55}" font-size="10" font-weight="700" ${F}>NEUTRAL · HOLD</text>`;
-  s+=`<text x="48" y="${c+b+15}" fill="${K.caut}" fill-opacity="${dn?1:.55}" font-size="11" font-weight="700" ${F}>▼ DESCEND</text>`;
-  if(py!=null){const y=clamp(py*H,2,H-2),col=up?K.grn:dn?K.caut:"#fff";s+=`<line x1="268" y1="${c}" x2="268" y2="${y}" stroke="${col}" stroke-width="2.5"/><circle cx="268" cy="${y}" r="5" fill="${col}" stroke="#000" stroke-width="1"/>`;}
-  return s;}
+  if(fist){if(S.gesture!=="locked"){CAM.neutral=null;setGesture("locked");}return;}
+  if(open){ if(!gAct()){CAM.neutral=W.y;S.liveRate=0;setGesture("climb");}
+    const disp=CAM.neutral-W.y;S.liveRate=clamp(disp*1.6,-2*CONFIG.gestureRate,2*CONFIG.gestureRate); // proportional, up to a max rate
+    S.gesture=S.liveRate>=0?"climb":"descend";}}
 const rateCmd=()=>CAM.tracking&&gAct()?S.liveRate:S.gesture==="climb"?CONFIG.gestureRate:S.gesture==="descend"?-CONFIG.gestureRate:0;
 const focusD=()=>drones.find(d=>d.id===S.focus);
 function log(text,k="info"){S.log.push({t:S.t,text,k});renderLog();}
@@ -825,10 +810,12 @@ function renderTapes(){
 const PALM=[[100,130],[80,120],[66,105],[56,92],[48,80],[85,90],[82,68],[80,54],[79,42],[100,88],[100,63],[100,48],[100,35],[114,90],[117,67],[119,53],[120,42],[126,96],[133,79],[137,68],[140,58]];
 const FIST=[[100,130],[80,120],[74,108],[82,100],[92,98],[85,90],[84,76],[90,82],[92,92],[100,88],[100,74],[104,82],[104,92],[114,90],[114,76],[116,84],[114,93],[126,96],[128,84],[128,92],[124,98]];
 const BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
-const HX=40,HY=37,OFF=50,MMPX=1.6,NEUT=120; // simulated palm centre sits on the screen centre line (NEUT), OFF moves it into a zone
+const HX=40,HY=50,OFF=24,MMPX=1.6,NEUT=130-5+HY; // neutral = wrist landmark height
 function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
-  if(CAM.tracking)s+=camZones(CAM.palmY,g==="locked"?0:S.liveRate);
   if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(CAM.mirror?1-p.x:p.x)*W,p.y*H]);  // matches the preview (mirrored for the front camera)
+    if(gAct()&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1];
+      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-8}" y="${ny-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist)</text>`;
+      s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
     s+=`<g stroke="${K.own}" stroke-width="2" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}</g>`;
     P.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===0?3.5:2.4}" fill="${K.friend}"/>`);
     if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label,w=lbl.length*6.3+12;
@@ -840,7 +827,8 @@ function renderCam(){
   if(CAM.on){renderLiveCam();return;}
   const g=S.gesture,wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob,conf=g==="locked"?93:96;let s="";
   s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${gAct()||g==="locked"?" · SIMULATED GESTURE":""}</text>`;
-  if(gAct())s+=camZones((NEUT+dy)/240,g==="climb"?1:-1);
+  if(gAct()){s+=`<line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="312" y="${NEUT-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
+    const cy=NEUT+dy;s+=`<line x1="20" y1="${NEUT}" x2="20" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M14 ${cy+(dy<0?6:-6)}L20 ${cy}L26 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
   if(gAct()||g==="locked"){
     const pts=(g==="locked"?FIST:PALM).map(([x,y])=>[x+HX,y-5+HY+(g==="locked"?wob:dy)]);
     s+=`<g stroke="${K.own}" stroke-width="1.5" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}"/>`).join("")}</g>`;
@@ -920,7 +908,7 @@ function renderSide(){
   if(window.__ready&&OPT.feed!==d.id){OPT.feed=d.id;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===d.id);applyFeeds();}
   // Essential only: what the gesture is commanding, and to which drones
   const g=S.gesture,hl=drones.filter(isHeld).map(x=>U(x.id)),to=hl.length?hl.join(" + "):"no drone held";let main,sub,k;
-  if(g==="climb"||g==="descend"){if(hl.length){main=Math.abs(rateCmd())<0.01?"Palm at centre, holding":`${g==="climb"?"▲ Climbing":"▼ Descending"} ${Math.abs(rateCmd()).toFixed(2)} m/s`;sub=to;k="ok";}else{main="Hold a drone to use altitude";sub="Gesture active";k="idle";}}
+  if(g==="climb"||g==="descend"){if(hl.length){main=Math.abs(rateCmd())<0.01?"Palm at neutral, holding":`${g==="climb"?"▲ Climbing":"▼ Descending"} ${Math.abs(rateCmd()).toFixed(2)} m/s`;sub=to;k="ok";}else{main="Hold a drone to use altitude";sub="Gesture active";k="idle";}}
   else if(g==="locked"){main="Altitude locked";sub=to;k="lock";}
   else if(g==="lost"){main="Hand lost, holding altitude";sub=to;k="warn";}
   else{main="Show open palm to start";sub="";k="idle";}
@@ -1067,9 +1055,9 @@ estop.addEventListener("keyup",e=>{if(e.key===" "||e.key==="Enter")cancel();});
    ===================================================================== */
 function syncSim(){document.querySelectorAll("#gestSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===S.gesture));document.querySelectorAll("#settings [data-t]").forEach(b=>b.setAttribute("aria-pressed",!!S[b.dataset.t]));}
 function setGesture(g){if(g===S.gesture)return;const was=S.gesture;S.gesture=g;const wa=was==="climb"||was==="descend";
-  if(gAct()&&!wa)log("Open palm, altitude control on: centre holds, upper half ascends, lower half descends","ok");
+  if(gAct()&&!wa)log("Open palm confirmed, neutral point captured","ok");
   if(g==="climb"||g==="descend")log(`Rate command ${sg(rateCmd())} m/s, shared by held units`);
-  if(g==="locked")log("Closed fist, altitude locked");if(g==="lost")log("Hand tracking lost, held units holding altitude","warn");
+  if(g==="locked")log("Closed fist, altitude locked, neutral point discarded");if(g==="lost")log("Hand tracking lost, held units holding altitude","warn");
   if(g==="idle")log("Gesture idle, waiting for open palm");syncSim();}
 document.querySelectorAll("#gestSeg button").forEach(b=>b.addEventListener("click",()=>setGesture(b.dataset.g)));
 $("camBtn").addEventListener("click",toggleCamera);$("camSw").addEventListener("click",switchCamera);
