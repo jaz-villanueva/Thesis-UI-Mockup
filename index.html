@@ -578,6 +578,13 @@ function clearBoxes(d,x,y,buf){let r={x,y,moved:false,box:null};if(!OPT.course)r
   CONFIG.boxes.forEach(b=>{const o=outsideRect(r.x,r.y,b.x,b.y,b.hx,b.hy,buf);if(o.moved)r={x:o.x,y:o.y,moved:true,box:b.id,nx:o.nx,ny:o.ny};});return r;}
 const rectDist=(x,y,cx,cy,hx,hy)=>Math.hypot(Math.max(Math.abs(x-cx)-hx,0),Math.max(Math.abs(y-cy)-hy,0));
 const OBS_WARN=0.30,OBS_CRIT=0.08; // d_buf edge (0.15 m) reads amber, not red
+const HOOP_WARN=0.12,HOOP_CRIT=0.06; // clearance to the hoop ring; a centred pass through a 0.20 m hoop stays clear
+// 3D distance from a drone to a hoop's ring (the frame, not the opening) and the nearest rim point
+function hoopRim(h,d){const a=(h.ang||0)*Math.PI/180,n=h.type==="horizontal"?[0,0,1]:[-Math.sin(a),Math.cos(a),0],
+  v=[d.x-h.x,d.y-h.y,d.z-h.z],vn=v[0]*n[0]+v[1]*n[1]+v[2]*n[2],p=[v[0]-vn*n[0],v[1]-vn*n[1],v[2]-vn*n[2]],pl=Math.hypot(p[0],p[1],p[2])||1e-6;
+  return{dist:Math.hypot(vn,pl-h.r),pt:[h.x+p[0]/pl*h.r,h.y+p[1]/pl*h.r,h.z+p[2]/pl*h.r]};}
+// plan-view half extents of a hoop, for the map highlight
+function hoopFoot(h){if(h.type==="horizontal")return[h.r,h.r];const a=h.ang*Math.PI/180;return[Math.abs(Math.cos(a))*h.r+0.04,Math.abs(Math.sin(a))*h.r+0.04];}
 function obstacleList(){const L=[];if(OPT.course)CONFIG.boxes.forEach(b=>L.push({id:b.id,name:b.id,x:b.x,y:b.y,hx:b.hx,hy:b.hy}));
   if(OPT.nfz){const N=CONFIG.nfz;L.push({id:"NFZ",name:"No-fly zone",x:N.x,y:N.y,hx:N.h,hy:N.h});}return L;}
 function detectObstacles(){const near={};
@@ -587,6 +594,12 @@ function detectObstacles(){const near={};
       if(dist<OBS_WARN&&!was){S.obsNear[key]=true;log(`${U(d.id)} near ${o.name}, ${dist.toFixed(2)} m`,dist<OBS_CRIT?"crit":"warn");}
       else if(dist>=OBS_WARN+0.05&&was)delete S.obsNear[key];});
     if(best)near[o.id]={...o,dist:best.dist,drone:best.d};});
+  if(OPT.course)CONFIG.hoops.forEach(h=>{let best=null;
+    drones.forEach(d=>{if(!airborne(d))return;const r=hoopRim(h,d),key=d.id+"|"+h.id,was=S.obsNear[key];
+      if(r.dist<HOOP_WARN&&(!best||r.dist<best.dist))best={dist:r.dist,d,pt:r.pt};
+      if(r.dist<HOOP_WARN&&!was){S.obsNear[key]=true;log(`${U(d.id)} near ${h.id} rim, ${r.dist.toFixed(2)} m`,r.dist<HOOP_CRIT?"crit":"warn");}
+      else if(r.dist>=HOOP_WARN+0.03&&was)delete S.obsNear[key];});
+    if(best){const[fx,fy]=hoopFoot(h);near[h.id]={id:h.id,name:h.id,x:h.x,y:h.y,hx:fx,hy:fy,dist:best.dist,drone:best.d,pt:best.pt,hoop:true};}});
   S.obsHi=near;}
 // green (clear) -> amber (near) -> red (contact / collision)
 function threatColor(t){const L=(a,b,k)=>Math.round(a+(b-a)*k),A=[95,208,104],B=[255,154,31],C=[242,69,61];
@@ -710,10 +723,10 @@ function renderMap(){
     for(let i=1;i<T.length;i++){const age=S.t-T[i][2];if(age>LIFE)continue;const a=1-age/LIFE;
       g+=`<line x1="${px(T[i-1][0]).toFixed(1)}" y1="${py(T[i-1][1]).toFixed(1)}" x2="${px(T[i][0]).toFixed(1)}" y2="${py(T[i][1]).toFixed(1)}" stroke="${K.grn}" stroke-width="${(0.8+2.6*a).toFixed(2)}" stroke-opacity="${(0.75*a*a).toFixed(3)}" stroke-linecap="round"/>`;}});
   // obstacle detection highlight
-  Object.values(S.obsHi||{}).forEach(o=>{const crit=o.dist<OBS_CRIT,col=crit?K.crit:K.caut,X=px(o.x-o.hx)-4,Y=py(o.y+o.hy)-4,W=2*o.hx*SC+8,H=2*o.hy*SC+8;
+  Object.values(S.obsHi||{}).forEach(o=>{const crit=o.dist<(o.hoop?HOOP_CRIT:OBS_CRIT),col=crit?K.crit:K.caut,X=px(o.x-o.hx)-4,Y=py(o.y+o.hy)-4,W=2*o.hx*SC+8,H=2*o.hy*SC+8;
     g+=`<rect class="blink" x="${X}" y="${Y}" width="${W}" height="${H}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="7 4"/>`;
-    const tx=px(o.x),ty=Y-8;g+=`<g transform="translate(${tx},${ty})"><rect x="-58" y="-12" width="116" height="18" fill="#0B100C" stroke="${col}"/><text x="0" y="1.5" fill="${col}" font-size="10" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${crit?"CONTACT RISK":"OBSTACLE"} ${o.dist.toFixed(2)} m</text></g>`;
-    const D=o.drone,cx=clamp(D.x,o.x-o.hx,o.x+o.hx),cy=clamp(D.y,o.y-o.hy,o.y+o.hy);g+=`<line x1="${px(D.x)}" y1="${py(D.y)}" x2="${px(cx)}" y2="${py(cy)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;});
+    const tx=px(o.x),ty=Y-8;g+=`<g transform="translate(${tx},${ty})"><rect x="-58" y="-12" width="116" height="18" fill="#0B100C" stroke="${col}"/><text x="0" y="1.5" fill="${col}" font-size="10" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${o.hoop?(crit?"RIM CONTACT":"HOOP RIM"):(crit?"CONTACT RISK":"OBSTACLE")} ${o.dist.toFixed(2)} m</text></g>`;
+    const D=o.drone,cx=o.pt?o.pt[0]:clamp(D.x,o.x-o.hx,o.x+o.hx),cy=o.pt?o.pt[1]:clamp(D.y,o.y-o.hy,o.y+o.hy);g+=`<line x1="${px(D.x)}" y1="${py(D.y)}" x2="${px(cx)}" y2="${py(cy)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;});
   S.prox.forEach((dist,key)=>{const[a,b]=key.split("|").map(id=>drones.find(d=>d.id===id)),crit=dist<CONFIG.proxCrit,col=crit?K.crit:K.caut,mx=(px(a.x)+px(b.x))/2,my=(py(a.y)+py(b.y))/2;
     g+=`<line x1="${px(a.x)}" y1="${py(a.y)}" x2="${px(b.x)}" y2="${py(b.y)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
     [a,b].forEach(d=>g+=`<circle class="blink" cx="${px(d.x)}" cy="${py(d.y)}" r="30" fill="none" stroke="${col}" stroke-width="2"/>`);
@@ -964,6 +977,7 @@ function update(dt){
   // threat level per drone (0 = clear, 1 = contact/collision) from nearest obstacle or other drone
   drones.forEach(d=>{let lv=0;if(airborne(d)){
       obstacleList().forEach(o=>{const r=rectDist(d.x,d.y,o.x,o.y,o.hx,o.hy);lv=Math.max(lv,clamp((OBS_WARN-r)/(OBS_WARN-OBS_CRIT),0,1));});
+      if(OPT.course)CONFIG.hoops.forEach(h=>{const r=hoopRim(h,d).dist;lv=Math.max(lv,clamp((HOOP_WARN-r)/(HOOP_WARN-HOOP_CRIT),0,1));});
       drones.forEach(e=>{if(e===d||!airborne(e))return;const r=Math.hypot(d.x-e.x,d.y-e.y);lv=Math.max(lv,clamp((CONFIG.proxWarn-r)/(CONFIG.proxWarn-CONFIG.proxCrit),0,1));});}
     d.threat=d.threat==null?lv:d.threat+(lv-d.threat)*0.25;});
   detectObstacles();
