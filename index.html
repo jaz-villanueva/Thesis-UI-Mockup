@@ -853,7 +853,8 @@ function resetScenario(){
 }
 /* ---------- restricted zone: interface-level, course trials only (§1.7.6) ---------- */
 // The restricted zone is "only active while the lap-course trials are being run" (§1.7.6), so it applies while a trial runs.
-function restrictedZones(){const N=CONFIG.nfz;return S.trial.running?[{id:"NFZ",name:"restricted zone",x:N.x,y:N.y,hx:N.h,hy:N.h}]:[];}
+// Blocked at all times (project decision DEC-20, stricter than §1.7.6); restriction triggers are counted only in trials.
+function restrictedZones(){const N=CONFIG.nfz;return[{id:"NFZ",name:"restricted zone",x:N.x,y:N.y,hx:N.h,hy:N.h}];}
 // green (clear) -> amber (near) -> red (at the defensive-hover distance)
 const PROX_R=40;   // proximity ring radius in px: about 2.5 fingertip radii, so a finger on the icon leaves it visible
 function threatColor(t){const L=(a,b,k)=>Math.round(a+(b-a)*k),A=K.threatA,B=[255,154,31],C=[242,69,61];
@@ -869,7 +870,9 @@ function droneBlocked(d,ax,ay,bx,by){for(const e of drones){if(e===d||!airborne(
     const ez=e.zTarget!=null?e.zTarget:e.z;if(Math.abs(d.z-e.z)>=CONFIG.droneVsep&&Math.abs(d.z-ez)>=CONFIG.droneVsep)continue;
     for(const[cx,cy] of [[e.x,e.y],[e.tx,e.ty]]){const d0=Math.hypot(ax-cx,ay-cy),dm=segMinDist(ax,ay,bx,by,cx,cy);if(dm<CONFIG.droneBuf&&dm<d0-1e-4)return U(e.id);}}
   return null;}
-function dragPathBlocked(d,ax,ay,bx,by){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;
+function dragPathBlocked(d,ax,ay,bx,by){const B=CONFIG.zoneMargin;for(const o of restrictedZones()){
+    if(Math.abs(ax-o.x)<o.hx+B&&Math.abs(ay-o.y)<o.hy+B)continue;   // a drone already inside (e.g. after a layout sync) may be dragged out
+    if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;}
   return dragBlocked(bx,by)||droneBlocked(d,ax,ay,bx,by)||droneBlocked(d,d.x,d.y,bx,by);}
 function segHitsRect(ax,ay,bx,by,cx,cy,hx,hy){let t0=0,t1=1;const dx=bx-ax,dy=by-ay;
   const P=[-dx,dx,-dy,dy],Q=[ax-(cx-hx),(cx+hx)-ax,ay-(cy-hy),(cy+hy)-ay];
@@ -1016,16 +1019,11 @@ function buildMapStatic(){
   }
   // drag margin around the restricted zone (where drags stop)
   restrictedZones().forEach(o=>{const B=CONFIG.zoneMargin;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" fill="none" stroke="${K.tx}" stroke-opacity=".18" stroke-width="1" stroke-dasharray="2 4"/>`;});
-  // restricted zone: active only in course-trial mode
+  // restricted zone: drags into it are always rejected
   const N=CONFIG.nfz,s0=N.h*SC;
-  if(S.trial.running){
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="${K.crit}" fill-opacity=".10"/>`;
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" stroke="${K.crit}" stroke-width="2.5"/>`;
     g+=`<rect x="${px(N.x)-52}" y="${py(N.y)-10}" width="104" height="20" fill="${K.critBg}" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">RESTRICTED</text>`;
-  }
-  else{ // shown between trials too, so the operator always knows where it is; drags are only blocked during a trial
-    g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" fill-opacity=".45" stroke="${K.crit}" stroke-opacity=".7" stroke-width="2" stroke-dasharray="7 5"/>`;
-    g+=`<rect x="${px(N.x)-58}" y="${py(N.y)-15}" width="116" height="30" fill="${K.critBg}" fill-opacity=".9" stroke="${K.crit}" stroke-opacity=".6"/><text x="${px(N.x)}" y="${py(N.y)-2}" fill="${K.crit}" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">RESTRICTED</text><text x="${px(N.x)}" y="${py(N.y)+10}" fill="${K.crit}" fill-opacity=".8" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">active in trials</text>`;}
   $("mapStatic").innerHTML=g;
 }
 function renderMap(){
@@ -1299,7 +1297,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
     <dt>Paused by</dt><dd class="${S.altBlock?"warn":""}">${S.altBlock?`${U(S.altBlock.d.id)}, ${S.altBlock.why}`:"--"}</dd>
     <dt>Limits</dt><dd>${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m, max ${CONFIG.rateMax.toFixed(2)} m/s</dd>`;
   const T=S.trial,L=T.last;
-  $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>${T.running?"Active":"Inactive (no trial running)"}</dd>
+  $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>Blocking drags</dd>
     <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?OUT[L.outcome]:"Not started"}</dd>
     <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
     <dt>Hoops passed</dt><dd>${T.running&&T.prog?drones.map(d=>`${d.id.slice(2)}: ${T.prog[d.id]}/${CONFIG.hoops.length}`).join(", "):"--"}</dd>
@@ -1493,7 +1491,7 @@ function startTrial(){const T=S.trial;if(T.running)return;const why=trialBlocker
   // "A trial starts with the system bringing up telemetry and the video feed" (§1.7.6): the clock starts here
   if(TAB!=="map")setTab("map");if(!OPT.feed||!drones.some(d=>d.id===OPT.feed))setVideo("cf1",true);
   Object.assign(T,{running:true,t0:S.t,dh:0,restrict:0,last:null,prog:Object.fromEntries(drones.map(d=>[d.id,0])),home:{}});S.curTrial=trialId();S.alert=null;buildMapStatic();
-  log(`Trial ${trialId()} started: telemetry and video feed up, restricted zone active`,"ok");}
+  log(`Trial ${trialId()} started: telemetry and video feed up`,"ok");}
 // completed when every drone has passed H1, H2, H3 in order and is on the ground at its own start position
 function trialDone(){const T=S.trial,n=CONFIG.hoops.length;
   return drones.every(d=>T.prog[d.id]>=n&&d.z<=0.02&&d.zTarget==null&&!d.crashed&&atPad(d));}
