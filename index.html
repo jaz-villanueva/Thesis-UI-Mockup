@@ -50,7 +50,7 @@ svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-nu
    On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
 html,body{background:#000}
 .stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:56px 1fr 64px;grid-template-columns:44px 236px 96px 1fr 236px;grid-template-areas:"top top top top top" "rail side alt main vid" "plan plan plan plan plan";position:relative}
+.app{display:grid;height:800px;grid-template-rows:56px 1fr 64px;grid-template-columns:44px 236px 96px 1fr;grid-template-areas:"top top top top" "rail side alt main" "plan plan plan plan";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:18px}
@@ -123,7 +123,8 @@ html,body{background:#000}
 .mapcard{flex:1;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--panel);min-width:0;min-height:0}
 .mtool{display:flex;align-items:center;height:34px;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .mtool>*{height:100%;display:flex;align-items:center;padding:0 10px;border-right:1px solid var(--line);white-space:nowrap}
-.mtool .tab{font-weight:700;font-size:14px;color:var(--grn);box-shadow:inset 0 -3px 0 var(--grn)}
+.mtool .tab{font-weight:600;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-2)}
+.mtool .tab[aria-selected="true"]{color:var(--grn);box-shadow:inset 0 -3px 0 var(--grn)}
 .mtool .coord{min-width:170px;gap:8px;color:var(--tx-2);font-family:var(--fm);font-size:13px}
 .mtool .sp{flex:1;border-right:0}
 .mtool .dd{border-left:1px solid var(--line);border-right:0;font-size:13px;color:var(--tx-2);gap:8px}
@@ -297,18 +298,46 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .cbs[aria-checked="true"]{color:var(--grn-tx);border-color:var(--grn-2)}
 .cbs[aria-checked="true"]::before{background:var(--grn) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%230C0F0C' stroke-width='2.2'/%3E%3C/svg%3E") center/100% no-repeat;border-color:var(--grn)}
 /* all feeds off: column collapses to a slim strip that keeps the checkboxes */
-/* right panel: the single video feed and the held drones' altitude (§1.7.3.5) */
-.vid{grid-area:vid;padding:4px 4px 4px 0;display:flex;min-height:0}
-.app.lefty .vid{padding:4px 0 4px 4px}
-.vhead{height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--panel-2);color:var(--grn-tx);border-left:3px solid var(--grn-2);border-bottom:1px solid var(--line);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.vhead span{font-size:10px;font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--tx-3)}
-.vbody{flex:1;min-height:0;overflow:auto;padding:0 4px 4px;display:flex;flex-direction:column;gap:4px}
-.heldalt{border:1px solid var(--line);background:var(--panel-2);padding:6px 8px;display:flex;flex-direction:column;gap:4px;font-size:13px}
-.heldalt .t{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--grn-tx)}
-.heldalt div{display:flex;justify-content:space-between;gap:8px}
-.heldalt b{color:var(--own);font-weight:600} .heldalt .none{color:var(--tx-3)}
+/* video feed section under the hand camera, and the per-drone take off / land pair */
+#secVid .sbody{padding:0 4px 4px;display:flex;flex-direction:column;gap:4px}
+.side #secVid>button{height:30px}
+.side .feed{aspect-ratio:4/3}
+#sideFeed .dfeed svg{aspect-ratio:4/3!important}
+.heldalt{border:1px solid var(--line);background:var(--panel-2);padding:5px 8px;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12px}
+.heldalt .t{width:100%;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--grn-tx)}
+.heldalt b{color:var(--own);font-weight:600;margin-left:4px} .heldalt .none{color:var(--tx-3)}
+.side .act{padding:6px}
+.pair{flex:1;height:52px;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-weight:700;font-size:14px;line-height:1.15}
+.pair small{font-size:11px;font-weight:600;letter-spacing:.04em;opacity:.8}
+.pair.to{border:1px solid var(--grn-2);background:var(--grn-dim);color:var(--grn-tx)}
+.pair.to:active{border-color:var(--grn)}
+.pair.ld{background:var(--task);color:#07120A}
+.pair.ld:active{background:#3E9A48}
+.pair[disabled]{background:var(--panel-3);border-color:var(--line);color:var(--tx-3);cursor:not-allowed}
+/* telemetry / logs tab */
+.telpane{flex:1;min-height:0;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px;background:#0A0E0B}
+.telpane[hidden],.mapbody[hidden]{display:none}
+.tel-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tcard{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tcard h3{height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grn-tx)}
+.tcard h3 span{font-weight:500;letter-spacing:0;text-transform:none;color:var(--tx-3)}
+.tscroll{overflow-x:auto}
+.ttab{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.ttab th{text-align:right;font-weight:600;color:var(--tx-3);font-size:11px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ttab td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ttab tr:last-child td{border-bottom:0}
+.ttab thead tr:first-child th:nth-child(-n+2),.ttab td:nth-child(-n+2){text-align:left}
+.ttab .grp{text-align:center;color:var(--grn-tx);border-bottom:1px solid var(--line-2)}
+.ttab .warn{color:var(--caut)} .ttab .crit{color:var(--crit)} .ttab .ok{color:var(--grn)} .ttab .own{color:var(--own)} .ttab .caut{color:var(--caut)} .ttab .dim{color:var(--tx-3)}
+.kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;padding:8px 10px;margin:0;font-size:12.5px}
+.kvs dt{color:var(--tx-2)} .kvs dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.kvs dd.warn{color:var(--caut)} .kvs dd.crit{color:var(--crit)} .kvs dd.ok{color:var(--grn)}
+.tlog{flex:1;min-height:180px}
+.tlog ol{list-style:none;margin:0;padding:0 10px;overflow:auto;flex:1;min-height:0}
+.tlog li{display:grid;grid-template-columns:92px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tlog .t{color:var(--tx-2);font-size:12px;font-variant-numeric:tabular-nums}
 /* top bar: per-drone telemetry and the trial clock */
-.dstat{display:flex;gap:6px;margin-left:10px}
+.dstat{display:flex;gap:6px}
 .ds{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;border:1px solid var(--line-2);background:var(--bg);font-size:12px;white-space:nowrap}
 .ds b{font-weight:700;letter-spacing:.03em}
 .ds .v{color:var(--tx-2)} .ds .v.warn{color:var(--caut)}
@@ -367,7 +396,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== TOP BAR =============================== -->
 <header class="top">
-  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L21 19 H3 Z" fill="none" stroke="#EDEDEE" stroke-width="1.6"/><path d="M12 9 L16 16 H8 Z" fill="#EDEDEE"/></svg>
   <div class="dstat" id="dstat" aria-label="Drone telemetry">
     <span class="ds" id="ds-cf1"><i class="sd"></i><b>DRONE 1</b><span class="m v">--</span><em>--</em></span>
     <span class="ds" id="ds-cf2"><i class="sd"></i><b>DRONE 2</b><span class="m v">--</span><em>--</em></span>
@@ -390,7 +418,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== SIDE PANEL =============================== -->
 <aside class="side" id="side">
-  <section class="card" aria-label="Hand camera">
+  <section class="card" aria-label="Hand camera and video feed">
     <div class="scroll">
       <div class="sec" id="secCam">
         <button aria-expanded="true">Gesture Camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -402,6 +430,18 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
           <div class="gstat" id="gstat"><b id="gMain">--</b><span id="gSub"></span></div>
         </div>
       </div>
+      <div class="sec" id="secVid">
+        <button aria-expanded="true">Video Feed<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
+        <div class="sbody">
+          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><span class="fl">SHOW</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
+          <div id="sideFeed"></div>
+          <div class="heldalt" id="heldAlt"></div>
+        </div>
+      </div>
+    </div>
+    <div class="act">
+      <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
+      <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
     </div>
   </section>
 </aside>
@@ -413,28 +453,26 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== MAP =============================== -->
 <main class="main">
-  <section class="mapcard" aria-label="Arena map">
-    <div class="mapbody">
+  <section class="mapcard" aria-label="Arena map and telemetry">
+    <div class="mtool" role="tablist" aria-label="Main view">
+      <button class="tab" role="tab" id="tabMap" aria-selected="true" aria-controls="mapbody">Map</button>
+      <button class="tab" role="tab" id="tabTel" aria-selected="false" aria-controls="telPane">Telemetry / Logs</button>
+      <span class="sp"></span>
+    </div>
+    <div class="mapbody" id="mapbody" role="tabpanel" aria-labelledby="tabMap">
       <div class="mapchip"><span class="scale"><i id="scaleBar"></i><span class="m">1 m</span></span><span class="m" id="cursor">--</span></div>
       <svg id="mapSvg" viewBox="0 0 600 600" preserveAspectRatio="none" role="application" aria-label="Tap a unit to select, hold and drag to set target"><g id="mapStatic"></g><g id="mapDyn"></g></svg>
     </div>
+    <div class="telpane" id="telPane" role="tabpanel" aria-labelledby="tabTel" hidden>
+      <section class="tcard"><h3>Drones<span>telemetry at 5 Hz</span></h3><div class="tscroll"><table class="ttab" id="telTable"></table></div></section>
+      <div class="tel-row">
+        <section class="tcard"><h3>Altitude channel</h3><dl class="kvs" id="telAlt"></dl></section>
+        <section class="tcard"><h3>Trial</h3><dl class="kvs" id="telTrial"></dl></section>
+      </div>
+      <section class="tcard tlog"><h3>Event log<span id="logCount"></span></h3><ol id="telLog"></ol></section>
+    </div>
   </section>
 </main>
-
-<!-- =============================== VIDEO FEED (right panel, §1.7.3.5) =============================== -->
-<aside class="vid" id="vid" aria-label="Video feed">
-  <section class="card">
-    <div class="vhead">Video feed<span>one drone at a time</span></div>
-    <div class="vbody">
-      <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><span class="fl">SHOW</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
-      <div id="sideFeed"></div>
-      <div class="heldalt" id="heldAlt"></div>
-    </div>
-    <div class="act">
-      <button class="primary" id="btnLandSel">Land DRONE 1</button>
-    </div>
-  </section>
-</aside>
 
 <!-- hidden store for the video tiles that are not shown -->
 <aside class="feeds" aria-label="Drone camera feeds" id="feeds"></aside>
@@ -956,8 +994,10 @@ function renderSide(){
   else{main="Show an open palm to start";sub="";k="idle";}
   const gs=$("gstat");gs.dataset.k=k;$("gMain").textContent=main;$("gSub").textContent=sub;
   // right panel: the video drone, independent of touch (DEC-08), and the held drones' altitude
-  const v=videoD(),btn=$("btnLandSel");btn.textContent=`Land ${U(v.id)}`;btn.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
-  $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<div><span>${U(d.id)}</span><b class="m">${d.z.toFixed(2)} m</b></div>`).join(""):`<div class="none">No drone held</div>`);
+  const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
+  bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
+  bt.querySelector("small").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
+  $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<span>${U(d.id)}<b class="m">${d.z.toFixed(2)} m</b></span>`).join(""):`<span class="none">No drone held</span>`);
 }
 
 /* =====================================================================
@@ -995,6 +1035,37 @@ function renderLog(){
   $("logLatest").innerHTML=L?`<span class="t">T+${fmtT(L.t)}</span>${L.text}`:"";$("lastDot").dataset.k=L?L.k:"";
   $("logList").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");
 }
+/* ---------- Telemetry / Logs tab ---------- */
+let TAB="map";
+function setTab(t){if(t===TAB)return;TAB=t;
+  $("tabMap").setAttribute("aria-selected",t==="map");$("tabTel").setAttribute("aria-selected",t==="tel");
+  $("mapbody").hidden=t!=="map";$("telPane").hidden=t!=="tel";
+  if(t==="tel"){ // the map is hidden, so nothing can stay held by a finger on it
+    pointers.clear();drones.forEach(d=>{if(d.pHeld){d.pHeld=false;d.blocked=null;d.blockPt=null;log(`${U(d.id)} released (map hidden)`);}});renderTelemetry();}
+  else requestAnimationFrame(()=>{fitMap();measure();});}
+$("tabMap").addEventListener("click",()=>setTab("map"));$("tabTel").addEventListener("click",()=>setTab("tel"));
+function rangeCell(d,k){const r=d.ranges&&d.ranges[k];if(!airborne(d))return`<td class="dim">--</td>`;if(r==null)return`<td class="dim">&gt;4 m</td>`;
+  return`<td class="${r<MR.trig?"crit":r<MR.show?"warn":""}">${r.toFixed(2)}</td>`;}
+function renderTelemetry(){if(TAB!=="tel")return;
+  let h=`<thead><tr><th rowspan="2">Drone</th><th rowspan="2">State</th><th rowspan="2">Link</th><th rowspan="2">Battery</th><th colspan="3" class="grp">Position (m)</th><th colspan="2" class="grp">Target (m)</th><th colspan="5" class="grp">Multi-ranger (m)</th><th rowspan="2">Held</th></tr>
+    <tr><th>x</th><th>y</th><th>z</th><th>x</th><th>y</th><th>Front</th><th>Back</th><th>Left</th><th>Right</th><th>Up</th></tr></thead><tbody>`;
+  drones.forEach(d=>{const[st,k]=flightState(d),c=connState(d),pct=S.lowBatt&&d.id==="cf3"?12:d.batt;
+    h+=`<tr><td><b>${U(d.id)}</b></td><td class="${k}">${st}${d.dh?` (${d.dh.dir})`:""}</td><td class="${c==="lost"?"crit":c==="weak"?"warn":"ok"}">${c==="lost"?"lost":"ok"}</td>
+      <td class="${pct<CONFIG.lowBatt?"warn":""}">${volts(d).toFixed(2)} V</td><td>${d.x.toFixed(2)}</td><td>${d.y.toFixed(2)}</td><td>${d.z.toFixed(2)}</td>
+      <td>${d.tx.toFixed(2)}</td><td>${d.ty.toFixed(2)}</td>${DIRS.map(k=>rangeCell(d,k)).join("")}<td class="${isHeld(d)?"own":"dim"}">${isHeld(d)?"yes":"no"}</td></tr>`;});
+  $("telTable").innerHTML=h+"</tbody>";
+  const g=S.gesture,gName={idle:"Idle",confirming:"Confirming",climb:"Active",descend:"Active",locked:"Locked",lost:"Hand lost",unrecognized:"Unrecognised pose"}[g]||g;
+  $("telAlt").innerHTML=`<dt>Gesture state</dt><dd>${gName}</dd><dt>Source</dt><dd>${CAM.tracking?`Camera, ${CAM.fps} fps`:"Simulation controls"}</dd>
+    <dt>Requested rate</dt><dd>${sg(gAct()?rateCmd():0)} m/s</dd><dt>Applied rate</dt><dd>${sg(S.appliedRate)} m/s</dd>
+    <dt>Paused by</dt><dd class="${S.altBlock?"warn":""}">${S.altBlock?`${U(S.altBlock.d.id)}, ${S.altBlock.why}`:"--"}</dd>
+    <dt>Limits</dt><dd>${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m, max ${CONFIG.rateMax.toFixed(2)} m/s</dd>`;
+  const T=S.trial,L=T.last;
+  $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Mode</dt><dd>${OPT.mode==="course"?"Course":"Gesture sub-test"}</dd>
+    <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?L.outcome.replace("_"," "):"Not started"}</dd>
+    <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
+    <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd>`;
+  $("logCount").textContent=`${S.log.length} events`;
+  $("telLog").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");}
 function toggleLog(){const o=$("app").classList.toggle("log-open");$("logToggle").setAttribute("aria-expanded",o);}
 $("logToggle").addEventListener("click",toggleLog);
 document.querySelectorAll(".sec>button").forEach(b=>b.addEventListener("click",()=>{const c=b.parentElement.classList.toggle("closed");b.setAttribute("aria-expanded",!c);}));
@@ -1056,7 +1127,7 @@ let last=performance.now(),acc=0,frames=0,fpsAcc=0;
 let fN=0;
 function frame(now){const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
   frames++;fpsAcc+=dt;acc+=dt;
-  if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();}
+  if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();renderTelemetry();}
   requestAnimationFrame(frame);}
 
 /* =====================================================================
@@ -1092,7 +1163,9 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
    ===================================================================== */
 function landOne(d){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
 function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
+function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
 $("btnLandSel").addEventListener("click",()=>landOne(videoD()));
+$("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
@@ -1228,25 +1301,25 @@ function layout(){
   const mode=vw<700?"compact":(vw/vh<1.15?"portrait":"landscape");app.dataset.mode=mode;
   const st=app.style;
   if(mode==="landscape"){
-    // three panels (§1.7.3.5): hand camera and altitude on the left, map in the centre, video feed on the right
-    const topH=56,botH=vh<700?56:64,sideW=236,altW=96,vidW=236;
+    // left: hand camera, video feed and altitude; the map takes the rest of the width
+    const topH=56,botH=vh<700?56:64,sideW=236,altW=96;
     $("side").classList.remove("wide");
     st.gridTemplateRows=`${topH}px 1fr ${botH}px`;
-    const cols=["44px",`${sideW}px`,`${altW}px`,"minmax(0,1fr)",`${vidW}px`],areas=["rail","side","alt","main","vid"];
+    const cols=["44px",`${sideW}px`,`${altW}px`,"minmax(0,1fr)"],areas=["rail","side","alt","main"];
     if(OPT.lefty){cols.reverse();areas.reverse();}   // mirror for left-handed operators
     st.gridTemplateColumns=cols.join(" ");
-    st.gridTemplateAreas=`"top top top top top" "${areas.join(" ")}" "plan plan plan plan plan"`;
+    st.gridTemplateAreas=`"top top top top" "${areas.join(" ")}" "plan plan plan plan"`;
   }else if(mode==="portrait"){
     $("side").classList.remove("wide");
     const altW=Math.max(104,Math.min(130,vw*0.12)),mapW=vw-44-altW-10,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),rowMap=Math.min((mapW-32)/AR+56,(vh-104)*0.64);
     st.gridTemplateRows=`56px ${rowMap|0}px 1fr 64px`;
     st.gridTemplateColumns=OPT.lefty?`${altW|0}px 1fr 1fr 44px`:`44px 1fr 1fr ${altW|0}px`;
-    st.gridTemplateAreas=OPT.lefty?`"top top top top" "alt main main rail" "vid vid side rail" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side vid vid" "plan plan plan plan"`;
+    st.gridTemplateAreas=OPT.lefty?`"top top top top" "alt main main rail" "side side side rail" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side side side" "plan plan plan plan"`;
   }else{
     $("side").classList.remove("wide");
     st.gridTemplateRows=`56px ${Math.min(vw,vh*0.62)|0}px 240px auto auto auto`;
     st.gridTemplateColumns="minmax(0,1fr)";
-    st.gridTemplateAreas=`"top" "main" "alt" "side" "vid" "plan"`;
+    st.gridTemplateAreas=`"top" "main" "alt" "side" "plan"`;
   }
   requestAnimationFrame(()=>{fitMap();measure();});
 }
@@ -1261,7 +1334,7 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 /* =====================================================================
    INIT
    ===================================================================== */
-resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("vid"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
 // PWA: offline support + home-screen install
 if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Service worker not registered",e));
 </script>
