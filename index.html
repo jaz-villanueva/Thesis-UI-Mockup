@@ -540,9 +540,12 @@ const isHeld=d=>d.pHeld||d.latched||(S.simHold&&(d.id==="cf1"||d.id==="cf2"));
 const airborne=d=>d.z>0.08&&!S.stopped&&!d.crashed;
 const gAct=()=>S.gesture==="climb"||S.gesture==="descend";
 /* ---------- live camera + hand tracking ---------- */
-const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,conf:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
+const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,cat:null,lastFrame:-1,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,conf:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
 const GEST={confirmMs:500,still:0.04,dead:0.03,full:0.18};   // confirmation hold, steadiness, dead zone and full-rate displacement (fractions of frame height); placeholders (OPEN-07)
-const MP_VER="0.4.1675469240",MP_BASE=`https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MP_VER}/`;
+// MediaPipe Gesture Recognizer (DEC-06): hand landmarks, including the wrist, plus the built-in Open_Palm and
+// Closed_Fist labels. Package and model are pinned to the versions recorded in the project README.
+const MP_BASE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1",
+      MP_MODEL="https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task";
 function camNote(t){const n=$("camNote");if(!n)return;n.hidden=!t;n.textContent=t||"";}
 async function toggleCamera(){if(CAM.on){stopCamera();return;}await startCamera(CAM.deviceId);}
 // open a real camera: a specific deviceId, else the front (user-facing) camera
@@ -573,29 +576,30 @@ async function autoCamera(){
   let state="prompt";try{state=(await navigator.permissions.query({name:"camera"})).state;}catch(e){}
   if(state==="denied"){camNote("Camera access is blocked for this site. Allow it in the browser's site settings, then tap Enable camera.");return;}
   await startCamera(null,true);}
-function loadHands(){if(CAM.hands){CAM.tracking=true;handLoop();return;}
-  camNote("Loading hand tracking (MediaPipe Hands)…");
-  const sc=document.createElement("script");sc.src=MP_BASE+"hands.js";sc.crossOrigin="anonymous";
-  sc.onload=async()=>{try{const H=new window.Hands({locateFile:f=>MP_BASE+f});
-      H.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:0.6,minTrackingConfidence:0.5});
-      H.onResults(r=>{CAM.lm=r.multiHandLandmarks&&r.multiHandLandmarks[0]||null;CAM.fc++;});
-      await H.initialize();CAM.hands=H;CAM.tracking=true;camNote("");log("Hand tracking running","ok");handLoop();}
-    catch(e){camNote("Live video only: hand tracking could not load here (needs internet, and may be blocked on the claude.ai link). Gestures stay on the simulation controls.");}};
-  sc.onerror=()=>camNote("Live video only: hand tracking could not load here (needs internet, and may be blocked on the claude.ai link). Gestures stay on the simulation controls.");
-  document.head.appendChild(sc);}
-async function handLoop(){if(!CAM.on||!CAM.tracking)return;const v=$("camVideo"),now=performance.now();
-  if(!CAM.busy&&v.readyState>=2&&now-CAM.last>=45){CAM.busy=true;CAM.last=now;try{await CAM.hands.send({image:v});}catch(e){}CAM.busy=false;}
+async function loadHands(){if(CAM.hands){CAM.tracking=true;handLoop();return;}
+  camNote("Loading MediaPipe Gesture Recognizer…");
+  const fail=()=>camNote("Live video only: the gesture recognizer could not load (it needs internet the first time). Gestures stay on the simulation controls.");
+  let V,files;try{V=await import(MP_BASE+"/vision_bundle.mjs");files=await V.FilesetResolver.forVisionTasks(MP_BASE+"/wasm");}catch(e){fail();return;}
+  const make=delegate=>V.GestureRecognizer.createFromOptions(files,{baseOptions:{modelAssetPath:MP_MODEL,delegate},runningMode:"VIDEO",numHands:1,minHandDetectionConfidence:0.6,minHandPresenceConfidence:0.6,minTrackingConfidence:0.5});
+  try{CAM.hands=await make("GPU");}catch(e){try{CAM.hands=await make("CPU");}catch(e2){fail();return;}}
+  CAM.tracking=true;camNote("");log("Gesture Recognizer running","ok");handLoop();}
+function handLoop(){if(!CAM.on||!CAM.tracking)return;const v=$("camVideo"),now=performance.now();
+  if(v.readyState>=2&&v.currentTime!==CAM.lastFrame){CAM.lastFrame=v.currentTime;
+    try{const r=CAM.hands.recognizeForVideo(v,now),g=r.gestures&&r.gestures[0]&&r.gestures[0][0];
+      CAM.lm=r.landmarks&&r.landmarks[0]||null;CAM.cat=g?g.categoryName:null;CAM.score=g?g.score:0;CAM.fc++;}catch(e){}}
   if(now-CAM.ft>1000){CAM.fps=CAM.fc;CAM.fc=0;CAM.ft=now;}
   requestAnimationFrame(handLoop);}
 // Gesture channel (§1.7.3.6). An open palm must be held steady for GEST.confirmMs before the wrist height
 // is captured as the neutral point, so a resting hand in view does not activate altitude control.
-function classify(L){const W=L[0],dd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let ext=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(dd(L[t],W)>dd(L[p],W)*1.12)ext++;});return ext>=4?"open":ext<=1?"fist":"other";}
+// Open_Palm activates and drives the rate, Closed_Fist locks, every other label (None, Pointing_Up, ...) counts as unrecognised
+const MIN_SCORE=0.5;
+function classify(){return CAM.score>=MIN_SCORE&&CAM.cat==="Open_Palm"?"open":CAM.score>=MIN_SCORE&&CAM.cat==="Closed_Fist"?"fist":"other";}
 // proportional to displacement from neutral, zero inside the dead zone, capped at the maximum rate
 function gestureRate(disp){const a=Math.abs(disp);if(a<=GEST.dead)return 0;return Math.sign(disp)*CONFIG.rateMax*Math.min(1,(a-GEST.dead)/(GEST.full-GEST.dead));}
 function liveGesture(){if(!CAM.tracking)return;const L=CAM.lm,now=performance.now();
   if(!L){CAM.label="";CAM.conf=null;S.liveRate=0;
     if(gAct()||S.gesture==="unrecognized")setGesture("lost");else if(S.gesture==="confirming")setGesture(S.beforeConfirm||"idle");return;}
-  const c=classify(L),W=L[0];CAM.label=c==="open"?"Open Palm":c==="fist"?"Closed Fist":"Unrecognized";
+  const c=classify(),W=L[0];CAM.label=(c==="open"?"Open Palm":c==="fist"?"Closed Fist":"Unrecognized")+(c==="other"?"":` ${Math.round(CAM.score*100)}%`);
   if(c==="fist"){CAM.conf=null;S.liveRate=0;if(S.gesture!=="locked"){CAM.neutral=null;setGesture("locked");}return;}
   if(c==="other"){S.liveRate=0;if(gAct())setGesture("unrecognized");else if(S.gesture==="confirming"){CAM.conf=null;setGesture(S.beforeConfirm||"idle");}return;}
   // open palm: keep driving the rate, resume after an unrecognised pose, or confirm a fresh activation
@@ -860,10 +864,10 @@ function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
       s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
     s+=`<g stroke="${K.own}" stroke-width="2" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}</g>`;
     P.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===0?3.5:2.4}" fill="${K.friend}"/>`);
-    if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label+(g==="confirming"?` · confirming ${confirmPct()}%`:""),w=lbl.length*6.3+12,col=CAM.label==="Unrecognized"?K.caut:K.sel;
+    if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label+(g==="confirming"?` · confirming ${confirmPct()}%`:""),w=lbl.length*6.3+12,col=CAM.label.startsWith("Unrecognized")?K.caut:K.sel;
       s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${col}" stroke-width="2"/><rect x="${(x0+x1)/2-w/2}" y="${y0-22}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-9}" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;}}
   else if(CAM.tracking&&g==="lost"){s+=`<rect x="80" y="100" width="160" height="38" fill="#111" fill-opacity=".85" stroke="${K.caut}"/><text x="160" y="116" fill="${K.caut}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">No hand in frame</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">Held units holding altitude</text>`;}
-  if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">MediaPipe ${CAM.fps} fps</text>`;
+  if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">Gesture Recognizer ${CAM.fps} fps</text>`;
   $("camSvg").innerHTML=s;}
 function renderCam(){
   if(CAM.on){renderLiveCam();return;}

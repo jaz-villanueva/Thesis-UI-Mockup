@@ -1,6 +1,6 @@
-/* Service worker: offline app shell + cached MediaPipe hand-tracking files.
+/* Service worker: offline app shell + cached MediaPipe Gesture Recognizer files and model.
    Bump VERSION whenever index.html or the icons change, so installed copies update. */
-const VERSION = "v7";
+const VERSION = "v8";
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = "runtime-mediapipe";
 const SHELL_FILES = [
@@ -40,8 +40,9 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // MediaPipe model + wasm from the CDN: versioned URLs, so cache first
-  if (url.hostname === "cdn.jsdelivr.net" && url.pathname.startsWith("/npm/@mediapipe/")) {
+  // MediaPipe package, wasm and model: versioned URLs, so cache first
+  if ((url.hostname === "cdn.jsdelivr.net" && url.pathname.startsWith("/npm/@mediapipe/")) ||
+      (url.hostname === "storage.googleapis.com" && url.pathname.startsWith("/mediapipe-models/"))) {
     e.respondWith(
       caches.open(RUNTIME).then(c => c.match(req).then(hit => hit || fetch(req).then(res => {
         if (res.ok || res.type === "opaque") c.put(req, res.clone());
