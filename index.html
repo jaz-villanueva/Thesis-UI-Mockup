@@ -371,6 +371,15 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .alt .h{height:30px;padding:0 6px}
 .ticker{position:absolute;right:6px;bottom:4px;z-index:2;max-width:58%;height:22px;display:flex;align-items:center;gap:8px;padding:0 8px;background:rgba(10,14,11,.85);border:1px solid var(--line);font-size:12px;text-align:left;color:var(--tx)}
 .ticker .ln{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sync{position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.6);display:grid;place-items:center}
+.sync[hidden]{display:none}
+.sync .dlg{width:640px;max-height:700px;background:var(--panel);border:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.sync .dh{height:40px;flex:none;display:flex;align-items:center;padding:0 14px;background:var(--panel-2);border-bottom:1px solid var(--line);font-weight:700;color:var(--grn)}
+.sync .db{padding:10px 14px;overflow:auto;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.sync .db p{color:var(--tx-2);line-height:1.45}
+.sync .df{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+.sync .apply{height:38px;padding:0 16px;background:var(--task);color:#07120A;border-radius:var(--r);font-weight:700}
+.sync .apply[disabled]{background:var(--panel-3);color:var(--tx-3)}
 .settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
 /* Sim controls (mockup only) */
 .sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
@@ -498,6 +507,19 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 <!-- hidden store for the video tiles that are not shown -->
 <aside class="feeds" aria-label="Drone camera feeds" id="feeds"></aside>
 
+<!-- =============================== SYNC LAYOUT WITH MOTIVE =============================== -->
+<div class="sync" id="syncDlg" role="dialog" aria-modal="true" aria-labelledby="syncTitle" hidden>
+  <div class="dlg">
+    <div class="dh" id="syncTitle">Sync layout with Motive</div>
+    <div class="db">
+      <p id="syncStatus">Reading rigid bodies from Motive…</p>
+      <div class="tscroll"><table class="ttab" id="syncTable"></table></div>
+      <p>Simulated in this mockup. In the real system the ground station reads the marked rigid bodies from Motive and sends the new course to the tablet.</p>
+    </div>
+    <div class="df"><button class="tbtn2" id="syncCancel">Cancel</button><button class="apply" id="syncApply" disabled>Apply to map</button></div>
+  </div>
+</div>
+
 <!-- =============================== SETTINGS DRAWER =============================== -->
 <section class="settings" id="settings" aria-label="Settings" hidden>
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -506,6 +528,9 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <div class="seg" id="modeSeg"><button data-mode="course">Course trial</button><button data-mode="gesture_subtest">Gesture sub-test</button></div>
     <div class="seg"><button id="trStart">Start trial</button><button id="trDone">End: completed</button><button id="trAbort" style="grid-column:span 2">End: hardware abort</button></div>
     <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
+    <div class="set-g">Course layout</div>
+    <button class="sw-row reset" id="syncBtn">Sync layout with Motive</button>
+    <p class="note" id="syncNote">Using the proposal's Figure 5 positions. Not synced yet.</p>
     <div class="set-g">Ground station configuration</div>
     <p class="note">Set by the flight host in the real system. Values are placeholders until lab tests.</p>
     <div class="stp" data-k="zmin"><span>Minimum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
@@ -1058,7 +1083,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
   $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Mode</dt><dd>${OPT.mode==="course"?"Course":"Gesture sub-test"}</dd>
     <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?L.outcome.replace("_"," "):"Not started"}</dd>
     <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
-    <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd>`;
+    <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd><dt>Layout</dt><dd>${CONFIG.layout?`Motive, ${new Date(CONFIG.layout.synced).toLocaleTimeString()}`:"Figure 5"}</dd>`;
   $("logCount").textContent=`${S.log.length} events`;
   $("telLog").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");}
 $("logToggle").addEventListener("click",()=>setTab("tel"));
@@ -1193,8 +1218,41 @@ function endTrial(outcome){const T=S.trial;if(!T.running)return;T.running=false;
   T.last={id:trialId(),outcome,elapsed:el,dh:T.dh};T.n++;
   if(outcome==="timeout")S.alert=`Time limit reached. Trial ${T.last.id} failed, so all drones are landing. Press Take off all to fly again.`;
   if(fail||outcome==="hardware_abort")landAll(fail?"Trial failed, grounding all drones":"Grounding all drones");}
+/* ---------- Sync course layout with Motive (simulated) ----------
+   Reflective markers on each box, hoop, restricted-zone corner and start pad are set up in Motive as rigid bodies
+   named O1, O2, H1-H3, ZONE and D1-D3. In the real system the ground station reads them from Motive, converts
+   Motive's y-up frame to the z-up course frame, and sends the new course to the tablet. The course must not change
+   during a trial or with drones in the air, so sync runs only between trials with every drone grounded. */
+function layoutItems(){return[
+  ...CONFIG.boxes.map(b=>({id:b.id,what:"Box",get:()=>[b.x,b.y,b.h],set:v=>{b.x=v[0];b.y=v[1];b.h=v[2];}})),
+  ...CONFIG.hoops.map(h=>({id:h.id,what:"Hoop",get:()=>[h.x,h.y,h.z],set:v=>{h.x=v[0];h.y=v[1];h.z=v[2];}})),
+  {id:"ZONE",what:"Restricted zone",get:()=>[CONFIG.nfz.x,CONFIG.nfz.y,0],set:v=>{CONFIG.nfz.x=v[0];CONFIG.nfz.y=v[1];}},
+  ...CONFIG.drones.map((c,i)=>({id:"D"+(i+1),what:"Start pad",get:()=>[c.x,c.y,0],set:v=>{c.x=v[0];c.y=v[1];const d=drones[i];if(d.z<=0.02){d.x=d.tx=v[0];d.y=d.ty=v[1];}}}))];}
+let SYNC=null,SIM_TRUE=null;
+function syncLayout(){
+  if(S.trial.running){log("Layout sync is only allowed between trials","warn");return;}
+  if(drones.some(d=>d.z>0.02)){log("Land every drone before syncing the layout","warn");return;}
+  toggleSettings(false);$("syncDlg").hidden=false;$("syncApply").disabled=true;$("syncTable").innerHTML="";
+  $("syncStatus").textContent="Reading rigid bodies from Motive…";
+  setTimeout(()=>{ // simulated readings: each body sits at a fixed spot a few cm off Figure 5, read with about 5 mm of noise
+    const n=a=>(Math.random()*2-1)*a;
+    if(!SIM_TRUE){SIM_TRUE={};layoutItems().forEach(it=>{const v=it.get();SIM_TRUE[it.id]=[v[0]+n(0.03),v[1]+n(0.03),v[2]?v[2]+n(0.015):0];});}
+    SYNC=layoutItems().map(it=>{const now=it.get(),t=SIM_TRUE[it.id],m=[t[0]+n(0.005),t[1]+n(0.005),t[2]?t[2]+n(0.005):0];return{...it,now,m,dcm:Math.hypot(m[0]-now[0],m[1]-now[1],m[2]-now[2])*100};});
+    const f=v=>v.map(x=>x.toFixed(2)).join(", "),big=SYNC.filter(r=>r.dcm>=5).length;
+    $("syncTable").innerHTML=`<thead><tr><th>Body</th><th>Item</th><th>Now (x, y, z m)</th><th>Motive (x, y, z m)</th><th>Change</th></tr></thead><tbody>`+
+      SYNC.map(r=>`<tr><td><b>${r.id}</b></td><td>${r.what}</td><td>${f(r.now)}</td><td>${f(r.m)}</td><td class="${r.dcm>=5?"warn":""}">${r.dcm.toFixed(1)} cm</td></tr>`).join("")+"</tbody>";
+    $("syncStatus").textContent=`Found ${SYNC.length} of ${SYNC.length} rigid bodies. ${big?`${big} moved 5 cm or more: check the markers before applying.`:"All within 5 cm of the current map."}`;
+    $("syncApply").disabled=false;},900);}
+function applySync(){if(!SYNC)return;SYNC.forEach(r=>r.set(r.m));const most=SYNC.reduce((a,r)=>r.dcm>a.dcm?r:a,SYNC[0]);
+  CONFIG.layout={source:"Motive",synced:new Date().toISOString(),bodies:SYNC.length};
+  buildMapStatic();buildSensorScene();renderMap();
+  log(`Layout synced from Motive: ${SYNC.length} rigid bodies, largest change ${most.dcm.toFixed(1)} cm (${most.id})`,"ok");
+  $("syncNote").textContent=`Synced with Motive at ${new Date().toLocaleTimeString()}, ${SYNC.length} rigid bodies.`;
+  SYNC=null;$("syncDlg").hidden=true;}
+$("syncBtn").addEventListener("click",syncLayout);$("syncApply").addEventListener("click",applySync);
+$("syncCancel").addEventListener("click",()=>{SYNC=null;$("syncDlg").hidden=true;});
 function exportLog(){const last=S.trial.last,data={trial:last||{id:trialId(),outcome:S.trial.running?"running":null},mode:OPT.mode,
-    config:{room:CONFIG.arena,altitude:CONFIG.z,restricted_zone:CONFIG.nfz,obstacles:CONFIG.boxes,hoops:CONFIG.hoops,rate_max:CONFIG.rateMax,defensive_hover:{trigger_m:MR.trig,clear_m:MR.clear},time_limit_s:CONFIG.timeLimit},
+    config:{layout:CONFIG.layout||{source:"Figure 5"},room:CONFIG.arena,altitude:CONFIG.z,restricted_zone:CONFIG.nfz,obstacles:CONFIG.boxes,hoops:CONFIG.hoops,rate_max:CONFIG.rateMax,defensive_hover:{trigger_m:MR.trig,clear_m:MR.clear},time_limit_s:CONFIG.timeLimit},
     events:S.log.map(e=>({t_s:+e.t.toFixed(3),kind:e.k,text:e.text}))};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})),a=document.createElement("a");
   a.href=url;a.download=`trial-${(last||{id:trialId()}).id}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);log("Trial log exported");}
