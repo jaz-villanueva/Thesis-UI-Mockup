@@ -636,7 +636,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         <section class="tcard"><h3>Trial</h3><dl class="kvs" id="telTrial"></dl></section>
       </div>
       <section class="tcard"><h3>Health<button class="gbtn" id="hcBtn" style="height:24px;padding:0 10px;font-size:11px">Run health check</button></h3><div class="tscroll"><table class="ttab" id="telHealth"></table></div></section>
-      <section class="tcard tlog"><h3>Event log<span class="logtools"><span id="logCount"></span><label class="logsel">View <select id="logView" aria-label="Show the history of a session or trial"><option value="all">All sessions</option></select></label></span></h3>
+      <section class="tcard tlog"><h3>Event log<span class="logtools"><span id="logCount"></span><label class="logsel">Session <select id="logSes" aria-label="Filter the event log by participant session"><option value="all">All</option></select></label><label class="logsel">Trial <select id="logView" aria-label="Filter the chosen session by trial" disabled><option value="all">All</option></select></label></span></h3>
         <dl class="kvs trsum" id="logSum" hidden></dl><ol id="telLog"></ol></section>
     </div>
   </section>
@@ -662,43 +662,25 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 <section class="settings" id="settings" aria-label="Settings" hidden>
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="set-b">
-    <div class="set-g">Trial log</div>
-    <div class="note">Start trial is at the top of the left-hand column. A trial ends by itself: completed when every drone has flown H1, H2 and H3 in order and landed on its start position, or failed at the time limit or when a drone tumbles in a collision.</div>
-    <button class="sw-row reset" id="trCol" disabled>Record a collision (fails the trial)</button>
-    <button class="sw-row reset" id="trVoid" disabled>Void running trial (hardware fault)</button>
-    <button class="sw-row reset" id="trSession">Next participant (new session)</button>
-    <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
-    <div class="set-g">Course layout</div>
+    <div class="set-g">Trial</div>
+    <button class="sw-row reset" id="trCol" disabled>Record a collision</button>
+    <button class="sw-row reset" id="trVoid" disabled>Void trial (hardware fault)</button>
+    <button class="sw-row reset" id="trSession">Next participant</button>
+    <button class="sw-row reset" id="trExport">Export log</button>
+    <div class="set-g">Course</div>
     <button class="sw-row reset" id="syncBtn">Sync layout with Motive</button>
-    <p class="note" id="syncNote">Using the proposal's Figure 5 positions. Not synced yet.</p>
-    <div class="set-g">Ground station configuration</div>
-    <p class="note">Set by the flight host in the real system. Values are placeholders until lab tests.</p>
+    <p class="note" id="syncNote">Figure 5 layout</p>
+    <div class="set-g">Flight</div>
     <div class="stp" data-k="zmin"><span>Minimum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="zmax"><span>Maximum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="takeoff"><span>Takeoff height</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="rate"><span>Maximum climb rate</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="dhtrig"><span>Defensive hover distance</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="tlim"><span>Trial time limit</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="prox"><span>Proximity warning</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="nfzr"><span>Restricted zone size</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="aw"><span>Room width (x)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="ad"><span>Room depth (y)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="set-g">Display</div>
     <button class="sw-row" data-o="light">Light mode</button>
     <button class="sw-row" data-o="lefty">Left-handed layout</button>
-    <button class="sw-row" data-o="latch">Tap to hold (mouse testing)</button>
-    <button class="sw-row" data-o="course">Boxes and hoops</button>
-    <button class="sw-row" data-o="trails">Flight trails</button>
-    <div class="fpick" role="radiogroup" aria-label="Drone camera feed">
-      <span>Video feed</span>
-      <div class="fp-row">
-        <button class="cb" data-fs="cf1" role="radio">DRONE 1</button>
-        <button class="cb" data-fs="cf2" role="radio">DRONE 2</button>
-        <button class="cb" data-fs="cf3" role="radio">DRONE 3</button>
-      </div>
-
-    </div>
-    <div class="set-g">Simulation (mockup only)</div>
+    <button class="sw-row reset" id="fsBtn">Fullscreen</button>
+    <div class="set-g">Simulation</div>
     <div class="seg" id="gestSeg"><button data-g="idle">Idle</button><button data-g="confirming">Confirming</button><button data-g="climb">Active climb</button><button data-g="descend">Active descend</button><button data-g="locked">Locked</button><button data-g="unrecognized">Unrecognized pose</button><button data-g="lost" style="grid-column:span 2">Tracking lost</button></div>
     <button class="sw-row" data-t="simHold">Hold DRONE 1 + DRONE 2</button>
     <button class="sw-row" data-t="degraded">Link degraded</button>
@@ -707,9 +689,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <button class="sw-row" data-t="cf3Lost">DRONE 3 disconnected</button>
     <button class="sw-row" data-t="proximity">Send DRONE 3 toward DRONE 2</button>
     <button class="sw-row reset" id="simReset">Reset scenario</button>
-    <div class="set-g">Display target</div>
-    <div class="dispinfo m" id="dispInfo">--</div>
-    <button class="sw-row reset" id="fsBtn">Enter fullscreen (hide browser bars)</button>
   </div>
 </section>
 
@@ -750,7 +729,7 @@ const K=Object.assign({},PAL.dark);
 /* =====================================================================
    STATE + HELPERS
    ===================================================================== */
-const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,motorFault:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:1,running:false,t0:0,dh:0,restrict:0,last:null},session:1,curTrial:"",trials:[],logView:"all"};
+const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,motorFault:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:1,running:false,t0:0,dh:0,restrict:0,last:null},session:1,curTrial:"",trials:[],logView:"all",logSes:"all"};
 let drones=[];const pointers=new Map();
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -1337,11 +1316,14 @@ function renderLogView(){const sel=$("logView"),L=trialList();
   // one ID per event: its trial (S1-T2) when it happened during a trial, otherwise its session (S1)
   const idOf=e=>e.tr||e.ses||"",sessions=[...new Set([...S.log.map(e=>e.ses),sessionId()].filter(Boolean))];
   const key=sessions.join()+"|"+L.map(t=>t.id+(t.outcome||"")).join();
-  if(sel.dataset.key!==key){sel.dataset.key=key;
-    sel.innerHTML=`<option value="all">All sessions</option>`+sessions.map(ss=>`<optgroup label="Participant session ${ss}"><option value="${ss}">${ss} · all of this participant</option>`+
-      L.filter(t=>t.session===ss).map(t=>`<option value="${t.id}">${t.id} · ${t.outcome?OUT[t.outcome]:"running"}</option>`).join("")+`</optgroup>`).join("");
-    if(![...sel.options].some(o=>o.value===S.logView))S.logView="all";sel.value=S.logView;}
-  const v=S.logView,tr=L.find(t=>t.id===v),ses=sessions.includes(v)?v:null,sum=$("logSum");
+  // two filters: pick a participant session, then (optionally) one of that session's trials
+  const ss=$("logSes");if(S.logSes!=="all"&&!sessions.includes(S.logSes))S.logSes="all";
+  if(sel.dataset.key!==key+"|"+S.logSes){sel.dataset.key=key+"|"+S.logSes;
+    ss.innerHTML=`<option value="all">All</option>`+sessions.map(x=>`<option value="${x}">${x}</option>`).join("");ss.value=S.logSes;
+    const mine=L.filter(t=>t.session===S.logSes);
+    sel.innerHTML=`<option value="all">All</option>`+mine.map(t=>`<option value="${t.id}">${t.id.split("-")[1]} · ${t.outcome?OUT[t.outcome]:"running"}</option>`).join("");
+    if(!mine.some(t=>t.id===S.logView))S.logView="all";sel.value=S.logView;sel.disabled=S.logSes==="all"||!mine.length;}
+  const v=S.logView!=="all"?S.logView:S.logSes,tr=L.find(t=>t.id===v),ses=sessions.includes(v)?v:null,sum=$("logSum");
   const ev=tr?S.log.filter(e=>e.tr===tr.id):ses?S.log.filter(e=>e.ses===ses):S.log;
   if(tr){sum.hidden=false;
     sum.innerHTML=`<dt>Trial</dt><dd>${tr.id}</dd><dt>Outcome</dt><dd class="${tr.outcome==="completed"?"ok":tr.outcome?"crit":""}">${tr.outcome?OUT[tr.outcome]:"Running"}</dd><dt>Started</dt><dd>T+${fmtT(tr.t0)}</dd><dt>Ended</dt><dd>${tr.t1!=null?"T+"+fmtT(tr.t1):"running"}</dd>
@@ -1350,7 +1332,7 @@ function renderLogView(){const sel=$("logView"),L=trialList();
     sum.innerHTML=`<dt>Participant session</dt><dd>${ses}</dd><dt>Trials</dt><dd>${T.length}</dd><dt>Started</dt><dd>${ev.length?"T+"+fmtT(ev[0].t):"--"}</dd><dt>Last event</dt><dd>${ev.length?"T+"+fmtT(ev[ev.length-1].t):"--"}</dd>
       <dt>Completed</dt><dd class="ok">${done}</dd><dt>Failed</dt><dd class="${fail?"crit":""}">${fail}</dd><dt>Aborted</dt><dd>${T.filter(t=>t.outcome==="hardware_abort").length}</dd><dt>Events</dt><dd>${ev.length}</dd>`;}
   else sum.hidden=true;
-  $("logCount").textContent=v==="all"?`${S.log.length} events`:`${ev.length} of ${S.log.length} events`;
+  $("logCount").textContent=!tr&&!ses?`${S.log.length} events`:`${ev.length} of ${S.log.length} events`;
   let h=`<li class="lh"><span>Time</span><span>${tr?"In trial":"ID"}</span><span></span><span>Event</span></li>`,prev;
   [...ev].reverse().forEach((e,i)=>{const k=idOf(e);
     if(!tr&&(i===0||k!==prev)){const t=e.tr&&L.find(x=>x.id===e.tr);
@@ -1358,6 +1340,7 @@ function renderLogView(){const sel=$("logView"),L=trialList();
     prev=k;h+=`<li><span class="t">T+${fmtT(e.t)}</span><span class="m">${tr?fmtMS(Math.max(0,e.t-tr.t0)):k}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`;});
   $("telLog").innerHTML=h;}
 $("logView").addEventListener("change",e=>{S.logView=e.target.value;renderLogView();});
+$("logSes").addEventListener("change",e=>{S.logSes=e.target.value;S.logView="all";renderLogView();});
 $("logToggle").addEventListener("click",()=>setTab("tel"));
 document.querySelectorAll(".sec>button,.camhead>button:first-child").forEach(b=>b.addEventListener("click",()=>{const c=b.closest(".sec").classList.toggle("closed");b.setAttribute("aria-expanded",!c);}));
 
@@ -1545,7 +1528,7 @@ function applySync(){if(!SYNC)return;SYNC.forEach(r=>r.set(r.m));const most=SYNC
   CONFIG.layout={source:"Motive",synced:new Date().toISOString(),bodies:SYNC.length};
   buildMapStatic();buildSensorScene();renderMap();
   log(`Layout synced from Motive: ${SYNC.length} rigid bodies, largest change ${most.dcm.toFixed(1)} cm (${most.id})`,"ok");
-  $("syncNote").textContent=`Synced with Motive at ${new Date().toLocaleTimeString()}, ${SYNC.length} rigid bodies.`;
+  $("syncNote").textContent=`Motive, ${new Date().toLocaleTimeString()}`;
   SYNC=null;$("syncDlg").hidden=true;}
 $("syncBtn").addEventListener("click",syncLayout);$("syncApply").addEventListener("click",applySync);
 $("syncCancel").addEventListener("click",()=>{SYNC=null;$("syncDlg").hidden=true;});
