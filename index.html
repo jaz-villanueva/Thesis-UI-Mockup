@@ -347,6 +347,9 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .trial.run{border-color:var(--grn-2)} .trial.run b{color:var(--grn)}
 .trial.fail{border-color:var(--crit)} .trial.fail b{color:var(--crit)}
 .fstat .lnk{font-weight:700;letter-spacing:.04em;margin-right:2px} .fstat .lnk.warn{color:var(--caut)} .fstat .lnk.crit{color:var(--crit)}
+.alertbar{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:12px;max-width:92%;padding:8px 8px 8px 12px;background:#2A0B09;border:1px solid var(--crit);color:#fff;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.alertbar[hidden]{display:none}
+.alertbar button{flex:none;height:30px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx)}
 .settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
 /* Sim controls (mockup only) */
 .sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
@@ -460,6 +463,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
       <span class="sp"></span>
     </div>
     <div class="mapbody" id="mapbody" role="tabpanel" aria-labelledby="tabMap">
+      <div class="alertbar" id="alertBar" role="alert" hidden><span id="alertTxt"></span><button id="alertOk">Dismiss</button></div>
       <div class="mapchip"><span class="scale"><i id="scaleBar"></i><span class="m">1 m</span></span><span class="m" id="cursor">--</span></div>
       <svg id="mapSvg" viewBox="0 0 600 600" preserveAspectRatio="none" role="application" aria-label="Tap a unit to select, hold and drag to set target"><g id="mapStatic"></g><g id="mapDyn"></g></svg>
     </div>
@@ -659,7 +663,7 @@ function dtgZ(){const d=new Date(),mo=["JAN","FEB","MAR","APR","MAY","JUN","JUL"
 function resetScenario(){
   drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[],ranges:{},dh:null,crashed:false}));
   Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0});
-  S.trial.running=false;S.trial.last=null;
+  S.trial.running=false;S.trial.last=null;S.alert=null;S.frameErr=false;
   S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
   $("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";
   if(window.__ready){OPT.feed="cf1";Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x==="cf1");}
@@ -1043,7 +1047,7 @@ function setTab(t){if(t===TAB)return;TAB=t;
   if(t==="tel"){ // the map is hidden, so nothing can stay held by a finger on it
     pointers.clear();drones.forEach(d=>{if(d.pHeld){d.pHeld=false;d.blocked=null;d.blockPt=null;log(`${U(d.id)} released (map hidden)`);}});renderTelemetry();}
   else requestAnimationFrame(()=>{fitMap();measure();});}
-$("tabMap").addEventListener("click",()=>setTab("map"));$("tabTel").addEventListener("click",()=>setTab("tel"));
+$("tabMap").addEventListener("click",()=>setTab("map"));$("alertOk").addEventListener("click",()=>{S.alert=null;renderAlert();});$("tabTel").addEventListener("click",()=>setTab("tel"));
 function rangeCell(d,k){const r=d.ranges&&d.ranges[k];if(!airborne(d))return`<td class="dim">--</td>`;if(r==null)return`<td class="dim">&gt;4 m</td>`;
   return`<td class="${r<MR.trig?"crit":r<MR.show?"warn":""}">${r.toFixed(2)}</td>`;}
 function renderTelemetry(){if(TAB!=="tel")return;
@@ -1122,13 +1126,21 @@ function update(dt){
   if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
 }
 function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
-  log(`Collision: ${U(d.id)} hit ${what}`,"crit");if(S.trial.running)endTrial("collision");}
+  log(`Collision: ${U(d.id)} hit ${what}`,"crit");
+  S.alert=S.trial.running?`Collision: ${U(d.id)} hit ${what}. Trial ${trialId()} failed, so all drones are landing. Press Take off all to fly again.`
+    :`Collision: ${U(d.id)} hit ${what} and is down. Take off ${U(d.id)} or Take off all to fly it again.`;
+  if(S.trial.running)endTrial("collision");}
 let last=performance.now(),acc=0,frames=0,fpsAcc=0;
 let fN=0;
-function frame(now){const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
-  frames++;fpsAcc+=dt;acc+=dt;
-  if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();renderTelemetry();}
+function frame(now){
+  // one bad frame must never stop the loop: log the error once and keep going
+  try{const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
+    frames++;fpsAcc+=dt;acc+=dt;
+    if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();renderTelemetry();renderAlert();}}
+  catch(e){last=now;console.error(e);if(!S.frameErr){S.frameErr=true;log(`Display error: ${e.message}. The simulation keeps running.`,"crit");}}
   requestAnimationFrame(frame);}
+// banner after a collision or timeout, so a grounded, unresponsive map is explained
+function renderAlert(){const el=$("alertBar"),A=S.alert;el.hidden=!A;if(!A)return;$("alertTxt").textContent=A;}
 
 /* =====================================================================
    INPUT
@@ -1163,14 +1175,14 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
    ===================================================================== */
 function landOne(d){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
 function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
-function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
+function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;if(d.crashed)S.alert=null;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
 $("btnLandSel").addEventListener("click",()=>landOne(videoD()));
 $("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
     S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";log("Emergency stop cleared by operator","ok");}
-  const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
+  S.alert=null;const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
 // Trials (§1.7.4, §1.7.6): start on the ground; a collision or the time limit fails the trial and grounds the drones.
 // Defensive hovers are counted separately and do not fail a trial.
 const trialId=()=>`P07-TV-${S.trial.n}`;
@@ -1181,6 +1193,7 @@ function startTrial(){const T=S.trial;if(T.running)return;
 function endTrial(outcome){const T=S.trial;if(!T.running)return;T.running=false;const el=S.t-T.t0,fail=outcome==="collision"||outcome==="timeout";
   log(`Trial ${trialId()} ${outcome==="completed"?"completed":outcome==="hardware_abort"?"ended, hardware abort":"failed: "+outcome} at ${fmtMS(el)}, ${T.dh} defensive hover${T.dh===1?"":"s"}`,fail?"crit":outcome==="completed"?"ok":"warn");
   T.last={id:trialId(),outcome,elapsed:el,dh:T.dh};T.n++;
+  if(outcome==="timeout")S.alert=`Time limit reached. Trial ${T.last.id} failed, so all drones are landing. Press Take off all to fly again.`;
   if(fail||outcome==="hardware_abort")landAll(fail?"Trial failed, grounding all drones":"Grounding all drones");}
 function exportLog(){const last=S.trial.last,data={trial:last||{id:trialId(),outcome:S.trial.running?"running":null},mode:OPT.mode,
     config:{room:CONFIG.arena,altitude:CONFIG.z,restricted_zone:CONFIG.nfz,obstacles:CONFIG.boxes,hoops:CONFIG.hoops,rate_max:CONFIG.rateMax,defensive_hover:{trigger_m:MR.trig,clear_m:MR.clear},time_limit_s:CONFIG.timeLimit},
