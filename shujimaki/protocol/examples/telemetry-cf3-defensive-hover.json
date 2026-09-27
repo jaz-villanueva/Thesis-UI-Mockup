@@ -4,8 +4,7 @@
     "seq": 24205,
     "host_ms": 5203551.0,
     "ack": { "seq": 24210, "t_ms": 812345.6, "host_rx_ms": 5203537.1 },
-    "mode": "course",
-    "trial": { "id": "P07-TV-2", "running": true, "elapsed_ms": 92418.0 },
+    "trial": { "id": "S1-T2", "running": true, "elapsed_ms": 92418.0 },
     "altitude": { "rate": 0.0, "blocked_by": "cf3", "reason": "defensive_hover" },
     "drones": [
         {
@@ -15,6 +14,11 @@
             "ranges": { "front": null, "back": 1.18, "left": 0.45, "right": 0.84, "up": 1.8 },
             "defensive_hover": null,
             "battery_v": 3.94,
+            "battery_level": 60,
+            "pm_state": "battery",
+            "can_fly": true,
+            "tumbled": false,
+            "health": null,
             "link_quality": 98
         },
         {
@@ -24,6 +28,11 @@
             "ranges": { "front": 3.37, "back": 1.94, "left": 2.55, "right": 0.99, "up": 1.63 },
             "defensive_hover": null,
             "battery_v": 3.91,
+            "battery_level": 50,
+            "pm_state": "battery",
+            "can_fly": true,
+            "tumbled": false,
+            "health": null,
             "link_quality": 97
         },
         {
@@ -33,6 +42,11 @@
             "ranges": { "front": 0.23, "back": 0.82, "left": 1.99, "right": 1.56, "up": 1.95 },
             "defensive_hover": { "dir": "front", "range": 0.23 },
             "battery_v": 3.88,
+            "battery_level": 40,
+            "pm_state": "battery",
+            "can_fly": true,
+            "tumbled": false,
+            "health": null,
             "link_quality": 96
         }
     ]

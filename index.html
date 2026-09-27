@@ -63,8 +63,10 @@ html,body{background:#000}
 :root.light .alertbar{background:#FFECEA;color:#7F1D1D}
 :root.light .sec>button{border-left-color:var(--grn)}
 :root.light .dfeed .fh .num{color:var(--tx)}
-.stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:1fr;grid-template-columns:250px 78px 1fr;grid-template-areas:"side alt main";position:relative}
+.stage{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+.rotate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--tx);font-size:18px;font-weight:700;text-align:center}
+.rotate[hidden]{display:none}
+.app{display:grid;height:100%;grid-template-rows:minmax(0,1fr);grid-template-columns:clamp(200px,21vw,300px) clamp(64px,6.5vw,96px) minmax(0,1fr);grid-template-areas:"side alt main";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -266,7 +268,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .sd.lost{background:var(--crit);animation:blink 1s steps(2,end) infinite}
 .cbs,.cb{gap:7px}
 /* Settings drawer */
-.settings{position:absolute;left:0;top:0;bottom:0;width:320px;z-index:20;background:var(--panel);border-right:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(0,0,0,.45)}
+.settings{position:absolute;left:0;top:0;bottom:0;width:min(320px,92vw);z-index:20;background:var(--panel);border-right:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(0,0,0,.45)}
 .settings[hidden]{display:none}
 .set-h{height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 14px;background:var(--panel-2);border-bottom:1px solid var(--line);font-weight:700;color:var(--grn)}
 .set-h button{width:40px;height:40px;display:grid;place-items:center;color:var(--tx-2)}
@@ -336,6 +338,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .tel-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tcard{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tcard h3{height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grn-tx)}
+.tcard h3 .gbtn{border-width:1px}
 .tcard h3 span{font-weight:500;letter-spacing:0;text-transform:none;color:var(--tx-3)}
 .tscroll{overflow-x:auto}
 .ttab{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
@@ -350,7 +353,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .kvs dd.warn{color:var(--caut)} .kvs dd.crit{color:var(--crit)} .kvs dd.ok{color:var(--grn)}
 .tlog{flex:1;min-height:180px}
 .tlog ol{list-style:none;margin:0;padding:0 10px;overflow:auto;flex:1;min-height:0}
-.tlog li{display:grid;grid-template-columns:92px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tlog li{display:grid;grid-template-columns:84px 58px 70px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tlog li.lh{position:sticky;top:0;background:var(--panel);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-3)}
 .tlog .t{color:var(--tx-2);font-size:12px;font-variant-numeric:tabular-nums}
 /* top bar: per-drone telemetry and the trial clock */
 .dstat{display:flex;gap:4px}
@@ -376,7 +380,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .gear{width:38px;height:38px;display:grid;place-items:center;color:var(--tx-2);border:1px solid var(--line-2);border-radius:var(--r)}
 .gear[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
 .side{padding:2px 0 2px 2px}
-.side .card{overflow:hidden}
+.side .card{overflow-y:auto;overflow-x:hidden}
 .side .scroll{flex:none;overflow:visible}
 .side .act{padding:4px;border-top:1px solid var(--line)}
 .side .pair{height:42px;font-size:13px}
@@ -387,7 +391,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .ticker .ln{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sync{position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.6);display:grid;place-items:center}
 .sync[hidden]{display:none}
-.sync .dlg{width:640px;max-height:700px;background:var(--panel);border:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.sync .dlg{width:min(640px,94vw);max-height:92%;background:var(--panel);border:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.6)}
 .sync .dh{height:40px;flex:none;display:flex;align-items:center;padding:0 14px;background:var(--panel-2);border-bottom:1px solid var(--line);font-weight:700;color:var(--grn)}
 .sync .db{padding:10px 14px;overflow:auto;display:flex;flex-direction:column;gap:10px;font-size:13px}
 .sync .db p{color:var(--tx-2);line-height:1.45}
@@ -478,6 +482,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 </style>
 </head>
 <body>
+<div class="rotate" id="rotate" hidden>Turn the tablet to landscape.<br><span style="font-weight:400;font-size:14px">The interface runs in a fixed landscape layout (§1.7.3.5).</span></div>
 <div class="stage" id="stage">
 <div class="app" id="app">
 
@@ -556,6 +561,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         <section class="tcard"><h3>Altitude channel</h3><dl class="kvs" id="telAlt"></dl></section>
         <section class="tcard"><h3>Trial</h3><dl class="kvs" id="telTrial"></dl></section>
       </div>
+      <section class="tcard"><h3>Health<button class="gbtn" id="hcBtn" style="height:24px;padding:0 10px;font-size:11px">Run health check</button></h3><div class="tscroll"><table class="ttab" id="telHealth"></table></div></section>
       <section class="tcard tlog"><h3>Event log<span id="logCount"></span></h3><ol id="telLog"></ol></section>
     </div>
   </section>
@@ -582,8 +588,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="set-b">
     <div class="set-g">Trial (experimenter)</div>
-    <div class="seg" id="modeSeg"><button data-mode="course">Course trial</button><button data-mode="gesture_subtest">Gesture sub-test</button></div>
     <div class="seg"><button id="trStart">Start trial</button><button id="trDone">End: completed</button><button id="trAbort" style="grid-column:span 2">End: hardware abort</button></div>
+    <button class="sw-row reset" id="trSession">Start new session</button>
     <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
     <div class="set-g">Course layout</div>
     <button class="sw-row reset" id="syncBtn">Sync layout with Motive</button>
@@ -619,7 +625,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <div class="seg" id="gestSeg"><button data-g="idle">Idle</button><button data-g="confirming">Confirming</button><button data-g="climb">Active climb</button><button data-g="descend">Active descend</button><button data-g="locked">Locked</button><button data-g="unrecognized">Unrecognized pose</button><button data-g="lost" style="grid-column:span 2">Tracking lost</button></div>
     <button class="sw-row" data-t="simHold">Hold DRONE 1 + DRONE 2</button>
     <button class="sw-row" data-t="degraded">Link degraded</button>
-    <button class="sw-row" data-t="lowBatt">DRONE 3 low battery</button>
+    <button class="sw-row" data-t="lowBatt">DRONE 3 low battery (3.15 V)</button>
+    <button class="sw-row" data-t="motorFault">DRONE 2 motor M3 fault</button>
     <button class="sw-row" data-t="cf3Lost">DRONE 3 disconnected</button>
     <button class="sw-row" data-t="proximity">Send DRONE 3 toward DRONE 2</button>
     <button class="sw-row reset" id="simReset">Reset scenario</button>
@@ -642,15 +649,16 @@ const CONFIG={
   nfz:{x:2.655,y:1.775,h:0.59},   // 118 cm restricted zone at the room centre (§1.7.6 prose; Fig. 5 draws it ~11 cm lower)
   boxes:[{id:"O1",x:1.31,y:1.56,hx:0.265,hy:0.255,h:1.02},{id:"O2",x:2.60,y:2.71,hx:0.265,hy:0.255,h:1.53}],   // balikbayan stacks 53x51 cm
   hoops:[{id:"H1",x:1.31,y:2.70,type:"horizontal",z:1.00,r:0.20},{id:"H2",x:3.99,y:2.70,ang:90,z:0.50,r:0.20},{id:"H3",x:3.99,y:1.49,ang:90,z:1.50,r:0.20}],   // 40 cm hoops
-  zoneMargin:0.06,   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
+  zoneMargin:0.06,
+  droneBuf:0.20,droneVsep:0.10,   // drag buffer between drones at similar height (two 0.05 m bodies plus margin); placeholders   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
   rateMax:0.20,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
   timeLimit:300,   // placeholder: the proposal sets it from two expert pilots' mean times x 2 (§1.7.4)
   sessionStart:12*60+31,timelineSec:300,
   drones:[
-    {id:"cf1",n:1,x:2.35,y:0.45,z:0,batt:86,volt:3.94,link:98,yaw:20},
-    {id:"cf2",n:2,x:2.65,y:0.45,z:0,batt:81,volt:3.90,link:97,yaw:350},
-    {id:"cf3",n:3,x:2.95,y:0.45,z:0,batt:77,volt:3.87,link:96,yaw:95}],
-  initialLog:[[-151,"Session start, participant P07","info"],[-148,"MoCap lock, 3 of 3 rigid bodies","ok"],
+    {id:"cf1",n:1,x:2.35,y:0.45,z:0,vbat:4.02,link:98,yaw:20},
+    {id:"cf2",n:2,x:2.65,y:0.45,z:0,vbat:3.98,link:97,yaw:350},
+    {id:"cf3",n:3,x:2.95,y:0.45,z:0,vbat:3.94,link:96,yaw:95}],
+  initialLog:[[-151,"Session S1 started","info"],[-148,"MoCap lock, 3 of 3 rigid bodies","ok"],
     [-9,"Drones on start pads D1–D3, 30 cm spacing","ok"]]
 };
 // Map and gauge colours. Dark mode uses the tactical green accent; light mode uses an electric blue accent.
@@ -664,7 +672,7 @@ const K=Object.assign({},PAL.dark);
 /* =====================================================================
    STATE + HELPERS
    ===================================================================== */
-const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:3,running:false,t0:0,dh:0,last:null}};
+const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,motorFault:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:1,running:false,t0:0,dh:0,restrict:0,last:null},session:1,curTrial:""};
 let drones=[];const pointers=new Map();
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -749,8 +757,33 @@ const confirmPct=()=>CAM.conf?Math.round(clamp((performance.now()-CAM.conf.t0)/G
 const rateCmd=()=>CAM.tracking&&gAct()?S.liveRate:S.gesture==="climb"?0.75*CONFIG.rateMax:S.gesture==="descend"?-0.75*CONFIG.rateMax:0;
 const videoD=()=>drones.find(d=>d.id===S.video);
 const fmtMS=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
-const volts=d=>3.4+0.8*(S.lowBatt&&d.id==="cf3"?12:d.batt)/100;   // simulated battery voltage from charge
-function log(text,k="info"){S.log.push({t:S.t,text,k});renderLog();}
+/* ---------- Crazyflie battery and health, using the firmware's own values (crazyflie-firmware 2026.08) ----------
+   pm.vbat (V); pm.batteryLevel = 10 x the step on LiPoTypicalChargeCurve (0 to 90 %); pm.state goes to lowPower
+   below pm.lowVoltage 3.2 V for 5 s; pm.criticalLowVoltage is 3.0 V. The health test group: health.startPropTest
+   gives health.motorPass (bit n = motor n+1 passed); health.startBatTest gives health.batterySag, a pass when the sag
+   is 0.70 V or less. sys.canfly and sys.isTumbled come from the supervisor. Link quality (0-100) comes from cflib. */
+const LIPO=[3.00,3.78,3.83,3.87,3.89,3.92,3.96,4.00,4.04,4.10],BAT_LOW=3.2,BAT_CRIT=3.0,BAT_LOW_S=5,SAG_MAX=0.70;
+const volts=d=>d.vbat;
+function batteryLevel(v){if(v<LIPO[0])return 0;if(v>LIPO[9])return 90;let c=0;while(v>LIPO[c])c++;return c*10;}
+const pmState=d=>(d.lowT||0)>=BAT_LOW_S?"lowPower":"battery";
+function healthOf(d){const h=d.health,why=[];
+  if(connState(d)==="lost")why.push("radio link lost");
+  if(pmState(d)==="lowPower")why.push(`battery low (${d.vbat.toFixed(2)} V)`);
+  if(d.tumbled)why.push("tumbled");
+  if(h&&h.motorPass){const bad=h.motorPass.map((p,i)=>p?null:`M${i+1}`).filter(Boolean);if(bad.length)why.push(`motor ${bad.join(", ")} failed`);}
+  if(h&&h.batPass===false)why.push(`battery sag ${h.sag.toFixed(2)} V`);
+  return why.length?{k:"crit",text:why.join("; ")}:h?{k:"ok",text:"Passed"}:{k:"",text:"Not checked"};}
+// Propeller and battery tests, run on the ground between trials. Display only: they never block a command.
+function runHealthCheck(){
+  if(S.trial.running){log("Run the health check between trials","warn");return;}
+  if(drones.some(d=>d.z>0.02)){log("Land every drone before the health check: the test spins the propellers","warn");return;}
+  log("Health check: propeller and battery tests on all drones");
+  setTimeout(()=>{drones.forEach(d=>{if(connState(d)==="lost"){d.health=null;return;}
+      const motorPass=[0,1,2,3].map(i=>!(S.motorFault&&d.id==="cf2"&&i===2)),sag=+(0.25+Math.max(0,4.10-d.vbat)*0.9).toFixed(2);
+      d.health={motorPass,sag,batPass:sag<=SAG_MAX,at:S.t};const hs=healthOf(d);log(`${U(d.id)} health: ${hs.text}`,hs.k==="crit"?"crit":"ok");});
+    const bad=drones.filter(d=>healthOf(d).k==="crit");if(bad.length)S.alert=`Health check: ${bad.map(d=>`${U(d.id)} ${healthOf(d).text}`).join(". ")}. Check before flying.`;
+    renderTelemetry();},1200);}
+function log(text,k="info"){S.log.push({t:S.t,text,k,ses:sessionId(),tr:S.curTrial||""});renderLog();}
 function dtgZ(){const d=new Date(),mo=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"],dw=["SUN","MON","TUE","WED","THU","FRI","SAT"],p=n=>String(n).padStart(2,"0");
   return{long:`${dw[d.getUTCDay()]} ${mo[d.getUTCMonth()]} ${p(d.getUTCDate())} ${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} ZULU`,
          hms:`${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}Z`};}
@@ -759,20 +792,30 @@ function resetScenario(){
   drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[],ranges:{},dh:null,crashed:false}));
   Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0});
   S.trial.running=false;S.trial.last=null;S.alert=null;S.frameErr=false;
-  S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
+  S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k,ses:sessionId(),tr:""}));S.curTrial="";
   $("estop").classList.remove("fired");$("estopTitle").textContent="E-STOP";$("estopSub").textContent="Hold 1 s";
   if(window.__ready){OPT.feed="cf1";Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x==="cf1");}
   syncSim();renderLog();buildFeeds();buildSensorScene();if(window.__ready)applyFeeds();
 }
 /* ---------- restricted zone: interface-level, course trials only (§1.7.6) ---------- */
-function restrictedZones(){const N=CONFIG.nfz;return OPT.mode==="course"?[{id:"NFZ",name:"restricted zone",x:N.x,y:N.y,hx:N.h,hy:N.h}]:[];}
+// The restricted zone is "only active while the lap-course trials are being run" (§1.7.6), so it applies while a trial runs.
+function restrictedZones(){const N=CONFIG.nfz;return S.trial.running?[{id:"NFZ",name:"restricted zone",x:N.x,y:N.y,hx:N.h,hy:N.h}]:[];}
 // green (clear) -> amber (near) -> red (at the defensive-hover distance)
 function threatColor(t){const L=(a,b,k)=>Math.round(a+(b-a)*k),A=K.threatA,B=[255,154,31],C=[242,69,61];
   const [p,q,k]=t<0.5?[A,B,t/0.5]:[B,C,(t-0.5)/0.5];return `rgb(${L(p[0],q[0],k)},${L(p[1],q[1],k)},${L(p[2],q[2],k)})`;}
 // The touch surface rejects any drag that would place a drone entity inside the restricted zone.
 // Physical obstacles are not blocked here: they exist to test the onboard Multi-ranger stop (§1.7.6).
 function dragBlocked(x,y){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(Math.abs(x-o.x)<o.hx+B&&Math.abs(y-o.y)<o.hy+B)return o.name;return null;}
-function dragPathBlocked(ax,ay,bx,by){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;return dragBlocked(bx,by);}
+// Interface-level obstacle buffer around other drones (SO1, §1.7.3.2): a drag is rejected when it would bring a drone
+// within CONFIG.droneBuf of another drone flying at a similar height (within CONFIG.droneVsep), where they would really touch.
+// Drags that increase the gap are always allowed. Placeholder distances, pending flight tests.
+function segMinDist(ax,ay,bx,by,cx,cy){const dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy,t=L?clamp(((cx-ax)*dx+(cy-ay)*dy)/L,0,1):0;return Math.hypot(ax+dx*t-cx,ay+dy*t-cy);}
+function droneBlocked(d,ax,ay,bx,by){for(const e of drones){if(e===d||!airborne(e))continue;
+    const ez=e.zTarget!=null?e.zTarget:e.z;if(Math.abs(d.z-e.z)>=CONFIG.droneVsep&&Math.abs(d.z-ez)>=CONFIG.droneVsep)continue;
+    for(const[cx,cy] of [[e.x,e.y],[e.tx,e.ty]]){const d0=Math.hypot(ax-cx,ay-cy),dm=segMinDist(ax,ay,bx,by,cx,cy);if(dm<CONFIG.droneBuf&&dm<d0-1e-4)return U(e.id);}}
+  return null;}
+function dragPathBlocked(d,ax,ay,bx,by){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;
+  return dragBlocked(bx,by)||droneBlocked(d,ax,ay,bx,by)||droneBlocked(d,d.x,d.y,bx,by);}
 function segHitsRect(ax,ay,bx,by,cx,cy,hx,hy){let t0=0,t1=1;const dx=bx-ax,dy=by-ay;
   const P=[-dx,dx,-dy,dy],Q=[ax-(cx-hx),(cx+hx)-ax,ay-(cy-hy),(cy+hy)-ay];
   for(let i=0;i<4;i++){if(Math.abs(P[i])<1e-9){if(Q[i]<0)return false;}else{const r=Q[i]/P[i];if(P[i]<0){if(r>t1)return false;if(r>t0)t0=r;}else{if(r<t0)return false;if(r<t1)t1=r;}}}
@@ -912,7 +955,7 @@ function buildMapStatic(){
   restrictedZones().forEach(o=>{const B=CONFIG.zoneMargin;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" fill="none" stroke="${K.tx}" stroke-opacity=".18" stroke-width="1" stroke-dasharray="2 4"/>`;});
   // restricted zone: active only in course-trial mode
   const N=CONFIG.nfz,s0=N.h*SC;
-  if(OPT.mode==="course"){
+  if(S.trial.running){
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="${K.crit}" fill-opacity=".10"/>`;
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" stroke="${K.crit}" stroke-width="2.5"/>`;
     g+=`<rect x="${px(N.x)-52}" y="${py(N.y)-10}" width="104" height="20" fill="${K.critBg}" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">RESTRICTED</text>`;
@@ -947,26 +990,28 @@ function renderMap(){
       ["front","right","back","left"].forEach(k=>{const u=dirVec(d,k),a=Math.atan2(-u[1],u[0]),r=d.ranges[k],t=r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1);
         g+=`<path d="M${pt(a-sp)}A${R} ${R} 0 0 1 ${pt(a+sp)}" fill="none" stroke="${t>0?threatColor(t):K.line2}" stroke-opacity="${t>0?(0.5+0.5*t).toFixed(2):0.8}" stroke-width="${t>0?(3.5+2.5*t).toFixed(1):2.5}" stroke-linecap="round"/>`;});
       // above (up sensor) and below (motion capture + course layout) indicators, right of the icon
-      const vt=r=>r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1),ru=d.ranges.up,rb=d.below?d.below.dist:null,xa=X+33;
-      [[ru,-1],[rb,1]].forEach(([r,dir])=>{const t=vt(r),c=t>0?threatColor(t):K.line2,y0=Y+dir*6;
-        g+=`<path d="M${xa-5} ${y0}L${xa} ${y0+dir*7}L${xa+5} ${y0}Z" fill="${c}" fill-opacity="${t>0?1:.8}"/>`;
-        if(t>0)g+=`<text x="${xa+8}" y="${y0+dir*6+3}" fill="${c}" font-size="9.5" font-weight="700">${r.toFixed(2)}</text>`;});}
+      // above/below triangles sit in a cluster directly above the drone, clear of a fingertip on the icon and of
+      // neighbours, which usually sit side by side (start pads 30 cm apart)
+      const vt=r=>r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1),ru=d.ranges.up,rb=d.below?d.below.dist:null,xa=X+7,yc=Y-44;
+      [[ru,-1],[rb,1]].forEach(([r,dir])=>{const t=vt(r),c=t>0?threatColor(t):K.line2,y0=yc+dir*5;
+        g+=`<path d="M${xa-4.5} ${y0}L${xa} ${y0+dir*6}L${xa+4.5} ${y0}Z" fill="${c}" fill-opacity="${t>0?1:.8}"/>`;
+        if(t>0)g+=`<text x="${xa+8}" y="${y0+dir*5+3}" fill="${c}" font-size="9.5" font-weight="700">${r.toFixed(2)}</text>`;});}
     // heading tick
     const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+21*Math.cos(hr)}" y2="${Y+21*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
     const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="${held?K.own:K.iconFill}" stroke="${d.crashed||lostC?K.crit:gr?K.tx3:held?K.iconTx:K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
     g+=`<text x="${X}" y="${Y+5}" fill="${held?K.heldTx:K.iconTx}" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
     if(d.dh&&airborne(d)){g+=`<circle class="blink" cx="${X}" cy="${Y}" r="33" fill="none" stroke="${K.caut}" stroke-width="2"/>`;
-      g+=`<g transform="translate(${X},${Y-54})"><rect x="-50" y="-9" width="100" height="17" fill="${K.tagBg}" stroke="${K.caut}"/><text x="0" y="3.5" fill="${K.caut}" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">DEFENSIVE HOVER</text></g>`;}
+      g+=`<g transform="translate(${X},${Y+44})"><rect x="-50" y="-9" width="100" height="17" fill="${K.tagBg}" stroke="${K.caut}"/><text x="0" y="3.5" fill="${K.caut}" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">DEFENSIVE HOVER</text></g>`;}
     if(d.crashed){g+=`<path d="M${X-9} ${Y-9}L${X+9} ${Y+9}M${X+9} ${Y-9}L${X-9} ${Y+9}" stroke="${K.crit}" stroke-width="3"/>`;
-      g+=`<g transform="translate(${X},${Y-40})"><rect x="-40" y="-9" width="80" height="17" fill="${K.critBg}" stroke="${K.crit}"/><text x="0" y="3.5" fill="${K.crit}" font-size="9.5" font-weight="700" text-anchor="middle">COLLISION</text></g>`;}
+      g+=`<g transform="translate(${X},${Y+44})"><rect x="-40" y="-9" width="80" height="17" fill="${K.critBg}" stroke="${K.crit}"/><text x="0" y="3.5" fill="${K.crit}" font-size="9.5" font-weight="700" text-anchor="middle">COLLISION</text></g>`;}
     // altitude gradient bar (left of the icon, outside the proximity ring)
-    {const Zc=CONFIG.z,bh=40,bw=5,bx=X-40,by=Y-bh/2,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
+    {const Zc=CONFIG.z,bh=28,bw=5,bx=X-11,by=Y-58,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
      g+=`<clipPath id="${cid}"><rect x="${bx}" y="${ly}" width="${bw}" height="${by+bh-ly}"/></clipPath>`;
      g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="${K.iconTx}" fill-opacity=".07" stroke="${K.iconTx}" stroke-opacity=".22" stroke-width=".8"/>`;
      g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="url(#altGlass)" clip-path="url(#${cid})"/>`;
      g+=`<path d="M${bx-2} ${zy(Zc.max)}H${bx+bw+2}M${bx-2} ${zy(Zc.min)}H${bx+bw+2}" stroke="${K.caut}" stroke-opacity=".7" stroke-width="1"/>`;
      g+=`<circle cx="${bx+bw/2}" cy="${ly}" r="6" fill="${K.iconTx}" fill-opacity=".12"/><circle cx="${bx+bw/2}" cy="${ly}" r="3" fill="${K.iconTx}" fill-opacity=".95"/>`;}
-    g+=`<text x="${X}" y="${Y+42}" fill="${K.tx2}" font-size="10" text-anchor="middle">${d.z.toFixed(2)} m</text></g>`;
+    g+=`<text x="${X}" y="${Y-63}" fill="${K.tx2}" font-size="10" text-anchor="middle">${d.z.toFixed(2)} m</text></g>`;
   });
   $("mapDyn").innerHTML=g;
 }
@@ -1084,9 +1129,9 @@ function renderFeed(d){
   const[st,k]=flightState(d),e=$("fst-"+d.id);e.textContent=st;e.style.color={ok:K.grn,own:K.own,caut:K.caut,crit:K.crit,"":K.tx2}[k];
 }
 function updFeedStat(d){
-  const pct=S.lowBatt&&d.id==="cf3"?12:d.batt,c=connState(d),bk=pct<10?"crit":pct<CONFIG.lowBatt?"warn":"";
+  const pct=batteryLevel(d.vbat),c=connState(d),bk=d.vbat<BAT_CRIT?"crit":pmState(d)==="lowPower"?"crit":d.vbat<BAT_LOW?"warn":"";
   const lk=$("flk-"+d.id);lk.textContent=c==="lost"?"LINK LOST":c==="weak"?"LINK WEAK":"LINK OK";lk.className="lnk "+(c==="lost"?"crit":c==="weak"?"warn":"");
-  const bt=$("fbat-"+d.id);bt.className="bat "+bk;bt.firstElementChild.style.width=Math.max(4,pct)*0.14+"px";
+  const bt=$("fbat-"+d.id);bt.className="bat "+bk;bt.firstElementChild.style.width=Math.max(1,pct/90*14)+"px";
   const bv=$("fbatv-"+d.id);bv.textContent=volts(d).toFixed(2)+" V";bv.className="m "+bk;
 }
 function renderFeeds(){drones.forEach(d=>{const t=document.querySelector(`.dfeed[data-f="${d.id}"]`);if(t&&!t.classList.contains("off"))renderFeed(d);});document.querySelectorAll(".dfeed").forEach(b=>{b.classList.toggle("on",b.dataset.f===S.video);b.classList.toggle("held",isHeld(drones.find(x=>x.id===b.dataset.f)));});}
@@ -1127,18 +1172,19 @@ function renderTop(){
     let dot=b.querySelector(".sd");if(!dot){dot=document.createElement("i");dot.className="sd";b.prepend(dot);}
     dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
   // per-drone battery and radio signal (Figure 1; telemetry §1.7.3.7). Flight state lives in Telemetry and the video header.
-  drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),pct=Math.round(S.lowBatt&&d.id==="cf3"?12:d.batt),lq=linkQ(d),
-      bk=pct<10?"crit":pct<CONFIG.lowBatt?"warn":"",sk=lq===0?"crit":lq<70?"warn":"",bars=lq===0?0:lq>90?4:lq>70?3:lq>45?2:1;
-    const bt=el.querySelector(".bt");bt.className="bt "+bk;bt.firstElementChild.style.width=Math.max(1,pct*0.14)+"px";
+  drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),pct=batteryLevel(d.vbat),lq=linkQ(d),hs=healthOf(d),
+      bk=pmState(d)==="lowPower"?"crit":d.vbat<BAT_LOW?"warn":"",sk=lq===0?"crit":lq<70?"warn":"",bars=lq===0?0:lq>90?4:lq>70?3:lq>45?2:1;
+    const bt=el.querySelector(".bt");bt.className="bt "+bk;bt.firstElementChild.style.width=Math.max(1,pct/90*12)+"px";
     const v=el.querySelector(".v");v.textContent=pct+"%";v.className="m v "+bk;
     const sg=el.querySelector(".sg");sg.className="sg "+sk;[...sg.children].forEach((b,i)=>b.classList.toggle("on",i<bars));
-    el.title=`${U(d.id)}: battery ${volts(d).toFixed(2)} V (${pct}%), radio link ${lq}%`;});
+    el.querySelector("b").style.color=hs.k==="crit"?"var(--crit)":"";
+    el.title=`${U(d.id)}: pm.vbat ${d.vbat.toFixed(2)} V, pm.batteryLevel ${pct}%, link quality ${lq}%. Health: ${hs.text}`;});
   // trial clock (host-owned in the real system)
   const T=S.trial,tc=$("trialChip");if(!tc)return;   // the trial is shown in Telemetry, not on the main screen
   if(T.running){tc.className="trial run";tc.innerHTML=`<b>${trialId()}</b><span class="m">${fmtMS(S.t-T.t0)} / ${fmtMS(CONFIG.timeLimit)}</span>`;}
   else if(T.last){const f=T.last.outcome==="collision"||T.last.outcome==="timeout";tc.className="trial"+(f?" fail":"");
     tc.innerHTML=`<b>${T.last.id}</b><span>${f?"Failed: "+T.last.outcome:T.last.outcome==="completed"?"Completed":"Aborted"} ${fmtMS(T.last.elapsed)}</span>`;}
-  else{tc.className="trial";tc.innerHTML=`<b>${trialId()}</b><span>${OPT.mode==="course"?"Ready":"Sub-test"}</span>`;}
+  else{tc.className="trial";tc.innerHTML=`<b>${trialId()}</b><span>Ready</span>`;}
 }
 // radio link quality in % (Crazyradio acknowledged packets); 0 when the link is lost
 function linkQ(d){return connState(d)==="lost"?0:S.degraded?61:d.link;}
@@ -1159,13 +1205,17 @@ function setTab(t){if(t===TAB)return;TAB=t;
 $("tabMap").addEventListener("click",()=>setTab("map"));$("alertOk").addEventListener("click",()=>{S.alert=null;renderAlert();});$("tabTel").addEventListener("click",()=>setTab("tel"));
 function rangeCell(d,k){const r=d.ranges&&d.ranges[k];if(!airborne(d))return`<td class="dim">--</td>`;if(r==null)return`<td class="dim">&gt;4 m</td>`;
   return`<td class="${r<MR.trig?"crit":r<MR.show?"warn":""}">${r.toFixed(2)}</td>`;}
+function protoState(d){return S.stopped?"stopped":d.landing&&d.z>0.02?"landing":d.zTarget!=null&&!d.landing?"taking_off":d.z>0.02?"flying":"grounded";}
 function renderTelemetry(){if(TAB!=="tel")return;
-  let h=`<thead><tr><th rowspan="2">Drone</th><th rowspan="2">State</th><th rowspan="2">Link</th><th rowspan="2">Battery</th><th colspan="3" class="grp">Position (m)</th><th colspan="2" class="grp">Target (m)</th><th colspan="5" class="grp">Multi-ranger (m)</th><th rowspan="2">Below (m)<br><span style="font-weight:400">mocap</span></th><th rowspan="2">Held</th></tr>
-    <tr><th>x</th><th>y</th><th>z</th><th>x</th><th>y</th><th>Front</th><th>Back</th><th>Left</th><th>Right</th><th>Up</th></tr></thead><tbody>`;
-  drones.forEach(d=>{const[st,k]=flightState(d),c=connState(d),pct=S.lowBatt&&d.id==="cf3"?12:d.batt;
-    h+=`<tr><td><b>${U(d.id)}</b></td><td class="${k}">${st}${d.dh?` (${d.dh.dir})`:""}</td><td class="${c==="lost"?"crit":c==="weak"?"warn":"ok"}">${c==="lost"?"lost":"ok"}</td>
-      <td class="${pct<CONFIG.lowBatt?"warn":""}">${volts(d).toFixed(2)} V</td><td>${d.x.toFixed(2)}</td><td>${d.y.toFixed(2)}</td><td>${d.z.toFixed(2)}</td>
-      <td>${d.tx.toFixed(2)}</td><td>${d.ty.toFixed(2)}</td>${DIRS.map(k=>rangeCell(d,k)).join("")}${d.below&&airborne(d)?`<td class="${d.below.dist<MR.trig?"crit":d.below.dist<MR.show?"warn":""}">${d.below.dist.toFixed(2)} <span class="dim">${d.below.what}</span></td>`:`<td class="dim">--</td>`}<td class="${isHeld(d)?"own":"dim"}">${isHeld(d)?"yes":"no"}</td></tr>`;});
+  // fields follow protocol v1 telemetry and the Crazyflie firmware logs; "Below" is computed (DEC-19)
+  let h=`<thead><tr><th rowspan="2">Drone</th><th rowspan="2">state</th><th rowspan="2">defensive_hover</th><th colspan="2" class="grp">Radio</th><th colspan="2" class="grp">Battery</th><th colspan="4" class="grp">Pose, motion capture (m, °)</th><th colspan="3" class="grp">cmd (m)</th><th colspan="5" class="grp">ranges, Multi-ranger (m)</th><th rowspan="2">Below (m)<br><span style="font-weight:400">computed</span></th><th rowspan="2">held</th></tr>
+    <tr><th>link</th><th>quality</th><th>pm.vbat</th><th>level</th><th>x</th><th>y</th><th>z</th><th>yaw</th><th>x</th><th>y</th><th>z</th><th>front</th><th>back</th><th>left</th><th>right</th><th>up</th></tr></thead><tbody>`;
+  drones.forEach(d=>{const c=connState(d),lq=linkQ(d),cz=d.zTarget!=null?d.zTarget:d.z,st=protoState(d);
+    h+=`<tr><td><b>${U(d.id)}</b></td><td class="${st==="stopped"?"crit":st==="flying"?"ok":st==="grounded"?"dim":"own"}">${st}</td><td class="${d.dh?"caut":"dim"}">${d.dh?`${d.dh.dir} ${d.dh.range.toFixed(2)}`:"null"}</td>
+      <td class="${c==="lost"?"crit":"ok"}">${c==="lost"?"lost":"ok"}</td><td class="${lq<70?"warn":""}">${lq}%</td>
+      <td class="${pmState(d)==="lowPower"?"crit":d.vbat<BAT_LOW?"warn":""}">${d.vbat.toFixed(2)} V</td><td>${batteryLevel(d.vbat)}%</td>
+      <td>${d.x.toFixed(2)}</td><td>${d.y.toFixed(2)}</td><td>${d.z.toFixed(2)}</td><td>${Math.round(((d.yaw+180)%360+360)%360-180)}</td>
+      <td>${d.tx.toFixed(2)}</td><td>${d.ty.toFixed(2)}</td><td>${cz.toFixed(2)}</td>${DIRS.map(k=>rangeCell(d,k)).join("")}${d.below&&airborne(d)?`<td class="${d.below.dist<MR.trig?"crit":d.below.dist<MR.show?"warn":""}">${d.below.dist.toFixed(2)} <span class="dim">${d.below.what}</span></td>`:`<td class="dim">--</td>`}<td class="${isHeld(d)?"own":"dim"}">${isHeld(d)?"true":"false"}</td></tr>`;});
   $("telTable").innerHTML=h+"</tbody>";
   const g=S.gesture,gName={idle:"Idle",confirming:"Confirming",climb:"Active",descend:"Active",locked:"Locked",lost:"Hand lost",unrecognized:"Unrecognised pose"}[g]||g;
   $("telAlt").innerHTML=`<dt>Gesture state</dt><dd>${gName}</dd><dt>Source</dt><dd>${CAM.tracking?`Camera, ${CAM.fps} fps`:"Simulation controls"}</dd>
@@ -1173,12 +1223,18 @@ function renderTelemetry(){if(TAB!=="tel")return;
     <dt>Paused by</dt><dd class="${S.altBlock?"warn":""}">${S.altBlock?`${U(S.altBlock.d.id)}, ${S.altBlock.why}`:"--"}</dd>
     <dt>Limits</dt><dd>${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m, max ${CONFIG.rateMax.toFixed(2)} m/s</dd>`;
   const T=S.trial,L=T.last;
-  $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Mode</dt><dd>${OPT.mode==="course"?"Course":"Gesture sub-test"}</dd>
+  $("telTrial").innerHTML=`<dt>Session</dt><dd>${sessionId()}</dd><dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>${T.running?"Active":"Inactive (no trial running)"}</dd>
     <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?L.outcome.replace("_"," "):"Not started"}</dd>
     <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
-    <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd><dt>Layout</dt><dd>${CONFIG.layout?`Motive, ${new Date(CONFIG.layout.synced).toLocaleTimeString()}`:"Figure 5"}</dd>`;
+    <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd><dt>Drag restrictions</dt><dd>${T.running?T.restrict:L?L.restrict:0}</dd><dt>Layout</dt><dd>${CONFIG.layout?`Motive, ${new Date(CONFIG.layout.synced).toLocaleTimeString()}`:"Figure 5"}</dd>`;
+  let hh=`<thead><tr><th>Drone</th><th>Status</th><th>pm.state</th><th>sys.canfly</th><th>sys.isTumbled</th><th>health.motorPass</th><th>health.batterySag</th><th>Last check</th></tr></thead><tbody>`;
+  drones.forEach(d=>{const hs=healthOf(d),h=d.health;
+    hh+=`<tr><td><b>${U(d.id)}</b></td><td class="${hs.k}">${hs.text}</td><td class="${pmState(d)==="lowPower"?"crit":""}">${pmState(d)}</td><td>${!(d.tumbled||connState(d)==="lost")}</td><td class="${d.tumbled?"crit":""}">${!!d.tumbled}</td>
+      <td>${h&&h.motorPass?h.motorPass.map((p,i)=>`<span class="${p?"ok":"crit"}">M${i+1}</span>`).join(" "):"<span class=dim>--</span>"}</td>
+      <td class="${h&&!h.batPass?"crit":""}">${h?`${h.sag.toFixed(2)} V ${h.batPass?"pass":"fail"}`:"<span class=dim>--</span>"}</td><td>${h?`T+${fmtT(h.at)}`:"<span class=dim>never</span>"}</td></tr>`;});
+  $("telHealth").innerHTML=hh+"</tbody>";
   $("logCount").textContent=`${S.log.length} events`;
-  $("telLog").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");}
+  $("telLog").innerHTML=`<li class="lh"><span>Time</span><span>Session</span><span>Trial</span><span></span><span>Event</span></li>`+[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="m">${e.ses||""}</span><span class="m">${e.tr||"—"}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");}
 $("logToggle").addEventListener("click",()=>setTab("tel"));
 document.querySelectorAll(".sec>button").forEach(b=>b.addEventListener("click",()=>{const c=b.parentElement.classList.toggle("closed");b.setAttribute("aria-expanded",!c);}));
 
@@ -1211,7 +1267,8 @@ function update(dt){
   if(bk!==S.altBlockKey){S.altBlockKey=bk;if(block&&block.why!=="minimum altitude")log(`Shared ${rate>0?"climb":"descent"} paused: ${U(block.d.id)} at ${block.why}`,"warn");}
   S.altBlock=block;S.appliedRate=block?0:rate;
   drones.forEach(d=>{
-    const x0=d.x,y0=d.y,z0=d.z;d.batt=Math.max(5,d.batt-dt*0.004);
+    const x0=d.x,y0=d.y,z0=d.z;if(airborne(d))d.vbat=Math.max(2.9,d.vbat-dt*0.00025);if(S.lowBatt&&d.id==="cf3")d.vbat=Math.min(d.vbat,3.15);
+    d.lowT=d.vbat<BAT_LOW?(d.lowT||0)+dt:0;
     if(S.stopped||d.crashed){d.z=Math.max(0,d.z-dt*2.2);d.mvx=d.mvy=0;}
     else{
       if(d.zTarget!=null){const dz=d.zTarget-d.z,st=0.35*dt;if(Math.abs(dz)<=st){d.z=d.zTarget;d.zTarget=null;if(d.landing){d.landing=false;d.z=0;log(`${U(d.id)} landed`,"ok");}}else d.z+=Math.sign(dz)*st;}
@@ -1239,7 +1296,7 @@ function update(dt){
   drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
   if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
 }
-function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
+function crash(d,what){if(d.crashed)return;d.crashed=true;d.tumbled=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
   log(`Collision: ${U(d.id)} hit ${what}`,"crit");
   S.alert=S.trial.running?`Collision: ${U(d.id)} hit ${what}. Trial ${trialId()} failed, so all drones are landing. Press Take off all to fly again.`
     :`Collision: ${U(d.id)} hit ${what} and is down. Take off ${U(d.id)} or Take off all to fly it again.`;
@@ -1271,12 +1328,12 @@ svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");
   else{d.pHeld=true;if(OPT.latch)d.latched=true;log(airborne(d)?`${U(d.id)} held`:`${U(d.id)} held on its pad: raise an open palm to lift off`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
 svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
   $("cursor").textContent=inside?t:"--";
-  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed||!airborne(d))return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
+  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed||!airborne(d))return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d,d.tx,d.ty,cx,cy);
   if(!hit){d.tx=cx;d.ty=cy;d.blocked=null;}
   else{ // reject the part of the drag that enters the restricted zone: the target stops at its edge
-    let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
+    let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d,d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
     d.tx+=(cx-d.tx)*lo;d.ty+=(cy-d.ty)*lo;
-    if(d.blocked!==hit){d.blocked=hit;log(`${U(d.id)} drag rejected at the ${hit}`,"warn");}}
+    if(d.blocked!==hit){d.blocked=hit;if(S.trial.running)S.trial.restrict++;log(`${U(d.id)} drag rejected: ${/^DRONE/.test(hit)?`too close to ${hit}`:`${hit}`}`,"warn");}}
   d.blockPt=hit?[cx,cy]:null;});
 svg.addEventListener("pointerleave",()=>{$("cursor").textContent="--";});
 function release(e){const id=pointers.get(e.pointerId);if(!id)return;pointers.delete(e.pointerId);const d=drones.find(x=>x.id===id);d.nfzFlag=false;d.blocked=null;d.blockPt=null;
@@ -1297,24 +1354,27 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
    ===================================================================== */
 function landOne(d,msg){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(msg||`${U(d.id)} landing`);}
 function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
-function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;if(d.crashed)S.alert=null;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
+function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;if(d.crashed)S.alert=null;d.crashed=false;d.tumbled=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
 $("btnLandSel").addEventListener("click",()=>landOne(videoD()));
 $("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
     S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="E-STOP";$("estopSub").textContent="Hold 1 s";log("Emergency stop cleared by operator","ok");}
-  S.alert=null;const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
+  S.alert=null;const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.tumbled=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
 // Trials (§1.7.4, §1.7.6): start on the ground; a collision or the time limit fails the trial and grounds the drones.
 // Defensive hovers are counted separately and do not fail a trial.
-const trialId=()=>`P07-TV-${S.trial.n}`;
+// Simple IDs: session S1, S2 ... and trial S1-T1, S1-T2 ... (§1.7.7 logs "per participant and per trial")
+const sessionId=()=>`S${S.session}`,trialId=()=>`${sessionId()}-T${S.trial.n}`;
+function newSession(){if(S.trial.running){log("End the trial before starting a new session","warn");return;}
+  S.session++;S.trial.n=1;S.trial.last=null;log(`Session ${sessionId()} started`,"ok");}
 function startTrial(){const T=S.trial;if(T.running)return;
   if(S.stopped){log("Clear the emergency stop before starting a trial","warn");return;}
   if(drones.some(d=>d.z>0.02)){log("Start the trial with every drone on its pad","warn");return;}
-  Object.assign(T,{running:true,t0:S.t,dh:0,last:null});log(`Trial ${trialId()} started, ${OPT.mode==="course"?"course":"gesture sub-test"} mode, limit ${fmtMS(CONFIG.timeLimit)}`,"ok");}
+  Object.assign(T,{running:true,t0:S.t,dh:0,restrict:0,last:null});S.curTrial=trialId();buildMapStatic();log(`Trial ${trialId()} started, restricted zone active, limit ${fmtMS(CONFIG.timeLimit)}`,"ok");}
 function endTrial(outcome){const T=S.trial;if(!T.running)return;T.running=false;const el=S.t-T.t0,fail=outcome==="collision"||outcome==="timeout";
   log(`Trial ${trialId()} ${outcome==="completed"?"completed":outcome==="hardware_abort"?"ended, hardware abort":"failed: "+outcome} at ${fmtMS(el)}, ${T.dh} defensive hover${T.dh===1?"":"s"}`,fail?"crit":outcome==="completed"?"ok":"warn");
-  T.last={id:trialId(),outcome,elapsed:el,dh:T.dh};T.n++;
+  T.last={id:trialId(),outcome,elapsed:el,dh:T.dh,restrict:T.restrict};T.n++;S.curTrial="";buildMapStatic();
   if(outcome==="timeout")S.alert=`Time limit reached. Trial ${T.last.id} failed, so all drones are landing. Press Take off all to fly again.`;
   if(fail||outcome==="hardware_abort")landAll(fail?"Trial failed, grounding all drones":"Grounding all drones");}
 /* ---------- Sync course layout with Motive (simulated) ----------
@@ -1350,11 +1410,11 @@ function applySync(){if(!SYNC)return;SYNC.forEach(r=>r.set(r.m));const most=SYNC
   SYNC=null;$("syncDlg").hidden=true;}
 $("syncBtn").addEventListener("click",syncLayout);$("syncApply").addEventListener("click",applySync);
 $("syncCancel").addEventListener("click",()=>{SYNC=null;$("syncDlg").hidden=true;});
-function exportLog(){const last=S.trial.last,data={trial:last||{id:trialId(),outcome:S.trial.running?"running":null},mode:OPT.mode,
+function exportLog(){const last=S.trial.last,data={session:sessionId(),trial:last||{id:trialId(),outcome:S.trial.running?"running":null},
     config:{layout:CONFIG.layout||{source:"Figure 5"},room:CONFIG.arena,altitude:CONFIG.z,restricted_zone:CONFIG.nfz,obstacles:CONFIG.boxes,hoops:CONFIG.hoops,rate_max:CONFIG.rateMax,defensive_hover:{trigger_m:MR.trig,clear_m:MR.clear},time_limit_s:CONFIG.timeLimit},
-    events:S.log.map(e=>({t_s:+e.t.toFixed(3),kind:e.k,text:e.text}))};
+    events:S.log.map(e=>({t_s:+e.t.toFixed(3),session:e.ses,trial:e.tr||null,kind:e.k,text:e.text}))};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})),a=document.createElement("a");
-  a.href=url;a.download=`trial-${(last||{id:trialId()}).id}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);log("Trial log exported");}
+  a.href=url;a.download=`log-${(last||{id:trialId()}).id}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);log("Trial log exported");}
 const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
 function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
 function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
@@ -1381,7 +1441,8 @@ $("camBtn").addEventListener("click",toggleCamera);$("camSw").addEventListener("
 document.querySelectorAll("#settings [data-t]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.t;S[k]=!S[k];syncSim();
   if(k==="simHold")log(S.simHold?"DRONE 1 and DRONE 2 held (sim)":"DRONE 1 and DRONE 2 released (sim)");
   if(k==="degraded")log(S.degraded?"Link degraded, radio 61%, backend latency high":"Links nominal",S.degraded?"warn":"ok");
-  if(k==="lowBatt"&&S.lowBatt)log("DRONE 3 battery 12%, below 20%, land DRONE 3","warn");
+  if(k==="lowBatt"&&S.lowBatt)log("DRONE 3 battery at 3.15 V, below pm.lowVoltage 3.2 V","warn");if(k==="lowBatt"&&!S.lowBatt)drones[2].vbat=3.94;
+  if(k==="motorFault")log(S.motorFault?"DRONE 2 motor M3 fault (sim): shows on the next health check":"DRONE 2 motor M3 fault cleared (sim)");
   if(k==="cf3Lost")log(S.cf3Lost?"DRONE 3 connection lost":"DRONE 3 reconnected",S.cf3Lost?"crit":"ok");
   if(k==="proximity"){const c2=drones[1],c3=drones[2];if(S.proximity){c3.tx=c2.x+0.17;c3.ty=c2.y+0.02;log("DRONE 3 target set near DRONE 2 (sim)");}else{c3.tx=2.95;c3.ty=0.45;}}}));
 $("simReset").addEventListener("click",()=>{pointers.clear();resetScenario();});
@@ -1408,7 +1469,6 @@ function syncSettings(){
   document.querySelectorAll(".stp").forEach(r=>{const c=STEP[r.dataset.k];r.querySelector("b").textContent=c.fmt(c.get());});
   document.querySelectorAll("[data-o]").forEach(b=>b.setAttribute("aria-pressed",OPT[b.dataset.o]));
   document.querySelectorAll("[data-fs]").forEach(b=>b.setAttribute("aria-checked",b.dataset.fs===OPT.feed));
-  document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===OPT.mode));
 }
 document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",()=>{
   const k=b.closest(".stp").dataset.k,c=STEP[k],v=Math.round((c.get()+(+b.dataset.d)*c.step)*100)/100,nv=clamp(v,val(c.lo),val(c.hi));
@@ -1418,11 +1478,9 @@ document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",(
   syncSettings();}));
 document.querySelectorAll("[data-o]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.o;OPT[k]=!OPT[k];
   if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="light")applyTheme();if(k==="course"){buildMapStatic();buildSensorScene();log(OPT.course?"Boxes and hoops in the room":"Boxes and hoops removed");}syncSettings();}));
-document.querySelectorAll("#modeSeg button").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.mode;if(m===OPT.mode)return;
-  if(S.trial.running){log("The mode cannot change while a trial runs","warn");return;}
-  OPT.mode=m;buildMapStatic();log(m==="course"?"Course trial mode: restricted zone active":"Gesture sub-test mode: restricted zone off");syncSettings();}));
+
 $("trStart").addEventListener("click",startTrial);$("trDone").addEventListener("click",()=>endTrial("completed"));
-$("trAbort").addEventListener("click",()=>endTrial("hardware_abort"));$("trExport").addEventListener("click",exportLog);
+$("trAbort").addEventListener("click",()=>endTrial("hardware_abort"));$("trExport").addEventListener("click",exportLog);$("hcBtn").addEventListener("click",runHealthCheck);$("trSession").addEventListener("click",newSession);
 // A hidden page cannot keep streaming input, so release every contact and idle the altitude channel (protocol v1).
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)return;let n=0;
   drones.forEach(d=>{if(d.pHeld||d.latched)n++;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;});pointers.clear();
@@ -1460,11 +1518,10 @@ $("setBtn").addEventListener("click",()=>toggleSettings());$("setClose").addEven
    ===================================================================== */
 const STAGE={w:1280,h:800};let SCALE=1;
 function fitStage(){
-  SCALE=Math.min(innerWidth/STAGE.w,innerHeight/STAGE.h);
-  $("stage").style.transform=`translate(-50%,-50%) scale(${SCALE})`;
-  const dpr=window.devicePixelRatio||1,phys=[Math.round(STAGE.w*SCALE*dpr),Math.round(STAGE.h*SCALE*dpr)];
-  const exact=Math.abs(SCALE-1)<0.005&&Math.abs(dpr-2)<0.01;
-  const el=$("dispInfo");if(el)el.innerHTML=`Target 11" 16:10, 2560 × 1600 px<br>Stage 1280 × 800 CSS px @2x<br>This screen: ${phys[0]} × ${phys[1]} px, scale ${SCALE.toFixed(3)}, DPR ${dpr}<br><span style="color:${exact?"var(--grn)":"var(--caut)"}">${exact?"Exact 1:1 match":"Scaled to fit this window"}</span>`;
+  // the layout fills any landscape screen; portrait shows a prompt, because the tablet stays in landscape (REQ-01)
+  SCALE=1;$("stage").style.transform="";$("rotate").hidden=innerWidth>=innerHeight;
+  const dpr=window.devicePixelRatio||1,el=$("dispInfo");
+  if(el)el.innerHTML=`Target: Galaxy Tab S9, 11" 16:10 landscape<br>This window: ${innerWidth} × ${innerHeight} CSS px, DPR ${dpr}<br>The layout resizes to fill any landscape screen.`;
 }
 function layout(){
   fitStage();
@@ -1472,9 +1529,9 @@ function layout(){
   app.dataset.mode="landscape";
   const st=app.style;
   $("side").classList.remove("wide");
-  st.gridTemplateRows="1fr";
+  st.gridTemplateRows="minmax(0,1fr)";
   // left panel (§1.7.3.5) with the hand camera, altitude beside it, and the video feed below (accepted deviation); the map fills the rest
-  st.gridTemplateColumns=OPT.lefty?"1fr 78px 250px":"250px 78px 1fr";
+  st.gridTemplateColumns=OPT.lefty?"minmax(0,1fr) clamp(64px,6.5vw,96px) clamp(200px,21vw,300px)":"clamp(200px,21vw,300px) clamp(64px,6.5vw,96px) minmax(0,1fr)";
   st.gridTemplateAreas=OPT.lefty?`"main alt side"`:`"side alt main"`;
   requestAnimationFrame(()=>{fitMap();measure();});
 }
