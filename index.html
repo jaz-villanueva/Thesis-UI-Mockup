@@ -56,11 +56,11 @@ html,body{background:#000}
   --grn:#0066FF;--grn-2:#4D8DFF;--grn-dim:#E1ECFF;--grn-tx:#0047C2;--friend:#0066FF;--friend-bg:#E1ECFF;--own:#00A6C8;--sel:#E0147C;--task:#0066FF;--caut:#EA7300;--crit:#E5173F;
   --ovl:rgba(255,255,255,.86);--mapbg:#F3F7FD;--neon:0 0 0 1px rgba(0,102,255,.55),0 0 16px rgba(0,102,255,.35);--glass:0 10px 30px -12px rgba(18,52,120,.28),inset 0 1px 0 rgba(255,255,255,.9)}
 :root.light,:root.light body,:root.light .stage{background:radial-gradient(1200px 600px at 85% -10%,rgba(0,102,255,.14),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(224,20,124,.10),transparent 60%),linear-gradient(180deg,#EEF3FA,#DFE7F3)}
-:root.light .card,:root.light .mapcard,:root.light .alt,:root.light .gbar{background:var(--panel);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(0,102,255,.20);box-shadow:var(--glass);border-radius:10px}
+:root.light .card,:root.light .mapcard,:root.light .alt{background:var(--panel);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(0,102,255,.20);box-shadow:var(--glass);border-radius:10px}
 :root.light .card,:root.light .alt{border-top:2px solid var(--grn)}
 :root.light .mapcard{overflow:hidden;border-top:2px solid var(--grn)}
-:root.light .gbar{border-top:3px solid var(--grn);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(232,240,255,.85))}
-:root.light .gbar .glabel{color:var(--grn);text-shadow:0 0 10px rgba(0,102,255,.35);border-bottom-color:rgba(0,102,255,.3)}
+:root.light .gbar{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(225,236,255,.7));box-shadow:0 0 0 1px rgba(0,102,255,.15),0 0 16px rgba(0,102,255,.15)}
+:root.light .gbar .glabel{color:#fff;background:var(--grn);border-color:var(--grn);box-shadow:0 0 10px rgba(0,102,255,.4)}
 :root.light .gbtn{border:1.5px solid var(--grn);border-radius:6px;background:linear-gradient(180deg,#FFFFFF,#E6EFFF);color:var(--grn-tx);box-shadow:var(--neon)}
 :root.light .gbtn:active{background:var(--grn);color:#fff}
 :root.light .gbtn[disabled]{box-shadow:none;background:#F2F5FA;border-color:var(--line-2);color:var(--tx-3)}
@@ -87,7 +87,7 @@ html,body{background:#000}
 .stage{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
 .rotate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--tx);font-size:18px;font-weight:700;text-align:center}
 .rotate[hidden]{display:none}
-.app{display:grid;height:100%;grid-template-rows:minmax(0,1fr);grid-template-columns:clamp(76px,7vw,104px) clamp(190px,21vw,300px) clamp(56px,6vw,90px) minmax(0,1fr);grid-template-areas:"ctrl side alt main";position:relative}
+.app{display:grid;height:100%;grid-template-rows:minmax(0,1fr);grid-template-columns:clamp(200px,22vw,310px) clamp(56px,6vw,90px) minmax(0,1fr);grid-template-areas:"side alt main";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -425,8 +425,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .gear{width:38px;height:38px;display:grid;place-items:center;color:var(--tx-2);border:1px solid var(--line-2);border-radius:var(--r)}
 .gear[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
 .side{padding:2px 0 2px 2px}
-.side .card{overflow-y:auto;overflow-x:hidden}
-.side .scroll{flex:none;overflow:visible}
+.side .card{overflow:hidden}
+.side .scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
 .side .act{padding:4px;border-top:1px solid var(--line)}
 .side .pair{height:42px;font-size:13px}
 .altcol{padding:2px 0 2px 2px}
@@ -483,32 +483,25 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .pair{flex:1;height:46px;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
 .pair span{font-size:13px;font-weight:700} .pair small{font-size:10.5px;font-weight:700;letter-spacing:.06em}
 /* all-drone controls: bottom right of the map, square and outlined, apart from the one-drone pills */
-.ctrl{grid-area:ctrl;padding:2px 0 2px 2px;display:flex;min-height:0;min-width:0}
-.app.lefty .ctrl{padding:2px 2px 2px 0}
-.gbar{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 6px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--grn);min-height:0}
-.trl{display:flex;flex-direction:column;gap:6px;padding-bottom:8px;border-bottom:1px solid var(--line-2)}
-.trbtn{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px dashed var(--own);border-radius:var(--r);color:var(--own);background:transparent;font-weight:800;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;text-align:center;padding:4px 2px}
+/* panel footer: trial, one-drone pills, then the framed all-drone group */
+.foot{flex:none;display:flex;flex-direction:column;gap:6px;padding:6px;border-top:1px solid var(--line)}
+.side .foot .act{padding:0;border-top:0;margin:0}
+.trl{display:flex} .trl>*{flex:1}
+.trbtn{min-height:36px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--own);border-radius:var(--r);color:var(--own);background:transparent;font-weight:800;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
 .trbtn small{font-size:10px;font-weight:700;opacity:.8;letter-spacing:.04em}
 .trbtn.wait{border-color:var(--line-2);color:var(--tx-3)}
-.trbtn[hidden],.trrun[hidden],.trask[hidden],.trend[hidden]{display:none}
-.trrun{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:1.5px solid var(--own);border-radius:var(--r);background:color-mix(in srgb,var(--own) 10%,transparent)}
-.trlab{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--own)}
-.trrun b{font-size:clamp(17px,2vw,22px);font-weight:800;line-height:1;color:var(--tx)}
-.trrun small{font-size:10px;color:var(--tx-3)}
-.trbar{align-self:stretch;height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin:2px 0}
-.trbar i{display:block;height:100%;width:0;background:var(--own)}
-.trl[data-k="warn"] .trrun{border-color:var(--caut)} .trl[data-k="warn"] .trrun b,.trl[data-k="warn"] .trlab{color:var(--caut)} .trl[data-k="warn"] .trbar i{background:var(--caut)}
-.trl[data-k="crit"] .trrun{border-color:var(--crit)} .trl[data-k="crit"] .trrun b,.trl[data-k="crit"] .trlab{color:var(--crit)} .trl[data-k="crit"] .trbar i{background:var(--crit)}
-.trend{align-self:stretch;height:30px;margin-top:3px;border:1px solid var(--line-2);border-radius:var(--r);font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-2);background:var(--panel-2)}
-.trask{align-self:stretch;display:flex;flex-direction:column;gap:4px;margin-top:3px}
-.trask button{min-height:30px;border-radius:var(--r);font-size:10.5px;font-weight:800;line-height:1.1;padding:2px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--tx)}
-.trask #trOk{border-color:var(--grn);color:var(--grn-tx)} .trask #trHw{border-color:var(--caut);color:var(--caut)}
-@media (max-height:460px){.gbar{gap:5px;padding:5px 4px}.gbar .estop{min-height:70px}.gbar .gbtn{min-height:40px}.trbtn{min-height:44px}.gbar .glabel{padding-bottom:3px}}
-.gbar .glabel{font-size:10px;font-weight:800;letter-spacing:.14em;line-height:1.3;color:var(--grn-tx);text-align:center;padding-bottom:6px;border-bottom:1px dashed var(--line-2)}
-.gbar .gbtn{height:auto;flex:1;max-height:120px;min-height:52px;padding:6px 2px;white-space:normal;line-height:1.15;font-size:12px}
-.gbar .estop{margin-top:auto;width:100%;height:auto;min-height:96px;flex-direction:column;justify-content:center;gap:4px;padding:8px 2px;text-align:center}
-.gbar .estop small{white-space:normal}
-.app[data-mode="portrait"] .ctrl{padding:2px 0 2px 2px}
+.trbtn[hidden],.trrun[hidden]{display:none}
+.trrun{min-height:36px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--own);border-radius:var(--r);background:color-mix(in srgb,var(--own) 10%,transparent)}
+.trlab{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--own)}
+.trdot{width:10px;height:10px;border-radius:50%;background:var(--own);box-shadow:0 0 8px var(--own);animation:trp 1.6s ease-in-out infinite}
+@keyframes trp{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.trdot{animation:none}}
+.gbar{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;padding:14px 6px 6px;border:1.5px solid var(--grn);border-radius:2px;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--grn) 6%,transparent) 6px 7px)}
+.gbar .glabel{position:absolute;top:-8px;left:8px;padding:0 6px;background:var(--panel-2);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:14px;color:var(--grn-tx);border:1px solid var(--grn);border-radius:2px}
+.gbar .gbtn{height:40px;padding:0 4px;white-space:normal;line-height:1.1;font-size:11.5px;border-radius:2px}
+.gbar .estop{grid-column:span 2;width:100%;height:48px;flex-direction:row;justify-content:center;gap:10px;padding:0 8px}
+.gbar .estop small{white-space:nowrap}
+@media (max-height:520px){.foot{gap:4px;padding:4px}.gbar{gap:4px;padding:12px 4px 4px}.gbar .gbtn{height:34px}.gbar .estop{height:40px}.trbtn,.trrun{min-height:30px}.side .pair{height:38px}}
 .gbtn{height:46px;padding:0 16px;border:2px solid var(--grn);background:transparent;color:var(--grn);border-radius:3px;font-weight:800;font-size:13px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 .gbtn:active{background:var(--grn-dim)}
 .gbtn[disabled]{border-color:var(--line-2);color:var(--tx-3)}
@@ -592,9 +585,26 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         </div>
       </div>
     </div>
-    <div class="act">
-      <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
-      <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
+    <div class="foot">
+      <div class="trl" id="trl" aria-live="polite">
+        <button class="trbtn" id="trGo"><span>Start trial</span><small id="trNext">S1-T1</small></button>
+        <div class="trrun" id="trRun" hidden><span class="trdot"></span><span class="trlab">Trial running</span></div>
+      </div>
+      <!-- one drone: rounded pills naming the drone -->
+      <div class="act">
+        <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
+        <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
+      </div>
+      <!-- all drones: square buttons inside a labelled frame -->
+      <div class="gbar" id="gbar" role="group" aria-labelledby="allLbl">
+        <span class="glabel" id="allLbl">All drones</span>
+        <button class="gbtn" id="btnTakeoff">Take off all</button>
+        <button class="gbtn" id="btnLand">Land all</button>
+        <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
+        <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
+        <span><strong id="estopTitle">E-STOP</strong><small id="estopSub">Hold 1 s</small></span>
+          </button>
+      </div>
     </div>
   </section>
 </aside>
@@ -605,25 +615,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 </aside>
 
 
-
-<!-- trial and all-drone controls: a column at the left edge, apart from the one-drone pills in the left panel -->
-<aside class="ctrl" aria-label="All-drone controls">
-      <div class="gbar" id="gbar" role="group" aria-label="All drones">
-    <div class="trl" id="trl" aria-live="polite">
-      <button class="trbtn" id="trGo"><span>Start trial</span><small id="trNext">S1-T1</small></button>
-      <div class="trrun" id="trRun" hidden><span class="trlab" id="trId">S1-T1</span><b class="m" id="trClock">00:00</b><small class="m" id="trLim">/ 05:00</small><span class="trbar"><i id="trBar"></i></span>
-        <button class="trend" id="trEnd">End trial</button>
-        <div class="trask" id="trAsk" hidden><button id="trOk">Completed</button><button id="trHw">Hardware abort</button><button id="trNo">Keep going</button></div></div>
-    </div>
-    <span class="glabel">ALL<br>DRONES</span>
-    <button class="gbtn" id="btnTakeoff">Take off all</button>
-    <button class="gbtn" id="btnLand">Land all</button>
-    <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
-  <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
-  <span><strong id="estopTitle">E-STOP</strong><small id="estopSub">Hold 1 s</small></span>
-    </button>
-  </div>
-</aside>
 
 <!-- =============================== MAP =============================== -->
 <main class="main">
@@ -668,7 +659,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="set-b">
     <div class="set-g">Trial log</div>
-    <div class="note">Start and end trials with the Trial control at the top of the right-hand column.</div>
+    <div class="note">Start trial is at the top of the left-hand column. A trial ends by itself: completed when every drone has flown H1, H2 and H3 in order and landed on its start position, or failed on a collision or at the time limit.</div>
+    <button class="sw-row reset" id="trVoid" disabled>Void running trial (hardware fault)</button>
     <button class="sw-row reset" id="trSession">Start new session</button>
     <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
     <div class="set-g">Course layout</div>
@@ -732,6 +724,7 @@ const CONFIG={
   zoneMargin:0.06,
   droneBuf:0.20,droneVsep:0.10,   // drag buffer between drones at similar height (two 0.05 m bodies plus margin); placeholders   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
   rateMax:0.20,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  padTol:0.15,     // placeholder: a drone counts as back on its start position within 15 cm, half the 30 cm pad spacing (§1.7.6)
   timeLimit:300,   // placeholder: the proposal sets it from two expert pilots' mean times x 2 (§1.7.4)
   sessionStart:12*60+31,timelineSec:300,
   drones:[
@@ -956,12 +949,18 @@ function collisionOf(d){
   for(const e of drones){if(e===d||e.crashed||e.z<0.03)continue;if(Math.hypot(d.x-e.x,d.y-e.y,d.z-e.z)<2*MR.body)return{what:U(e.id),other:e};}
   return null;}
 function segCross(ax,ay,bx,by,cx,cy,dx,dy){const d1=(dx-cx)*(ay-cy)-(dy-cy)*(ax-cx),d2=(dx-cx)*(by-cy)-(dy-cy)*(bx-cx),d3=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax),d4=(bx-ax)*(dy-ay)-(by-ay)*(dx-ax);return d1*d2<0&&d3*d4<0;}
+// during a trial each drone must pass the hoops in order, H1 then H2 then H3 (§1.4.2, §1.7.6)
+function passed(d,h){const T=S.trial;if(!T.running||!T.prog){log(`${U(d.id)} passed ${h.id}`,"ok");return;}
+  const i=CONFIG.hoops.indexOf(h),p=T.prog[d.id],n=CONFIG.hoops.length;
+  if(i===p){T.prog[d.id]++;log(`${U(d.id)} passed ${h.id}${p+1===n?", all hoops done, return to the start position and land":""}`,"ok");}
+  else if(i<p)log(`${U(d.id)} passed ${h.id} again`);
+  else log(`${U(d.id)} passed ${h.id} out of order; ${CONFIG.hoops[p].id} comes first, so it does not count`,"warn");}
 function checkHoops(d,x0,y0,z0){if(!OPT.course)return;CONFIG.hoops.forEach(h=>{
   if(h.type==="horizontal"){ // pass by climbing/descending through the ring
-    if((z0-h.z)*(d.z-h.z)<0){const r=Math.hypot(d.x-h.x,d.y-h.y);if(r<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");}return;}
+    if((z0-h.z)*(d.z-h.z)<0){const r=Math.hypot(d.x-h.x,d.y-h.y);if(r<=h.r*0.8)passed(d,h);}return;}
   const a=h.ang*Math.PI/180,ux=Math.cos(a)*h.r,uy=Math.sin(a)*h.r;
   if(segCross(x0,y0,d.x,d.y,h.x-ux,h.y-uy,h.x+ux,h.y+uy)){
-    if(Math.abs(d.z-h.z)<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");
+    if(Math.abs(d.z-h.z)<=h.r*0.8)passed(d,h);
     else if(Math.abs(d.z-h.z)>h.r+MR.body)log(`${U(d.id)} went ${d.z<h.z?"under":"over"} ${h.id}, not through it (frame ${(h.z-h.r).toFixed(2)}–${(h.z+h.r).toFixed(2)} m)`,"warn");}});}
 function flightState(d){
   if(d.crashed)return["Collision","crit"];
@@ -1249,11 +1248,8 @@ function renderSide(){
 /* =====================================================================
    TOP BAR + TIMELINE
    ===================================================================== */
-let askT=null;function closeAsk(){clearTimeout(askT);$("trAsk").hidden=true;$("trEnd").hidden=false;}
-function renderTrialCtl(){const T=S.trial,run=T.running;$("trGo").hidden=run;$("trRun").hidden=!run;
-  if(!run){if(!$("trAsk").hidden)closeAsk();$("trl").dataset.k="";$("trNext").textContent=trialId();$("trGo").classList.toggle("wait",S.stopped||drones.some(d=>d.z>0.02));return;}
-  const el=S.t-T.t0,left=CONFIG.timeLimit-el;$("trId").textContent=trialId();$("trClock").textContent=fmtMS(el);$("trLim").textContent="/ "+fmtMS(CONFIG.timeLimit);
-  $("trBar").style.width=Math.min(100,el/CONFIG.timeLimit*100)+"%";$("trl").dataset.k=left<=30?"crit":left<=60?"warn":"";}
+function renderTrialCtl(){const T=S.trial,run=T.running;$("trGo").hidden=run;$("trRun").hidden=!run;$("trVoid").disabled=!run;
+  if(!run){$("trNext").textContent=trialId();$("trGo").classList.toggle("wait",!!trialBlocker());}}
 function renderTop(){renderTrialCtl();
   // on/off status dot on each video selector button
   document.querySelectorAll("[data-fs]").forEach(b=>{const d=drones.find(x=>x.id===b.dataset.fs);if(!d)return;const c=connState(d);
@@ -1313,6 +1309,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
   $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>${T.running?"Active":"Inactive (no trial running)"}</dd>
     <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?OUT[L.outcome]:"Not started"}</dd>
     <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
+    <dt>Hoops passed</dt><dd>${T.running&&T.prog?drones.map(d=>`${d.id.slice(2)}: ${T.prog[d.id]}/${CONFIG.hoops.length}`).join(", "):"--"}</dd>
     <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd><dt>Drag restrictions</dt><dd>${T.running?T.restrict:L?L.restrict:0}</dd><dt>Layout</dt><dd>${CONFIG.layout?`Motive, ${new Date(CONFIG.layout.synced).toLocaleTimeString()}`:"Figure 5"}</dd>`;
   let hh=`<thead><tr><th>Drone</th><th>Status</th><th>pm.state</th><th>sys.canfly</th><th>sys.isTumbled</th><th>health.motorPass</th><th>health.batterySag</th><th>Last check</th></tr></thead><tbody>`;
   drones.forEach(d=>{const hs=healthOf(d),h=d.health;
@@ -1323,7 +1320,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
   renderLogView();}
 // Event log: every event carries its session and trial. "All events" puts a divider wherever the trial changes;
 // choosing a finished or running trial shows its record and only its events, timed from the trial start.
-const OUT={completed:"Completed",hardware_abort:"Hardware abort",collision:"Failed, collision",timeout:"Failed, time limit"};
+const OUT={completed:"Completed",hardware_abort:"Voided, hardware fault",collision:"Failed, collision",timeout:"Failed, time limit"};
 function trialList(){const L=[...S.trials];if(S.trial.running)L.push({id:trialId(),session:sessionId(),t0:S.trial.t0,t1:null,outcome:null,dh:S.trial.dh,restrict:S.trial.restrict,elapsed:S.t-S.trial.t0});return L;}
 function renderLogView(){const sel=$("logView"),L=trialList();
   // one ID per event: its trial (S1-T2) when it happened during a trial, otherwise its session (S1)
@@ -1410,6 +1407,10 @@ function update(dt){
   S.prox=now;
   drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
   if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
+  if(S.trial.running){const T=S.trial,n=CONFIG.hoops.length;
+    drones.forEach(d=>{if(T.prog[d.id]>=n&&d.z<=0.02&&atPad(d)&&!T.home[d.id]){T.home[d.id]=true;log(`${U(d.id)} landed on its start position`,"ok");}
+      else if(T.home[d.id]&&(d.z>0.02||!atPad(d)))T.home[d.id]=false;});
+    if(trialDone())endTrial("completed");}
 }
 function crash(d,what){if(d.crashed)return;d.crashed=true;d.tumbled=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
   log(`Collision: ${U(d.id)} hit ${what}`,"crit");
@@ -1483,12 +1484,23 @@ $("btnTakeoff").addEventListener("click",()=>{
 const sessionId=()=>`S${S.session}`,trialId=()=>`${sessionId()}-T${S.trial.n}`;
 function newSession(){if(S.trial.running){log("End the trial before starting a new session","warn");return;}
   S.session++;S.trial.n=1;S.trial.last=null;log(`Session ${sessionId()} started`,"ok");}
-function startTrial(){const T=S.trial;if(T.running)return;
-  if(S.stopped){log("Clear the emergency stop before starting a trial","warn");return;}
-  if(drones.some(d=>d.z>0.02)){log("Start the trial with every drone on its pad","warn");return;}
-  Object.assign(T,{running:true,t0:S.t,dh:0,restrict:0,last:null});S.curTrial=trialId();buildMapStatic();log(`Trial ${trialId()} started, restricted zone active, limit ${fmtMS(CONFIG.timeLimit)}`,"ok");}
+// What keeps a trial from starting: each drone on its own start position, telemetry up, E-STOP clear (§1.4.2, §1.7.6)
+const padOf=d=>CONFIG.drones.find(c=>c.id===d.id),atPad=d=>{const p=padOf(d);return Math.hypot(d.x-p.x,d.y-p.y)<=CONFIG.padTol;};
+function trialBlocker(){if(S.stopped)return"Clear the emergency stop before starting a trial";
+  const a=drones.find(d=>d.z>0.02);if(a)return`Land ${U(a.id)} before starting a trial`;
+  const p=drones.find(d=>!atPad(d));if(p)return`Place ${U(p.id)} on its start position before starting a trial`;
+  const c=drones.find(d=>connState(d)==="lost");if(c)return`${U(c.id)} has no telemetry link, so the trial cannot start`;
+  return null;}
+function startTrial(){const T=S.trial;if(T.running)return;const why=trialBlocker();if(why){log(why,"warn");S.alert=why;renderAlert();return;}
+  // "A trial starts with the system bringing up telemetry and the video feed" (§1.7.6): the clock starts here
+  if(TAB!=="map")setTab("map");if(!OPT.feed||!drones.some(d=>d.id===OPT.feed))setVideo("cf1",true);
+  Object.assign(T,{running:true,t0:S.t,dh:0,restrict:0,last:null,prog:Object.fromEntries(drones.map(d=>[d.id,0])),home:{}});S.curTrial=trialId();S.alert=null;buildMapStatic();
+  log(`Trial ${trialId()} started: telemetry and video feed up, restricted zone active`,"ok");}
+// completed when every drone has passed H1, H2, H3 in order and is on the ground at its own start position
+function trialDone(){const T=S.trial,n=CONFIG.hoops.length;
+  return drones.every(d=>T.prog[d.id]>=n&&d.z<=0.02&&d.zTarget==null&&!d.crashed&&atPad(d));}
 function endTrial(outcome){const T=S.trial;if(!T.running)return;T.running=false;const el=S.t-T.t0,fail=outcome==="collision"||outcome==="timeout";
-  log(`Trial ${trialId()} ${outcome==="completed"?"completed":outcome==="hardware_abort"?"ended, hardware abort":"failed: "+outcome} at ${fmtMS(el)}, ${T.dh} defensive hover${T.dh===1?"":"s"}`,fail?"crit":outcome==="completed"?"ok":"warn");
+  log(`Trial ${trialId()} ${outcome==="completed"?"completed, all drones back on their start positions,":outcome==="hardware_abort"?"voided for a hardware fault":"failed: "+outcome} at ${fmtMS(el)}, ${T.dh} defensive hover${T.dh===1?"":"s"}`,fail?"crit":outcome==="completed"?"ok":"warn");
   T.last={id:trialId(),session:sessionId(),t0:T.t0,t1:S.t,outcome,elapsed:el,dh:T.dh,restrict:T.restrict};S.trials.push(T.last);T.n++;S.curTrial="";buildMapStatic();
   if(outcome==="timeout")S.alert=`Time limit reached. Trial ${T.last.id} failed, so all drones are landing. Press Take off all to fly again.`;
   if(fail||outcome==="hardware_abort")landAll(fail?"Trial failed, grounding all drones":"Grounding all drones");}
@@ -1595,12 +1607,10 @@ document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",(
 document.querySelectorAll("[data-o]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.o;OPT[k]=!OPT[k];
   if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="light")applyTheme();if(k==="course"){buildMapStatic();buildSensorScene();log(OPT.course?"Boxes and hoops in the room":"Boxes and hoops removed");}syncSettings();}));
 
-// Trial control: Start trial -> running clock -> End trial asks Completed / Hardware abort / Keep going (closes after 5 s)
+// Trial control: Start trial brings up telemetry and the video feed (§1.7.6). The trial ends by itself when every drone
+// has flown H1, H2 and H3 in order and landed on its start position, or fails on a collision or at the time limit.
 $("trGo").addEventListener("click",()=>{startTrial();renderTrialCtl();});
-$("trEnd").addEventListener("click",()=>{$("trAsk").hidden=false;$("trEnd").hidden=true;clearTimeout(askT);askT=setTimeout(closeAsk,5000);});
-$("trOk").addEventListener("click",()=>{closeAsk();endTrial("completed");renderTrialCtl();});
-$("trHw").addEventListener("click",()=>{closeAsk();endTrial("hardware_abort");renderTrialCtl();});
-$("trNo").addEventListener("click",closeAsk);$("trExport").addEventListener("click",exportLog);$("hcBtn").addEventListener("click",runHealthCheck);$("trSession").addEventListener("click",newSession);
+$("trVoid").addEventListener("click",()=>{endTrial("hardware_abort");renderTrialCtl();});$("trExport").addEventListener("click",exportLog);$("hcBtn").addEventListener("click",runHealthCheck);$("trSession").addEventListener("click",newSession);
 // A hidden page cannot keep streaming input, so release every contact and idle the altitude channel (protocol v1).
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)return;let n=0;
   drones.forEach(d=>{if(d.pHeld||d.latched)n++;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;});pointers.clear();
@@ -1652,14 +1662,14 @@ function layout(){
   $("side").classList.remove("wide");
   st.gridTemplateRows="minmax(0,1fr)";
   // left panel (§1.7.3.5) with the hand camera, altitude beside it, and the video feed below (accepted deviation); the map fills the rest
-  // everything but the map sits on the left: trial and all-drone column at the edge, then the panel and altitude; the map fills the right.
+  // everything but the map sits on the left: the panel (with trial, one-drone and all-drone controls under the video) and altitude; the map fills the right.
   // Left-handed use mirrors it. Portrait puts the map on top, full width.
-  const SIDE="clamp(190px,21vw,300px)",ALT="clamp(56px,6vw,90px)",CTRL="clamp(76px,7vw,104px)";
+  const SIDE="clamp(200px,22vw,310px)",ALT="clamp(56px,6vw,90px)";
   if(PORTRAIT){app.dataset.mode="portrait";st.gridTemplateRows="minmax(0,.8fr) minmax(0,1.2fr)";
-    st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT} ${CTRL}`:`${CTRL} ${ALT} minmax(0,1fr)`;
-    st.gridTemplateAreas=OPT.lefty?`"main main main" "side alt ctrl"`:`"main main main" "ctrl alt side"`;}
-  else{st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT} ${SIDE} ${CTRL}`:`${CTRL} ${SIDE} ${ALT} minmax(0,1fr)`;
-    st.gridTemplateAreas=OPT.lefty?`"main alt side ctrl"`:`"ctrl side alt main"`;}
+    st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT}`:`${ALT} minmax(0,1fr)`;
+    st.gridTemplateAreas=OPT.lefty?`"main main" "side alt"`:`"main main" "alt side"`;}
+  else{st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT} ${SIDE}`:`${SIDE} ${ALT} minmax(0,1fr)`;
+    st.gridTemplateAreas=OPT.lefty?`"main alt side"`:`"side alt main"`;}
   requestAnimationFrame(()=>{fitMap();measure();});
 }
 function measure(){
