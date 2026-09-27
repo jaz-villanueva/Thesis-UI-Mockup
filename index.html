@@ -666,7 +666,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <div class="note">Start trial is at the top of the left-hand column. A trial ends by itself: completed when every drone has flown H1, H2 and H3 in order and landed on its start position, or failed at the time limit or when a drone tumbles in a collision.</div>
     <button class="sw-row reset" id="trCol" disabled>Record a collision (fails the trial)</button>
     <button class="sw-row reset" id="trVoid" disabled>Void running trial (hardware fault)</button>
-    <button class="sw-row reset" id="trSession">Start new session</button>
+    <button class="sw-row reset" id="trSession">Next participant (new session)</button>
     <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
     <div class="set-g">Course layout</div>
     <button class="sw-row reset" id="syncBtn">Sync layout with Motive</button>
@@ -1338,7 +1338,7 @@ function renderLogView(){const sel=$("logView"),L=trialList();
   const idOf=e=>e.tr||e.ses||"",sessions=[...new Set([...S.log.map(e=>e.ses),sessionId()].filter(Boolean))];
   const key=sessions.join()+"|"+L.map(t=>t.id+(t.outcome||"")).join();
   if(sel.dataset.key!==key){sel.dataset.key=key;
-    sel.innerHTML=`<option value="all">All sessions</option>`+sessions.map(ss=>`<optgroup label="Session ${ss}"><option value="${ss}">${ss} · whole session</option>`+
+    sel.innerHTML=`<option value="all">All sessions</option>`+sessions.map(ss=>`<optgroup label="Participant session ${ss}"><option value="${ss}">${ss} · all of this participant</option>`+
       L.filter(t=>t.session===ss).map(t=>`<option value="${t.id}">${t.id} · ${t.outcome?OUT[t.outcome]:"running"}</option>`).join("")+`</optgroup>`).join("");
     if(![...sel.options].some(o=>o.value===S.logView))S.logView="all";sel.value=S.logView;}
   const v=S.logView,tr=L.find(t=>t.id===v),ses=sessions.includes(v)?v:null,sum=$("logSum");
@@ -1347,7 +1347,7 @@ function renderLogView(){const sel=$("logView"),L=trialList();
     sum.innerHTML=`<dt>Trial</dt><dd>${tr.id}</dd><dt>Outcome</dt><dd class="${tr.outcome==="completed"?"ok":tr.outcome?"crit":""}">${tr.outcome?OUT[tr.outcome]:"Running"}</dd><dt>Started</dt><dd>T+${fmtT(tr.t0)}</dd><dt>Ended</dt><dd>${tr.t1!=null?"T+"+fmtT(tr.t1):"running"}</dd>
       <dt>Time</dt><dd>${fmtMS(tr.elapsed)} / ${fmtMS(CONFIG.timeLimit)}</dd><dt>Defensive hovers</dt><dd>${tr.dh}</dd><dt>Drag restrictions</dt><dd>${tr.restrict}</dd><dt>Events</dt><dd>${ev.length}</dd>`;}
   else if(ses){const T=L.filter(t=>t.session===ses),done=T.filter(t=>t.outcome==="completed").length,fail=T.filter(t=>t.outcome==="collision"||t.outcome==="timeout").length;sum.hidden=false;
-    sum.innerHTML=`<dt>Session</dt><dd>${ses}</dd><dt>Trials</dt><dd>${T.length}</dd><dt>Started</dt><dd>${ev.length?"T+"+fmtT(ev[0].t):"--"}</dd><dt>Last event</dt><dd>${ev.length?"T+"+fmtT(ev[ev.length-1].t):"--"}</dd>
+    sum.innerHTML=`<dt>Participant session</dt><dd>${ses}</dd><dt>Trials</dt><dd>${T.length}</dd><dt>Started</dt><dd>${ev.length?"T+"+fmtT(ev[0].t):"--"}</dd><dt>Last event</dt><dd>${ev.length?"T+"+fmtT(ev[ev.length-1].t):"--"}</dd>
       <dt>Completed</dt><dd class="ok">${done}</dd><dt>Failed</dt><dd class="${fail?"crit":""}">${fail}</dd><dt>Aborted</dt><dd>${T.filter(t=>t.outcome==="hardware_abort").length}</dd><dt>Events</dt><dd>${ev.length}</dd>`;}
   else sum.hidden=true;
   $("logCount").textContent=v==="all"?`${S.log.length} events`:`${ev.length} of ${S.log.length} events`;
@@ -1491,10 +1491,11 @@ $("btnTakeoff").addEventListener("click",()=>{
   S.alert=null;const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.tumbled=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
 // Trials (§1.7.4, §1.7.6): start on the ground; a collision or the time limit fails the trial and grounds the drones.
 // Defensive hovers are counted separately and do not fail a trial.
-// Simple IDs: session S1, S2 ... and trial S1-T1, S1-T2 ... (§1.7.7 logs "per participant and per trial")
+// Simple IDs: one session per participant, S1, S2 ...; that participant's trials S1-T1, S1-T2 ...
+// (SO5 "a fixed session of three trials per interface condition"; §1.7.7 logs "per participant and per trial")
 const sessionId=()=>`S${S.session}`,trialId=()=>`${sessionId()}-T${S.trial.n}`;
-function newSession(){if(S.trial.running){log("End the trial before starting a new session","warn");return;}
-  S.session++;S.trial.n=1;S.trial.last=null;log(`Session ${sessionId()} started`,"ok");}
+function newSession(){if(S.trial.running){log("End the trial before moving to the next participant","warn");return;}
+  S.session++;S.trial.n=1;S.trial.last=null;log(`Session ${sessionId()} started for the next participant`,"ok");}
 // What keeps a trial from starting: each drone on its own start position, telemetry up, E-STOP clear (§1.4.2, §1.7.6)
 const padOf=d=>CONFIG.drones.find(c=>c.id===d.id),atPad=d=>{const p=padOf(d);return Math.hypot(d.x-p.x,d.y-p.y)<=CONFIG.padTol;};
 function trialBlocker(){if(S.stopped)return"Clear the emergency stop before starting a trial";
