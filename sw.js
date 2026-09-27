@@ -1,12 +1,13 @@
 /* Service worker: offline app shell + cached MediaPipe Gesture Recognizer files and model.
    Bump VERSION whenever index.html or the icons change, so installed copies update. */
-const VERSION = "v18";
+const VERSION="v19";
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = "runtime-mediapipe";
 const SHELL_FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./icons/favicon-64.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
