@@ -50,7 +50,7 @@ svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-nu
    On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
 html,body{background:#000}
 .stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:48px 1fr;grid-template-columns:200px 1fr;grid-template-areas:"top top" "side main";position:relative}
+.app{display:grid;height:800px;grid-template-rows:48px 1fr;grid-template-columns:200px 88px 1fr;grid-template-areas:"top top top" "side alt main";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -366,8 +366,9 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .side .scroll{flex:none;overflow:visible}
 .side .act{padding:4px;border-top:1px solid var(--line)}
 .side .pair{height:42px;font-size:13px}
-.side .alt{flex:1;min-height:120px;border:0;border-top:1px solid var(--line)}
-.side .alt .h{height:26px}
+.altcol{padding:2px 0 2px 2px}
+.app.lefty .altcol{padding:2px 2px 2px 0}
+.alt .h{height:30px;padding:0 6px}
 .ticker{position:absolute;right:6px;bottom:4px;z-index:2;max-width:58%;height:22px;display:flex;align-items:center;gap:8px;padding:0 8px;background:rgba(10,14,11,.85);border:1px solid var(--line);font-size:12px;text-align:left;color:var(--tx)}
 .ticker .ln{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
@@ -466,8 +467,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
       <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
       <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
     </div>
-    <div class="alt" aria-label="Altitude"><div class="h">ALTITUDE<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
   </section>
+</aside>
+
+<!-- altitude bars, beside the cameras -->
+<aside class="altcol" aria-label="Altitude">
+  <div class="alt"><div class="h">ALT<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
 </aside>
 
 <!-- =============================== MAP =============================== -->
@@ -883,7 +888,7 @@ function renderTapes(){
     if(blk){const w=S.altBlock.why,lbl=w==="maximum altitude"?"MAX":w==="minimum altitude"?"MIN":"DH";s+=`<text x="${x+W/2}" y="${zy(cz)-10}" fill="${K.caut}" font-size="9" font-weight="700" text-anchor="middle">${lbl}</text>`;}
     s+=`<text x="${x+W/2}" y="${top-24}" fill="#fff" font-size="${Math.min(11,slot/2.6).toFixed(1)}" text-anchor="middle">${d.z.toFixed(2)}</text>`;
     s+=`<circle cx="${x+W/2}" cy="${top-10}" r="7" fill="#121712" stroke="${d.z>0.02&&!S.stopped?K.own:K.tx3}" stroke-width="1.5"/><text x="${x+W/2}" y="${top-6.5}" fill="#fff" font-size="9" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
-    s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${held?"Held":""}</text></g>`;});
+    s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${held?(slot<24?"H":"Held"):""}</text></g>`;});
   $("tapeSvg").innerHTML=s;
 }
 
@@ -1297,11 +1302,11 @@ function layout(){
   const vw=STAGE.w,vh=STAGE.h,app=$("app"),fOn=OPT.feeds;
   app.dataset.mode="landscape";
   const st=app.style;
-  // one layout: top bar, then the side panel (cameras, take off / land, altitude) and the map
+  // one layout: top bar, then the side panel (cameras, take off / land), the altitude bars and the map
   $("side").classList.remove("wide");
   st.gridTemplateRows="48px 1fr";
-  st.gridTemplateColumns=OPT.lefty?"1fr 200px":"200px 1fr";
-  st.gridTemplateAreas=OPT.lefty?`"top top" "main side"`:`"top top" "side main"`;
+  st.gridTemplateColumns=OPT.lefty?"1fr 88px 200px":"200px 88px 1fr";
+  st.gridTemplateAreas=OPT.lefty?`"top top top" "main alt side"`:`"top top top" "side alt main"`;
   requestAnimationFrame(()=>{fitMap();measure();});
 }
 function measure(){
