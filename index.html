@@ -359,6 +359,9 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .vtabs button[aria-selected="true"]{background:var(--grn-dim);color:var(--grn)}
 .tbtn2{height:38px;padding:0 12px;border:1px solid var(--grn-2);background:var(--grn-dim);color:var(--grn-tx);border-radius:var(--r);font-weight:700;font-size:13px;white-space:nowrap}
 .tbtn2:active{border-color:var(--grn)}
+.tbtn2[disabled]{border-color:var(--line);background:var(--panel-2);color:var(--tx-3);cursor:not-allowed}
+.pair.hm{border:1px solid var(--own);background:#0C2A30;color:var(--own)}
+.pair.hm:active{background:#10404A}
 .gear{width:38px;height:38px;display:grid;place-items:center;color:var(--tx-2);border:1px solid var(--line-2);border-radius:var(--r)}
 .gear[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
 .side{padding:2px 0 2px 2px}
@@ -441,6 +444,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   <div class="trial" id="trialChip" aria-live="polite"></div>
   <div class="right">
     <button class="tbtn2" id="btnTakeoff">Take off all</button>
+    <button class="tbtn2" id="btnHome">Home all</button>
     <button class="tbtn2" id="btnLand">Land all</button>
     <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
       <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
@@ -474,6 +478,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     </div>
     <div class="act">
       <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
+      <button class="pair hm" id="btnHomeSel"><span>Home</span><small>DRONE 1</small></button>
       <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
     </div>
   </section>
@@ -585,7 +590,8 @@ const CONFIG={
   boxes:[{id:"O1",x:1.31,y:1.56,hx:0.265,hy:0.255,h:1.02},{id:"O2",x:2.60,y:2.71,hx:0.265,hy:0.255,h:1.53}],   // balikbayan stacks 53x51 cm
   hoops:[{id:"H1",x:1.31,y:2.70,type:"horizontal",z:1.00,r:0.20},{id:"H2",x:3.99,y:2.70,ang:90,z:0.50,r:0.20},{id:"H3",x:3.99,y:1.49,ang:90,z:1.50,r:0.20}],   // 40 cm hoops
   zoneMargin:0.06,   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
-  rateMax:0.20,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  rateMax:0.20,hSpeed:1.0,homeSpeed:0.5,   // homing flies slower than operator drags (placeholder)
+  proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
   timeLimit:300,   // placeholder: the proposal sets it from two expert pilots' mean times x 2 (§1.7.4)
   sessionStart:12*60+31,timelineSec:300,
   drones:[
@@ -765,6 +771,7 @@ function flightState(d){
   if(S.stopped)return["Motors cut","crit"];
   if(connState(d)==="lost")return["No link","crit"];
   if(d.dh&&d.z>0.02)return["Defensive hover","caut"];
+  if(d.homing&&d.z>0.02)return["Returning home","own"];
   if(d.landing)return d.z>0.02?["Landing","own"]:["Grounded",""];
   if(d.z<=0.02&&d.zTarget==null)return["Grounded",""];
   if(d.zTarget!=null)return["Taking off","own"];
@@ -1028,6 +1035,8 @@ function renderSide(){
   const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
   bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
   bt.querySelector("small").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
+  const bh=$("btnHomeSel");bh.querySelector("small").textContent=U(v.id);bh.disabled=!canHome(v);
+  $("btnHome").disabled=!drones.some(canHome);
 }
 
 /* =====================================================================
@@ -1122,9 +1131,10 @@ function update(dt){
         const dx=d.tx-d.x,dy=d.ty-d.y,hl=Math.hypot(dx,dy);let hold=false;
         if(d.dh){const u=dirVec(d,d.dh.dir);hold=!(hl>0.03&&(d.dh.dir==="up"||(dx*u[0]+dy*u[1])/hl<-0.2));}
         if(hold){d.mvx=d.mvy=0;}
-        else{const sp=Math.min(CONFIG.hSpeed,hl*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
+        else{const sp=Math.min(d.homing?CONFIG.homeSpeed:CONFIG.hSpeed,hl*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
           d.mvx=(d.mvx||0)+(dvx-(d.mvx||0))*k;d.mvy=(d.mvy||0)+(dvy-(d.mvy||0))*k;d.x+=d.mvx*dt;d.y+=d.mvy*dt;}
-        checkHoops(d,x0,y0,z0);}
+        checkHoops(d,x0,y0,z0);
+        if(d.homing&&hl<0.015&&Math.hypot(d.mvx,d.mvy)<0.04){d.homing=false;log(`${U(d.id)} home, landing on its pad`,"ok");landOne(d,true);}}
       if(d.z>0.02){const hit=collisionOf(d);if(hit){crash(d,hit.what);if(hit.other)crash(hit.other,U(d.id));}}
     }
     const a=Math.min(1,dt*6);d.vx+=((d.x-x0)/dt-d.vx)*a;d.vy+=((d.y-y0)/dt-d.vy)*a;d.vz+=((d.z-z0)/dt-d.vz)*a;
@@ -1140,7 +1150,7 @@ function update(dt){
   drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
   if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
 }
-function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
+function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.homing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
   log(`Collision: ${U(d.id)} hit ${what}`,"crit");
   S.alert=S.trial.running?`Collision: ${U(d.id)} hit ${what}. Trial ${trialId()} failed, so all drones are landing. Press Take off all to fly again.`
     :`Collision: ${U(d.id)} hit ${what} and is down. Take off ${U(d.id)} or Take off all to fly it again.`;
@@ -1169,7 +1179,7 @@ svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");
   e.preventDefault();pointers.set(e.pointerId,d.id);svg.setPointerCapture(e.pointerId);
   d.dragStart=[e.clientX,e.clientY];d.dragMoved=false;
   if(OPT.latch&&d.latched){/* tapping a latched drone releases it on pointerup (unless dragged) */}
-  else{d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
+  else{if(d.homing){d.homing=false;log(`${U(d.id)} homing cancelled, operator control`);}d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
 svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
   $("cursor").textContent=inside?t:"--";
   const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed)return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
@@ -1196,11 +1206,25 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
 /* =====================================================================
    COMMANDS
    ===================================================================== */
-function landOne(d){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
-function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
+function landOne(d,quiet){if(d.z<=0.02||S.stopped||d.crashed)return;d.homing=false;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;if(!quiet)log(`${U(d.id)} landing`);}
+/* Homing: fly straight back to the drone's own start pad at its current height, then land.
+   Straight line only (no route planning, §1.6.3); the onboard defensive hover still applies on the way.
+   Not available during a trial: returning each drone to its start is part of the scored task (REQ-15, §1.7.6).
+   Holding the drone on the map cancels homing and hands control back to the operator. */
+const padOf=d=>CONFIG.drones[drones.indexOf(d)];
+const canHome=d=>!S.trial.running&&!S.stopped&&airborne(d)&&!d.landing&&!d.homing&&connState(d)!=="lost";
+function homeOne(d,quiet){if(!canHome(d))return false;const p=padOf(d);
+  d.homing=true;d.zTarget=null;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;d.tx=p.x;d.ty=p.y;
+  const z=restrictedZones()[0],B=CONFIG.zoneMargin,cross=z&&segHitsRect(d.x,d.y,p.x,p.y,z.x,z.y,z.hx+B,z.hy+B);
+  if(!quiet)log(`${U(d.id)} returning home${cross?", path crosses the restricted zone":""}`,cross?"warn":"info");return true;}
+function homeAll(){if(S.trial.running){log("Home is off during a trial: returning to the start is part of the task","warn");return;}
+  const list=drones.filter(canHome);if(!list.length)return;list.forEach(d=>homeOne(d,true));log(`Home all: ${list.map(d=>U(d.id)).join(", ")} returning to their pads`);}
+function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.homing=false;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
 function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;if(d.crashed)S.alert=null;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
 $("btnLandSel").addEventListener("click",()=>landOne(videoD()));
 $("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
+$("btnHomeSel").addEventListener("click",()=>{if(S.trial.running){log("Home is off during a trial: returning to the start is part of the task","warn");return;}homeOne(videoD());});
+$("btnHome").addEventListener("click",homeAll);
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
@@ -1260,7 +1284,7 @@ const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
 function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
 function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
 function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s";}
-function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="MOTORS CUT";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
+function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.homing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="MOTORS CUT";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
 estop.addEventListener("pointerdown",e=>{estop.setPointerCapture(e.pointerId);start();});
 estop.addEventListener("pointerup",cancel);estop.addEventListener("pointercancel",cancel);
 estop.addEventListener("keydown",e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat&&hs==null){e.preventDefault();start();}});
