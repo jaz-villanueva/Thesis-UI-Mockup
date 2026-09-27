@@ -18,7 +18,7 @@ When you change `index.html` or the icons, bump `VERSION` in `sw.js` so installe
 The `shujimaki/` folder holds changes staged for
 [Shujimaki/touch-vision-drone-control](https://github.com/Shujimaki/touch-vision-drone-control). Each file sits at the path it will have there. None of them are in that repository yet.
 
-- `shujimaki/CONTEXT.md`: revises DEC-06 and DEC-08, and adds DEC-13 to DEC-18. These cover obstacles, the panel layout, gesture lift-off and landing, OptiTrack Motive and layout sync, the interim 1.44 m ceiling, and the mockup's status as a design prototype. It also notes these in OPEN-01, OPEN-02, OPEN-05, OPEN-08 and OPEN-10.
+- `shujimaki/CONTEXT.md`: revises DEC-06 and DEC-08, revises DEC-14, and adds DEC-13 to DEC-19. These cover obstacles, the panel layout (with the accepted video-on-the-left deviation), gesture lift-off and landing, OptiTrack Motive and layout sync, the interim 1.44 m ceiling, the mockup's status as a design prototype, and the above/below clearance indicators. It also notes these in OPEN-01, OPEN-02, OPEN-05, OPEN-08 and OPEN-10.
 - `shujimaki/README.md`: records OptiTrack Motive and links this mockup.
 - `shujimaki/protocol/README.md`: adds the `course` message, the `layout_read` and `layout_apply` commands, and `drones[].link_quality`.
 - `shujimaki/protocol/examples/`: the complete examples folder. The course follows proposal Figure 5, the altitude limits are 0.5 to 1.44 m, and there are two new examples for layout sync.
