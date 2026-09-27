@@ -87,7 +87,7 @@ html,body{background:#000}
 .stage{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
 .rotate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--tx);font-size:18px;font-weight:700;text-align:center}
 .rotate[hidden]{display:none}
-.app{display:grid;height:100%;grid-template-rows:minmax(0,1fr);grid-template-columns:clamp(190px,21vw,300px) clamp(56px,6vw,90px) minmax(0,1fr) clamp(76px,7vw,104px);grid-template-areas:"side alt main ctrl";position:relative}
+.app{display:grid;height:100%;grid-template-rows:minmax(0,1fr);grid-template-columns:clamp(76px,7vw,104px) clamp(190px,21vw,300px) clamp(56px,6vw,90px) minmax(0,1fr);grid-template-areas:"ctrl side alt main";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -331,7 +331,15 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .side .gstat b{font-size:15px}
 .side .gstat span{font-size:12px}
 #fheadSlot .fhead{height:34px;margin:3px 0 4px}
-#fheadSlot .cbs{height:28px}
+#fheadSlot .cbs{height:34px;flex:1;min-width:0;padding:0 4px}
+#fheadSlot .fhead{height:42px;padding:0 4px}
+/* each video button carries that drone's battery and radio signal */
+.cbs .ds{height:auto;border:0;background:none;padding:0;gap:4px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden}
+.cbs .ds>*{flex:none} .cbs .ds .bt{margin-left:2px;margin-right:4px}
+.cbs[aria-checked="true"] .ds .bt{border-color:currentColor} .cbs[aria-checked="true"] .ds .bt::after{background:currentColor}
+.cbs[aria-checked="true"] .ds .v{color:inherit}
+.cbs[aria-checked="true"] .ds .sg i:not(.on){background:rgba(0,0,0,.25)}
+.cbs[aria-checked="true"] .ds .sg i.on,.cbs[aria-checked="true"] .ds .bt i{background:currentColor}
 #sideFeed .dfeed .fh{height:24px}
 /* feed checkbox bar */
 .fhead{flex:none;display:flex;align-items:center;gap:4px;height:40px;padding:0 4px 0 8px;background:var(--panel);border:1px solid var(--line)}
@@ -475,14 +483,32 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .pair{flex:1;height:46px;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
 .pair span{font-size:13px;font-weight:700} .pair small{font-size:10.5px;font-weight:700;letter-spacing:.06em}
 /* all-drone controls: bottom right of the map, square and outlined, apart from the one-drone pills */
-.ctrl{grid-area:ctrl;padding:2px 2px 2px 0;display:flex;min-height:0;min-width:0}
-.app.lefty .ctrl{padding:2px 0 2px 2px}
+.ctrl{grid-area:ctrl;padding:2px 0 2px 2px;display:flex;min-height:0;min-width:0}
+.app.lefty .ctrl{padding:2px 2px 2px 0}
 .gbar{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 6px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--grn);min-height:0}
+.trl{display:flex;flex-direction:column;gap:6px;padding-bottom:8px;border-bottom:1px solid var(--line-2)}
+.trbtn{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px dashed var(--own);border-radius:var(--r);color:var(--own);background:transparent;font-weight:800;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;text-align:center;padding:4px 2px}
+.trbtn small{font-size:10px;font-weight:700;opacity:.8;letter-spacing:.04em}
+.trbtn.wait{border-color:var(--line-2);color:var(--tx-3)}
+.trbtn[hidden],.trrun[hidden],.trask[hidden],.trend[hidden]{display:none}
+.trrun{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:1.5px solid var(--own);border-radius:var(--r);background:color-mix(in srgb,var(--own) 10%,transparent)}
+.trlab{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--own)}
+.trrun b{font-size:clamp(17px,2vw,22px);font-weight:800;line-height:1;color:var(--tx)}
+.trrun small{font-size:10px;color:var(--tx-3)}
+.trbar{align-self:stretch;height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin:2px 0}
+.trbar i{display:block;height:100%;width:0;background:var(--own)}
+.trl[data-k="warn"] .trrun{border-color:var(--caut)} .trl[data-k="warn"] .trrun b,.trl[data-k="warn"] .trlab{color:var(--caut)} .trl[data-k="warn"] .trbar i{background:var(--caut)}
+.trl[data-k="crit"] .trrun{border-color:var(--crit)} .trl[data-k="crit"] .trrun b,.trl[data-k="crit"] .trlab{color:var(--crit)} .trl[data-k="crit"] .trbar i{background:var(--crit)}
+.trend{align-self:stretch;height:30px;margin-top:3px;border:1px solid var(--line-2);border-radius:var(--r);font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-2);background:var(--panel-2)}
+.trask{align-self:stretch;display:flex;flex-direction:column;gap:4px;margin-top:3px}
+.trask button{min-height:30px;border-radius:var(--r);font-size:10.5px;font-weight:800;line-height:1.1;padding:2px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--tx)}
+.trask #trOk{border-color:var(--grn);color:var(--grn-tx)} .trask #trHw{border-color:var(--caut);color:var(--caut)}
+@media (max-height:460px){.gbar{gap:5px;padding:5px 4px}.gbar .estop{min-height:70px}.gbar .gbtn{min-height:40px}.trbtn{min-height:44px}.gbar .glabel{padding-bottom:3px}}
 .gbar .glabel{font-size:10px;font-weight:800;letter-spacing:.14em;line-height:1.3;color:var(--grn-tx);text-align:center;padding-bottom:6px;border-bottom:1px dashed var(--line-2)}
 .gbar .gbtn{height:auto;flex:1;max-height:120px;min-height:52px;padding:6px 2px;white-space:normal;line-height:1.15;font-size:12px}
 .gbar .estop{margin-top:auto;width:100%;height:auto;min-height:96px;flex-direction:column;justify-content:center;gap:4px;padding:8px 2px;text-align:center}
 .gbar .estop small{white-space:normal}
-.app[data-mode="portrait"] .ctrl{padding:2px 2px 2px 0}
+.app[data-mode="portrait"] .ctrl{padding:2px 0 2px 2px}
 .gbtn{height:46px;padding:0 16px;border:2px solid var(--grn);background:transparent;color:var(--grn);border-radius:3px;font-weight:800;font-size:13px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 .gbtn:active{background:var(--grn-dim)}
 .gbtn[disabled]{border-color:var(--line-2);color:var(--tx-3)}
@@ -546,11 +572,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   </div>
       <button class="gear" id="setBtn" aria-expanded="false" aria-controls="settings" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
     </div>
-    <div class="dstat" id="dstat" aria-label="Battery and radio signal per drone">
-    <span class="ds" id="ds-cf1"><b>1</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
-    <span class="ds" id="ds-cf2"><b>2</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
-    <span class="ds" id="ds-cf3"><b>3</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
-  </div>
     <div class="scroll">
       <div class="sec" id="secCam">
         <div class="camhead"><button aria-expanded="true">Hand camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -565,7 +586,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
       <div class="sec" id="secVid">
         <button aria-expanded="true">Video<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
         <div class="sbody">
-          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
+          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video, battery and signal"><span class="ds" id="ds-cf1"><b>1</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span></button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video, battery and signal"><span class="ds" id="ds-cf2"><b>2</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span></button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video, battery and signal"><span class="ds" id="ds-cf3"><b>3</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span></button></div></div>
           <div id="sideFeed"></div>
           <div class="heldalt" id="heldAlt"></div>
         </div>
@@ -585,9 +606,15 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 
 
-<!-- all-drone controls: a column on the right edge, apart from the one-drone pills in the left panel -->
+<!-- trial and all-drone controls: a column at the left edge, apart from the one-drone pills in the left panel -->
 <aside class="ctrl" aria-label="All-drone controls">
       <div class="gbar" id="gbar" role="group" aria-label="All drones">
+    <div class="trl" id="trl" aria-live="polite">
+      <button class="trbtn" id="trGo"><span>Start trial</span><small id="trNext">S1-T1</small></button>
+      <div class="trrun" id="trRun" hidden><span class="trlab" id="trId">S1-T1</span><b class="m" id="trClock">00:00</b><small class="m" id="trLim">/ 05:00</small><span class="trbar"><i id="trBar"></i></span>
+        <button class="trend" id="trEnd">End trial</button>
+        <div class="trask" id="trAsk" hidden><button id="trOk">Completed</button><button id="trHw">Hardware abort</button><button id="trNo">Keep going</button></div></div>
+    </div>
     <span class="glabel">ALL<br>DRONES</span>
     <button class="gbtn" id="btnTakeoff">Take off all</button>
     <button class="gbtn" id="btnLand">Land all</button>
@@ -640,8 +667,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 <section class="settings" id="settings" aria-label="Settings" hidden>
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="set-b">
-    <div class="set-g">Trial (experimenter)</div>
-    <div class="seg"><button id="trStart">Start trial</button><button id="trDone">End: completed</button><button id="trAbort" style="grid-column:span 2">End: hardware abort</button></div>
+    <div class="set-g">Trial log</div>
+    <div class="note">Start and end trials with the Trial control at the top of the right-hand column.</div>
     <button class="sw-row reset" id="trSession">Start new session</button>
     <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
     <div class="set-g">Course layout</div>
@@ -1222,11 +1249,15 @@ function renderSide(){
 /* =====================================================================
    TOP BAR + TIMELINE
    ===================================================================== */
-function renderTop(){
+let askT=null;function closeAsk(){clearTimeout(askT);$("trAsk").hidden=true;$("trEnd").hidden=false;}
+function renderTrialCtl(){const T=S.trial,run=T.running;$("trGo").hidden=run;$("trRun").hidden=!run;
+  if(!run){if(!$("trAsk").hidden)closeAsk();$("trl").dataset.k="";$("trNext").textContent=trialId();$("trGo").classList.toggle("wait",S.stopped||drones.some(d=>d.z>0.02));return;}
+  const el=S.t-T.t0,left=CONFIG.timeLimit-el;$("trId").textContent=trialId();$("trClock").textContent=fmtMS(el);$("trLim").textContent="/ "+fmtMS(CONFIG.timeLimit);
+  $("trBar").style.width=Math.min(100,el/CONFIG.timeLimit*100)+"%";$("trl").dataset.k=left<=30?"crit":left<=60?"warn":"";}
+function renderTop(){renderTrialCtl();
   // on/off status dot on each video selector button
   document.querySelectorAll("[data-fs]").forEach(b=>{const d=drones.find(x=>x.id===b.dataset.fs);if(!d)return;const c=connState(d);
-    let dot=b.querySelector(".sd");if(!dot){dot=document.createElement("i");dot.className="sd";b.prepend(dot);}
-    dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
+    b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
   // per-drone battery and radio signal (Figure 1; telemetry §1.7.3.7). Flight state lives in Telemetry and the video header.
   drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),pct=batteryLevel(d.vbat),lq=linkQ(d),hs=healthOf(d),
       bk=pmState(d)==="lowPower"?"crit":d.vbat<BAT_LOW?"warn":"",sk=lq===0?"crit":lq<70?"warn":"",bars=lq===0?0:lq>90?4:lq>70?3:lq>45?2:1;
@@ -1564,8 +1595,12 @@ document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",(
 document.querySelectorAll("[data-o]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.o;OPT[k]=!OPT[k];
   if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="light")applyTheme();if(k==="course"){buildMapStatic();buildSensorScene();log(OPT.course?"Boxes and hoops in the room":"Boxes and hoops removed");}syncSettings();}));
 
-$("trStart").addEventListener("click",startTrial);$("trDone").addEventListener("click",()=>endTrial("completed"));
-$("trAbort").addEventListener("click",()=>endTrial("hardware_abort"));$("trExport").addEventListener("click",exportLog);$("hcBtn").addEventListener("click",runHealthCheck);$("trSession").addEventListener("click",newSession);
+// Trial control: Start trial -> running clock -> End trial asks Completed / Hardware abort / Keep going (closes after 5 s)
+$("trGo").addEventListener("click",()=>{startTrial();renderTrialCtl();});
+$("trEnd").addEventListener("click",()=>{$("trAsk").hidden=false;$("trEnd").hidden=true;clearTimeout(askT);askT=setTimeout(closeAsk,5000);});
+$("trOk").addEventListener("click",()=>{closeAsk();endTrial("completed");renderTrialCtl();});
+$("trHw").addEventListener("click",()=>{closeAsk();endTrial("hardware_abort");renderTrialCtl();});
+$("trNo").addEventListener("click",closeAsk);$("trExport").addEventListener("click",exportLog);$("hcBtn").addEventListener("click",runHealthCheck);$("trSession").addEventListener("click",newSession);
 // A hidden page cannot keep streaming input, so release every contact and idle the altitude channel (protocol v1).
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)return;let n=0;
   drones.forEach(d=>{if(d.pHeld||d.latched)n++;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;});pointers.clear();
@@ -1617,13 +1652,14 @@ function layout(){
   $("side").classList.remove("wide");
   st.gridTemplateRows="minmax(0,1fr)";
   // left panel (§1.7.3.5) with the hand camera, altitude beside it, and the video feed below (accepted deviation); the map fills the rest
-  // the all-drone column sits on the far edge, away from the left panel; portrait stacks the map above the panel
+  // everything but the map sits on the left: trial and all-drone column at the edge, then the panel and altitude; the map fills the right.
+  // Left-handed use mirrors it. Portrait puts the map on top, full width.
   const SIDE="clamp(190px,21vw,300px)",ALT="clamp(56px,6vw,90px)",CTRL="clamp(76px,7vw,104px)";
-  if(PORTRAIT){app.dataset.mode="portrait";st.gridTemplateRows="minmax(300px,.85fr) minmax(0,1.15fr)";
-    st.gridTemplateColumns=OPT.lefty?`${ALT} minmax(0,1fr) ${CTRL}`:`minmax(0,1fr) ${ALT} ${CTRL}`;
-    st.gridTemplateAreas=OPT.lefty?`"main main ctrl" "alt side side"`:`"main main ctrl" "side side alt"`;}
-  else{st.gridTemplateColumns=OPT.lefty?`${CTRL} minmax(0,1fr) ${ALT} ${SIDE}`:`${SIDE} ${ALT} minmax(0,1fr) ${CTRL}`;
-    st.gridTemplateAreas=OPT.lefty?`"ctrl main alt side"`:`"side alt main ctrl"`;}
+  if(PORTRAIT){app.dataset.mode="portrait";st.gridTemplateRows="minmax(0,.8fr) minmax(0,1.2fr)";
+    st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT} ${CTRL}`:`${CTRL} ${ALT} minmax(0,1fr)`;
+    st.gridTemplateAreas=OPT.lefty?`"main main main" "side alt ctrl"`:`"main main main" "ctrl alt side"`;}
+  else{st.gridTemplateColumns=OPT.lefty?`minmax(0,1fr) ${ALT} ${SIDE} ${CTRL}`:`${CTRL} ${SIDE} ${ALT} minmax(0,1fr)`;
+    st.gridTemplateAreas=OPT.lefty?`"main alt side ctrl"`:`"ctrl side alt main"`;}
   requestAnimationFrame(()=>{fitMap();measure();});
 }
 function measure(){
