@@ -1050,13 +1050,18 @@ function renderMap(){
       g+=`<path d="M${TX} ${TY} L${BX} ${BY}" stroke="url(#${gb})" stroke-width="6" stroke-linecap="round" opacity=".5"/><circle cx="${TX}" cy="${TY}" r="10" fill="none" stroke="${K.crit}" stroke-opacity=".7" stroke-width="1.5"/>`;
       g+=`<text x="${TX}" y="${TY-15}" fill="${K.crit}" font-size="10" font-weight="700" text-anchor="middle">DRAG REJECTED: ${d.blocked}</text>`;}
     g+=`<g data-drone="${d.id}" style="cursor:pointer"><circle cx="${X}" cy="${Y}" r="30" fill="transparent"/>`;
-    // proximity ring (§1.7.3.5): a faint ring well outside a fingertip; each side sensor lights a soft glow segment on its
-    // side that grows stronger and shifts green -> amber -> red as the obstacle gets closer
-    if(airborne(d)){const R=PROX_R,pt=(a,r)=>`${(X+r*Math.cos(a)).toFixed(1)} ${(Y+r*Math.sin(a)).toFixed(1)}`;
-      g+=`<circle cx="${X}" cy="${Y}" r="${R}" fill="none" stroke="${K.line2}" stroke-opacity=".45" stroke-width="1.2"/>`;
-      ["front","right","back","left"].forEach(k=>{const u=dirVec(d,k),a=Math.atan2(-u[1],u[0]),r=d.ranges[k],t=r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1);
-        if(t<=0)return;const c=threatColor(t),sp=(22+16*t)*Math.PI/180,arc=(rr,w,o,f)=>`<path d="M${pt(a-sp,rr)}A${rr} ${rr} 0 0 1 ${pt(a+sp,rr)}" fill="none" stroke="${c}" stroke-opacity="${o}" stroke-width="${w}" stroke-linecap="round"${f?` filter="url(#${f})"`:""}/>`;
-        g+=arc(R,(10+12*t).toFixed(1),(0.35+0.55*t).toFixed(2),"proxGlow")+arc(R,(2+2*t).toFixed(1),(0.6+0.4*t).toFixed(2),"proxSoft");});
+    // proximity ring (§1.7.3.5): always a full circle well outside a fingertip. Each side sensor colours the part of the
+    // ring facing it; the colour fades smoothly around the circle and darkens green -> amber -> red as the obstacle nears.
+    if(airborne(d)){const R=PROX_R,N=72,FALL=55*Math.PI/180,pt=a=>`${(X+R*Math.cos(a)).toFixed(1)} ${(Y+R*Math.sin(a)).toFixed(1)}`;
+      const src=["front","right","back","left"].map(k=>{const u=dirVec(d,k),r=d.ranges[k];return{a:Math.atan2(-u[1],u[0]),t:r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1)};}).filter(o=>o.t>0);
+      let ring="",glow="";
+      for(let i=0;i<N;i++){const a0=i/N*2*Math.PI,a1=(i+1)/N*2*Math.PI+0.004,am=(a0+a1)/2;
+        let t=0;src.forEach(o=>{let da=Math.abs(((am-o.a+3*Math.PI)%(2*Math.PI))-Math.PI);if(da<FALL)t=Math.max(t,o.t*Math.cos(da/FALL*Math.PI/2));});
+        const c=threatColor(t),seg=`M${pt(a0)}A${R} ${R} 0 0 1 ${pt(a1)}`;
+        ring+=`<path d="${seg}" stroke="${c}" stroke-opacity="${(0.55+0.45*t).toFixed(2)}" stroke-width="${(2.5+3*t).toFixed(1)}"/>`;
+        if(t>0.05)glow+=`<path d="${seg}" stroke="${c}" stroke-opacity="${(0.25+0.6*t).toFixed(2)}" stroke-width="${(6+14*t).toFixed(1)}"/>`;}
+      if(glow)g+=`<g fill="none" filter="url(#proxGlow)">${glow}</g>`;
+      g+=`<g fill="none">${ring}</g>`;
       // above (up sensor) and below (motion capture + course layout) indicators, right of the icon
       // above/below triangles sit in a cluster directly above the drone, clear of a fingertip on the icon and of
       // neighbours, which usually sit side by side (start pads 30 cm apart)
