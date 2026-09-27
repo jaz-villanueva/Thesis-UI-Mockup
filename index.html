@@ -380,7 +380,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .kvs dd.warn{color:var(--caut)} .kvs dd.crit{color:var(--crit)} .kvs dd.ok{color:var(--grn)}
 .tlog{flex:1;min-height:180px}
 .tlog ol{list-style:none;margin:0;padding:0 10px;overflow:auto;flex:1;min-height:0}
-.tlog li{display:grid;grid-template-columns:84px 58px 70px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tlog li{display:grid;grid-template-columns:84px 64px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .tlog li.lh{position:sticky;top:0;background:var(--panel);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-3)}
 .tlog .t{color:var(--tx-2);font-size:12px;font-variant-numeric:tabular-nums}
 .tlog li.ldiv{display:flex;align-items:center;gap:10px;padding:8px 0 4px;border-bottom:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--grn-tx)}
@@ -614,7 +614,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         <section class="tcard"><h3>Trial</h3><dl class="kvs" id="telTrial"></dl></section>
       </div>
       <section class="tcard"><h3>Health<button class="gbtn" id="hcBtn" style="height:24px;padding:0 10px;font-size:11px">Run health check</button></h3><div class="tscroll"><table class="ttab" id="telHealth"></table></div></section>
-      <section class="tcard tlog"><h3>Event log<span class="logtools"><span id="logCount"></span><label class="logsel">View <select id="logView" aria-label="Show events for"><option value="all">All events</option></select></label></span></h3>
+      <section class="tcard tlog"><h3>Event log<span class="logtools"><span id="logCount"></span><label class="logsel">View <select id="logView" aria-label="Show the history of a session or trial"><option value="all">All sessions</option></select></label></span></h3>
         <dl class="kvs trsum" id="logSum" hidden></dl><ol id="telLog"></ol></section>
     </div>
   </section>
@@ -1279,7 +1279,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
     <dt>Paused by</dt><dd class="${S.altBlock?"warn":""}">${S.altBlock?`${U(S.altBlock.d.id)}, ${S.altBlock.why}`:"--"}</dd>
     <dt>Limits</dt><dd>${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m, max ${CONFIG.rateMax.toFixed(2)} m/s</dd>`;
   const T=S.trial,L=T.last;
-  $("telTrial").innerHTML=`<dt>Session</dt><dd>${sessionId()}</dd><dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>${T.running?"Active":"Inactive (no trial running)"}</dd>
+  $("telTrial").innerHTML=`<dt>Trial</dt><dd>${T.running?trialId():L?L.id:trialId()}</dd><dt>Restricted zone</dt><dd>${T.running?"Active":"Inactive (no trial running)"}</dd>
     <dt>Status</dt><dd class="${T.running?"ok":L&&(L.outcome==="collision"||L.outcome==="timeout")?"crit":""}">${T.running?"Running":L?OUT[L.outcome]:"Not started"}</dd>
     <dt>Elapsed</dt><dd>${T.running?fmtMS(S.t-T.t0):L?fmtMS(L.elapsed):"--"} / ${fmtMS(CONFIG.timeLimit)}</dd>
     <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd><dt>Drag restrictions</dt><dd>${T.running?T.restrict:L?L.restrict:0}</dd><dt>Layout</dt><dd>${CONFIG.layout?`Motive, ${new Date(CONFIG.layout.synced).toLocaleTimeString()}`:"Figure 5"}</dd>`;
@@ -1294,23 +1294,29 @@ function renderTelemetry(){if(TAB!=="tel")return;
 // choosing a finished or running trial shows its record and only its events, timed from the trial start.
 const OUT={completed:"Completed",hardware_abort:"Hardware abort",collision:"Failed, collision",timeout:"Failed, time limit"};
 function trialList(){const L=[...S.trials];if(S.trial.running)L.push({id:trialId(),session:sessionId(),t0:S.trial.t0,t1:null,outcome:null,dh:S.trial.dh,restrict:S.trial.restrict,elapsed:S.t-S.trial.t0});return L;}
-function renderLogView(){const sel=$("logView"),L=trialList(),key=L.map(t=>t.id+(t.outcome||"")).join();
+function renderLogView(){const sel=$("logView"),L=trialList();
+  // one ID per event: its trial (S1-T2) when it happened during a trial, otherwise its session (S1)
+  const idOf=e=>e.tr||e.ses||"",sessions=[...new Set([...S.log.map(e=>e.ses),sessionId()].filter(Boolean))];
+  const key=sessions.join()+"|"+L.map(t=>t.id+(t.outcome||"")).join();
   if(sel.dataset.key!==key){sel.dataset.key=key;
-    sel.innerHTML=`<option value="all">All events</option>`+L.map(t=>`<option value="${t.id}">${t.id} · ${t.outcome?OUT[t.outcome]:"running"}</option>`).join("");
+    sel.innerHTML=`<option value="all">All sessions</option>`+sessions.map(ss=>`<optgroup label="Session ${ss}"><option value="${ss}">${ss} · whole session</option>`+
+      L.filter(t=>t.session===ss).map(t=>`<option value="${t.id}">${t.id} · ${t.outcome?OUT[t.outcome]:"running"}</option>`).join("")+`</optgroup>`).join("");
     if(![...sel.options].some(o=>o.value===S.logView))S.logView="all";sel.value=S.logView;}
-  const tr=S.logView==="all"?null:L.find(t=>t.id===S.logView),sum=$("logSum");
-  if(tr){const ev=S.log.filter(e=>e.tr===tr.id);sum.hidden=false;
-    sum.innerHTML=`<dt>Trial</dt><dd>${tr.id}</dd><dt>Session</dt><dd>${tr.session}</dd><dt>Started</dt><dd>T+${fmtT(tr.t0)}</dd><dt>Ended</dt><dd>${tr.t1!=null?"T+"+fmtT(tr.t1):"running"}</dd>
-      <dt>Outcome</dt><dd class="${tr.outcome==="completed"?"ok":tr.outcome?"crit":""}">${tr.outcome?OUT[tr.outcome]:"Running"}</dd><dt>Time</dt><dd>${fmtMS(tr.elapsed)} / ${fmtMS(CONFIG.timeLimit)}</dd>
-      <dt>Defensive hovers</dt><dd>${tr.dh}</dd><dt>Drag restrictions</dt><dd>${tr.restrict}</dd><dt>Events</dt><dd>${ev.length}</dd>`;
-    $("logCount").textContent=`${ev.length} of ${S.log.length} events`;
-    $("telLog").innerHTML=`<li class="lh"><span>Time</span><span>In trial</span><span>Trial</span><span></span><span>Event</span></li>`+[...ev].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="m">${fmtMS(Math.max(0,e.t-tr.t0))}</span><span class="m">${e.tr}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");return;}
-  sum.hidden=true;$("logCount").textContent=`${S.log.length} events`;
-  let h=`<li class="lh"><span>Time</span><span>Session</span><span>Trial</span><span></span><span>Event</span></li>`,prev;
-  [...S.log].reverse().forEach((e,i)=>{const k=(e.ses||"")+"|"+(e.tr||"");
-    if(i===0||k!==prev){const t=e.tr&&L.find(x=>x.id===e.tr);
-      h+=`<li class="ldiv" role="separator"><span>${e.tr?`Trial ${e.tr} · ${t&&t.outcome?OUT[t.outcome]:"running"}`:`${e.ses} · between trials`}</span></li>`;}
-    prev=k;h+=`<li><span class="t">T+${fmtT(e.t)}</span><span class="m">${e.ses||""}</span><span class="m">${e.tr||"—"}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`;});
+  const v=S.logView,tr=L.find(t=>t.id===v),ses=sessions.includes(v)?v:null,sum=$("logSum");
+  const ev=tr?S.log.filter(e=>e.tr===tr.id):ses?S.log.filter(e=>e.ses===ses):S.log;
+  if(tr){sum.hidden=false;
+    sum.innerHTML=`<dt>Trial</dt><dd>${tr.id}</dd><dt>Outcome</dt><dd class="${tr.outcome==="completed"?"ok":tr.outcome?"crit":""}">${tr.outcome?OUT[tr.outcome]:"Running"}</dd><dt>Started</dt><dd>T+${fmtT(tr.t0)}</dd><dt>Ended</dt><dd>${tr.t1!=null?"T+"+fmtT(tr.t1):"running"}</dd>
+      <dt>Time</dt><dd>${fmtMS(tr.elapsed)} / ${fmtMS(CONFIG.timeLimit)}</dd><dt>Defensive hovers</dt><dd>${tr.dh}</dd><dt>Drag restrictions</dt><dd>${tr.restrict}</dd><dt>Events</dt><dd>${ev.length}</dd>`;}
+  else if(ses){const T=L.filter(t=>t.session===ses),done=T.filter(t=>t.outcome==="completed").length,fail=T.filter(t=>t.outcome==="collision"||t.outcome==="timeout").length;sum.hidden=false;
+    sum.innerHTML=`<dt>Session</dt><dd>${ses}</dd><dt>Trials</dt><dd>${T.length}</dd><dt>Started</dt><dd>${ev.length?"T+"+fmtT(ev[0].t):"--"}</dd><dt>Last event</dt><dd>${ev.length?"T+"+fmtT(ev[ev.length-1].t):"--"}</dd>
+      <dt>Completed</dt><dd class="ok">${done}</dd><dt>Failed</dt><dd class="${fail?"crit":""}">${fail}</dd><dt>Aborted</dt><dd>${T.filter(t=>t.outcome==="hardware_abort").length}</dd><dt>Events</dt><dd>${ev.length}</dd>`;}
+  else sum.hidden=true;
+  $("logCount").textContent=v==="all"?`${S.log.length} events`:`${ev.length} of ${S.log.length} events`;
+  let h=`<li class="lh"><span>Time</span><span>${tr?"In trial":"ID"}</span><span></span><span>Event</span></li>`,prev;
+  [...ev].reverse().forEach((e,i)=>{const k=idOf(e);
+    if(!tr&&(i===0||k!==prev)){const t=e.tr&&L.find(x=>x.id===e.tr);
+      h+=`<li class="ldiv" role="separator"><span>${e.tr?`${e.tr} · ${t&&t.outcome?OUT[t.outcome]:"running"}`:`${e.ses} · between trials`}</span></li>`;}
+    prev=k;h+=`<li><span class="t">T+${fmtT(e.t)}</span><span class="m">${tr?fmtMS(Math.max(0,e.t-tr.t0)):k}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`;});
   $("telLog").innerHTML=h;}
 $("logView").addEventListener("change",e=>{S.logView=e.target.value;renderLogView();});
 $("logToggle").addEventListener("click",()=>setTab("tel"));
