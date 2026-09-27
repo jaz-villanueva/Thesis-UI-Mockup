@@ -50,10 +50,10 @@ svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-nu
    On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
 html,body{background:#000}
 .stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:56px 1fr 64px;grid-template-columns:44px 236px 96px 1fr;grid-template-areas:"top top top top" "rail side alt main" "plan plan plan plan";position:relative}
-.top{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
+.app{display:grid;height:800px;grid-template-rows:48px 1fr;grid-template-columns:200px 1fr;grid-template-areas:"top top" "side main";position:relative}
+.top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
-.top .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
 .online{font-family:var(--fm);font-size:13px}
 .online b{color:var(--friend);font-weight:500;margin-right:8px}
 .lk{font-family:var(--fm);font-size:12px;color:var(--tx-2);display:flex;align-items:center;gap:6px}
@@ -119,7 +119,7 @@ html,body{background:#000}
 /* =====================================================================
    MAP
    ===================================================================== */
-.main{grid-area:main;padding:4px;display:flex;min-width:0;min-height:0}
+.main{grid-area:main;padding:2px;display:flex;min-width:0;min-height:0}
 .mapcard{flex:1;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--panel);min-width:0;min-height:0}
 .mtool{display:flex;align-items:center;height:34px;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .mtool>*{height:100%;display:flex;align-items:center;padding:0 10px;border-right:1px solid var(--line);white-space:nowrap}
@@ -230,15 +230,17 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 /* left-handed mirror */
 .app.lefty .plan{direction:rtl} .app.lefty .plan>*{direction:ltr}
 .app.lefty .plan-l .estop{margin-left:0;margin-right:6px}
-.app.lefty .settings{left:auto;right:44px;border-right:0;border-left:1px solid var(--grn-2)}
+.app.lefty .settings{left:auto;right:0;border-right:0;border-left:1px solid var(--grn-2)}
 .app.lefty .rail{border-right:0;border-left:1px solid var(--line)}
 .app.lefty .rail button[aria-expanded="true"]{box-shadow:inset -3px 0 0 var(--grn)}
 .app.lefty .side{padding:4px 4px 4px 0}
 .app.lefty .altcol{padding:4px 4px 4px 0}
 .app.lefty .feeds{padding:4px 0 4px 4px}
 /* E-stop in the top bar */
-.top .right .estop{width:250px;height:46px;flex:none}
-.top .right .estop strong{font-size:15px}
+.top .right .estop{width:150px;height:38px;flex:none;padding:0 8px;gap:8px}
+.top .right .estop strong{font-size:13px}
+.top .right .estop small{font-size:10.5px}
+.top .right .estop svg{width:28px;height:28px}
 /* feed selector is single-choice (radio): selected = filled, no checkbox */
 .cbs::before,.cb::before{display:none}
 .cbs{min-width:52px}
@@ -250,7 +252,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .sd.lost{background:var(--crit);animation:blink 1s steps(2,end) infinite}
 .cbs,.cb{gap:7px}
 /* Settings drawer */
-.settings{position:absolute;left:44px;top:56px;bottom:64px;width:320px;z-index:20;background:var(--panel);border-right:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(0,0,0,.45)}
+.settings{position:absolute;left:0;top:48px;bottom:0;width:320px;z-index:20;background:var(--panel);border-right:1px solid var(--grn-2);display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(0,0,0,.45)}
 .settings[hidden]{display:none}
 .set-h{height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 14px;background:var(--panel-2);border-bottom:1px solid var(--line);font-weight:700;color:var(--grn)}
 .set-h button{width:40px;height:40px;display:grid;place-items:center;color:var(--tx-2)}
@@ -337,12 +339,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .tlog li{display:grid;grid-template-columns:92px 10px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .tlog .t{color:var(--tx-2);font-size:12px;font-variant-numeric:tabular-nums}
 /* top bar: per-drone telemetry and the trial clock */
-.dstat{display:flex;gap:6px}
-.ds{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;border:1px solid var(--line-2);background:var(--bg);font-size:12px;white-space:nowrap}
+.dstat{display:flex;gap:4px}
+.ds{display:flex;align-items:center;gap:6px;height:30px;padding:0 8px;border:1px solid var(--line-2);background:var(--bg);font-size:12px;white-space:nowrap}
 .ds b{font-weight:700;letter-spacing:.03em}
 .ds .v{color:var(--tx-2)} .ds .v.warn{color:var(--caut)}
 .ds em{font-style:normal;color:var(--tx-2)} .ds em.caut{color:var(--caut)} .ds em.crit{color:var(--crit)} .ds em.own{color:var(--own)} .ds em.ok{color:var(--grn)}
-.trial{display:flex;align-items:center;gap:10px;height:30px;padding:0 10px;border:1px solid var(--line-2);font-size:12px;white-space:nowrap;color:var(--tx-2)}
+.trial{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;border:1px solid var(--line-2);font-size:12px;white-space:nowrap;color:var(--tx-2)}
 .trial b{color:var(--tx);font-weight:700;letter-spacing:.03em}
 .trial.run{border-color:var(--grn-2)} .trial.run b{color:var(--grn)}
 .trial.fail{border-color:var(--crit)} .trial.fail b{color:var(--crit)}
@@ -350,6 +352,24 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .alertbar{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:12px;max-width:92%;padding:8px 8px 8px 12px;background:#2A0B09;border:1px solid var(--crit);color:#fff;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 .alertbar[hidden]{display:none}
 .alertbar button{flex:none;height:30px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx)}
+/* simplified shell: one top bar, side panel with cameras + altitude, map fills the rest */
+.vtabs{display:flex;height:34px;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden;flex:none}
+.vtabs button{padding:0 12px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-2)}
+.vtabs button+button{border-left:1px solid var(--line-2)}
+.vtabs button[aria-selected="true"]{background:var(--grn-dim);color:var(--grn)}
+.tbtn2{height:38px;padding:0 12px;border:1px solid var(--grn-2);background:var(--grn-dim);color:var(--grn-tx);border-radius:var(--r);font-weight:700;font-size:13px;white-space:nowrap}
+.tbtn2:active{border-color:var(--grn)}
+.gear{width:38px;height:38px;display:grid;place-items:center;color:var(--tx-2);border:1px solid var(--line-2);border-radius:var(--r)}
+.gear[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
+.side{padding:2px 0 2px 2px}
+.side .card{overflow:hidden}
+.side .scroll{flex:none;overflow:visible}
+.side .act{padding:4px;border-top:1px solid var(--line)}
+.side .pair{height:42px;font-size:13px}
+.side .alt{flex:1;min-height:120px;border:0;border-top:1px solid var(--line)}
+.side .alt .h{height:26px}
+.ticker{position:absolute;right:6px;bottom:4px;z-index:2;max-width:58%;height:22px;display:flex;align-items:center;gap:8px;padding:0 8px;background:rgba(10,14,11,.85);border:1px solid var(--line);font-size:12px;text-align:left;color:var(--tx)}
+.ticker .ln{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
 /* Sim controls (mockup only) */
 .sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
@@ -399,32 +419,33 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== TOP BAR =============================== -->
 <header class="top">
-  <div class="dstat" id="dstat" aria-label="Drone telemetry">
-    <span class="ds" id="ds-cf1"><i class="sd"></i><b>DRONE 1</b><span class="m v">--</span><em>--</em></span>
-    <span class="ds" id="ds-cf2"><i class="sd"></i><b>DRONE 2</b><span class="m v">--</span><em>--</em></span>
-    <span class="ds" id="ds-cf3"><i class="sd"></i><b>DRONE 3</b><span class="m v">--</span><em>--</em></span>
+  <div class="vtabs" role="tablist" aria-label="Main view">
+    <button role="tab" id="tabMap" aria-selected="true" aria-controls="mapbody">Map</button>
+    <button role="tab" id="tabTel" aria-selected="false" aria-controls="telPane">Telemetry</button>
+  </div>
+  <div class="dstat" id="dstat" aria-label="Drone status">
+    <span class="ds" id="ds-cf1"><i class="sd"></i><b>1</b><span class="m v"></span><em>--</em></span>
+    <span class="ds" id="ds-cf2"><i class="sd"></i><b>2</b><span class="m v"></span><em>--</em></span>
+    <span class="ds" id="ds-cf3"><i class="sd"></i><b>3</b><span class="m v"></span><em>--</em></span>
   </div>
   <div class="trial" id="trialChip" aria-live="polite"></div>
   <div class="right">
+    <button class="tbtn2" id="btnTakeoff">Take off all</button>
+    <button class="tbtn2" id="btnLand">Land all</button>
     <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
       <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
-      <span><strong id="estopTitle">Emergency stop</strong><small id="estopSub">Hold 1 s, cuts all motors</small></span>
+      <span><strong id="estopTitle">E-STOP</strong><small id="estopSub">Hold 1 s</small></span>
     </button>
-    <button class="gear2" id="setBtn2" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
+    <button class="gear" id="setBtn" aria-expanded="false" aria-controls="settings" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
   </div>
 </header>
-
-<!-- =============================== ICON RAIL =============================== -->
-<nav class="rail" aria-label="Settings">
-  <button id="setBtn" aria-expanded="false" aria-controls="settings" aria-label="Settings"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
-</nav>
 
 <!-- =============================== SIDE PANEL =============================== -->
 <aside class="side" id="side">
   <section class="card" aria-label="Hand camera and video feed">
     <div class="scroll">
       <div class="sec" id="secCam">
-        <button aria-expanded="true">Gesture Camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
+        <button aria-expanded="true">Hand camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
         <div class="sbody">
           <div class="feed"><video id="camVideo" class="mirror" playsinline muted autoplay hidden></video>
             <button class="camsw" id="camSw" aria-label="Switch to the next camera" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg><span id="camSwTxt">Switch</span></button><svg id="camSvg" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"></svg>
@@ -434,11 +455,10 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         </div>
       </div>
       <div class="sec" id="secVid">
-        <button aria-expanded="true">Video Feed<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
+        <button aria-expanded="true">Video<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
         <div class="sbody">
-          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><span class="fl">SHOW</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
+          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
           <div id="sideFeed"></div>
-          <div class="heldalt" id="heldAlt"></div>
         </div>
       </div>
     </div>
@@ -446,29 +466,21 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
       <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
       <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
     </div>
+    <div class="alt" aria-label="Altitude"><div class="h">ALTITUDE<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
   </section>
-</aside>
-
-<!-- =============================== ALTITUDE (beside CV feed) =============================== -->
-<aside class="altcol" aria-label="Altitude">
-  <div class="alt"><div class="h">ALT<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
 </aside>
 
 <!-- =============================== MAP =============================== -->
 <main class="main">
   <section class="mapcard" aria-label="Arena map and telemetry">
-    <div class="mtool" role="tablist" aria-label="Main view">
-      <button class="tab" role="tab" id="tabMap" aria-selected="true" aria-controls="mapbody">Map</button>
-      <button class="tab" role="tab" id="tabTel" aria-selected="false" aria-controls="telPane">Telemetry / Logs</button>
-      <span class="sp"></span>
-    </div>
     <div class="mapbody" id="mapbody" role="tabpanel" aria-labelledby="tabMap">
+      <button class="ticker" id="logToggle" aria-label="Latest event. Open the event log."><span class="dot" id="lastDot"></span><span class="ln" id="logLatest"></span></button>
       <div class="alertbar" id="alertBar" role="alert" hidden><span id="alertTxt"></span><button id="alertOk">Dismiss</button></div>
       <div class="mapchip"><span class="scale"><i id="scaleBar"></i><span class="m">1 m</span></span><span class="m" id="cursor">--</span></div>
       <svg id="mapSvg" viewBox="0 0 600 600" preserveAspectRatio="none" role="application" aria-label="Tap a unit to select, hold and drag to set target"><g id="mapStatic"></g><g id="mapDyn"></g></svg>
     </div>
     <div class="telpane" id="telPane" role="tabpanel" aria-labelledby="tabTel" hidden>
-      <section class="tcard"><h3>Drones<span>telemetry at 5 Hz</span></h3><div class="tscroll"><table class="ttab" id="telTable"></table></div></section>
+      <section class="tcard"><h3>Drones</h3><div class="tscroll"><table class="ttab" id="telTable"></table></div></section>
       <div class="tel-row">
         <section class="tcard"><h3>Altitude channel</h3><dl class="kvs" id="telAlt"></dl></section>
         <section class="tcard"><h3>Trial</h3><dl class="kvs" id="telTrial"></dl></section>
@@ -529,18 +541,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   </div>
 </section>
 
-<!-- =============================== PLAN STRIP =============================== -->
-<footer class="plan">
-  <div class="plan-l">
-    <button class="sbtn" id="btnTakeoff">Take off all<small id="toLbl">to 0.60 m</small></button>
-    <button class="sbtn" id="btnLand">Land all</button>
-  </div>
-  <div class="tl">
-    <div class="logpop" id="logPop"><ol id="logList"></ol></div>
-    <svg id="tlSvg" preserveAspectRatio="none"></svg>
-    <button class="tl-evt" id="logToggle" aria-expanded="false" aria-controls="logPop"><span class="dot" id="lastDot"></span><span class="ln" id="logLatest"></span></button>
-  </div>
-</footer>
 </div>
 </div>
 
@@ -665,7 +665,7 @@ function resetScenario(){
   Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0});
   S.trial.running=false;S.trial.last=null;S.alert=null;S.frameErr=false;
   S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
-  $("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";
+  $("estop").classList.remove("fired");$("estopTitle").textContent="E-STOP";$("estopSub").textContent="Hold 1 s";
   if(window.__ready){OPT.feed="cf1";Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x==="cf1");}
   syncSim();renderLog();buildFeeds();buildSensorScene();if(window.__ready)applyFeeds();
 }
@@ -751,7 +751,7 @@ function flightState(d){
 function fitMap(){
   const rr=document.querySelector(".mapbody").getBoundingClientRect(),r={width:rr.width/SCALE,height:rr.height/SCALE};
   VW=Math.max(300,r.width);VH=Math.max(300,r.height);
-  const padL=24,padT=20,padB=26,rightReserve=0,availW=VW-rightReserve-padL-8,availH=VH-padT-padB;
+  const padL=20,padT=18,padB=6,rightReserve=0,availW=VW-rightReserve-padL-6,availH=VH-padT-padB;
   const A=CONFIG.arena,aw=A.xMax-A.xMin,ad=A.yMax-A.yMin;SC=Math.min(availW/aw,availH/ad);
   OX=padL+availW/2-((A.xMax+A.xMin)/2)*SC;OY=padT+availH/2+((A.yMax+A.yMin)/2)*SC;
   $("mapSvg").setAttribute("viewBox",`0 0 ${VW} ${VH}`);
@@ -774,7 +774,6 @@ function buildMapStatic(){
   const m=a.margin;
   g+=`<rect x="${px(a.xMin)}" y="${py(a.yMax)}" width="${(a.xMax-a.xMin)*SC}" height="${(a.yMax-a.yMin)*SC}" fill="none" stroke="#3E8F46" stroke-width="1.5"/>`;
   g+=`<rect x="${px(a.xMin+m)}" y="${py(a.yMax-m)}" width="${(a.xMax-a.xMin-2*m)*SC}" height="${(a.yMax-a.yMin-2*m)*SC}" fill="none" stroke="${K.caut}" stroke-opacity=".5" stroke-dasharray="6 5"/>`;
-  g+=`<text x="${px(a.xMin+m)+6}" y="${py(a.yMax-m)+14}" fill="${K.caut}" fill-opacity=".8" font-size="10">Capture volume, ${m.toFixed(2)} m from walls</text>`;
   // altitude gradient (bottom → top: below-min caution, safe band green, above-max caution)
   const Z=CONFIG.z,p=z=>(1-z/Z.displayMax)*100;
   g+=`<defs><linearGradient id="altGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5FD068" stop-opacity=".9"/><stop offset="40%" stop-color="#F5D90A" stop-opacity=".82"/><stop offset="70%" stop-color="#FF9A1F" stop-opacity=".78"/><stop offset="100%" stop-color="#F2453D" stop-opacity=".75"/></linearGradient></defs>`;
@@ -790,15 +789,15 @@ function buildMapStatic(){
       g+=`<rect x="${X+4}" y="${Y+4}" width="${W}" height="${H}" fill="#000" opacity=".35"/>`;
       g+=`<rect x="${X}" y="${Y}" width="${W}" height="${H}" fill="#2B312B" stroke="#C9D1C7" stroke-width="1.5"/><rect x="${X}" y="${Y}" width="${W}" height="${H}" fill="url(#boxHatch)"/>`;
       g+=`<text x="${px(b.x)}" y="${py(b.y)-2}" fill="#E1E8DF" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${b.id}</text>`;
-      g+=`<text x="${px(b.x)}" y="${py(b.y)+11}" fill="#9DAA9B" font-size="9" text-anchor="middle">h ${b.h.toFixed(2)} m</text>`;});
+      g+=`<text x="${px(b.x)}" y="${py(b.y)+11}" fill="#9DAA9B" font-size="9" text-anchor="middle">${b.h.toFixed(2)} m</text>`;});
     CONFIG.hoops.forEach(h=>{if(h.type==="horizontal"){const cx=px(h.x),cy=py(h.y),r=h.r*SC;
         g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${K.sel}" fill-opacity=".06" stroke="${K.sel}" stroke-width="3.5"/><circle cx="${cx}" cy="${cy}" r="2.5" fill="${K.sel}"/>`;
-        g+=`<text x="${cx}" y="${cy-r-8}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">z ${h.z.toFixed(2)} m, fly up</tspan></text>`;return;}
+        g+=`<text x="${cx}" y="${cy-r-8}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">${h.z.toFixed(2)} m</tspan></text>`;return;}
       const a=h.ang*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),x1=px(h.x-ux*h.r),y1=py(h.y-uy*h.r),x2=px(h.x+ux*h.r),y2=py(h.y+uy*h.r),cx=px(h.x),cy=py(h.y),nx=-uy,ny=ux,L=16;
       g+=`<line x1="${cx-nx*L}" y1="${cy+ny*L}" x2="${cx+nx*L}" y2="${cy-ny*L}" stroke="${K.sel}" stroke-opacity=".5" stroke-dasharray="3 3"/>`;
       g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${K.sel}" stroke-width="4" stroke-linecap="round"/>`;
       g+=`<circle cx="${x1}" cy="${y1}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/><circle cx="${x2}" cy="${y2}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/>`;
-      g+=`<text x="${cx+nx*22}" y="${cy-ny*22+(ny>0.5?0:4)}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="${nx<-0.5?"end":nx>0.5?"start":"middle"}" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">z ${h.z.toFixed(2)} m</tspan></text>`;});
+      g+=`<text x="${cx+nx*22}" y="${cy-ny*22+(ny>0.5?0:4)}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="${nx<-0.5?"end":nx>0.5?"start":"middle"}" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">${h.z.toFixed(2)} m</tspan></text>`;});
   }
   // drag margin around the restricted zone (where drags stop)
   restrictedZones().forEach(o=>{const B=CONFIG.zoneMargin;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1" stroke-dasharray="2 4"/>`;});
@@ -808,9 +807,8 @@ function buildMapStatic(){
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="${K.crit}" fill-opacity=".10"/>`;
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" stroke="${K.crit}" stroke-width="2.5"/>`;
     g+=`<rect x="${px(N.x)-52}" y="${py(N.y)-10}" width="104" height="20" fill="#1A0605" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">RESTRICTED</text>`;
-    g+=`<text x="${px(N.x)}" y="${py(N.y)+N.h*SC+14}" fill="${K.crit}" font-size="10" text-anchor="middle">${(2*N.h).toFixed(2)} × ${(2*N.h).toFixed(2)} m</text>`;}
-  else g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="none" stroke="${K.tx3}" stroke-dasharray="4 5"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.tx3}" font-size="10" text-anchor="middle">Restricted zone off (sub-test)</text>`;
-  g+=`<text x="${px(a.xMax)+6}" y="${OY+3}" fill="${K.tx3}" font-size="10">+X</text><text x="${OX}" y="${py(a.yMax)-20}" fill="${K.tx3}" font-size="10" text-anchor="middle">+Y</text>`;
+  }
+  else g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="none" stroke="${K.tx3}" stroke-dasharray="4 5"/>`;
   $("mapStatic").innerHTML=g;
 }
 function renderMap(){
@@ -829,7 +827,7 @@ function renderMap(){
       g+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${X}" y1="${Y}" x2="${TX}" y2="${TY}"><stop offset="0" stop-color="${K.own}" stop-opacity="0"/><stop offset=".45" stop-color="${K.own}" stop-opacity=".22"/><stop offset="1" stop-color="${K.own}" stop-opacity=".6"/></linearGradient>`;
       g+=`<path d="M${X.toFixed(1)} ${Y.toFixed(1)}L${TX.toFixed(1)} ${TY.toFixed(1)}" fill="none" stroke="url(#${gid})" stroke-width="2.2" stroke-linecap="round"/>`;
       g+=`<circle cx="${TX}" cy="${TY}" r="11" fill="${K.own}" fill-opacity=".07"/><circle cx="${TX}" cy="${TY}" r="6" fill="none" stroke="${K.own}" stroke-opacity=".55" stroke-width="1.2"/><circle cx="${TX}" cy="${TY}" r="1.8" fill="${K.own}" fill-opacity=".8"/>`;
-      g+=`<text x="${TX+13}" y="${TY+4}" fill="${K.own}" fill-opacity=".75" font-size="10">${dist.toFixed(2)} m</text>`;}
+    }
     if(d.blockPt){const BX=px(d.blockPt[0]),BY=py(d.blockPt[1]),TX=px(d.tx),TY=py(d.ty),gb=`blk-${d.id}`;
       g+=`<linearGradient id="${gb}" gradientUnits="userSpaceOnUse" x1="${TX}" y1="${TY}" x2="${BX}" y2="${BY}"><stop offset="0" stop-color="${K.crit}" stop-opacity=".6"/><stop offset="1" stop-color="${K.crit}" stop-opacity="0"/></linearGradient>`;
       g+=`<path d="M${TX} ${TY} L${BX} ${BY}" stroke="url(#${gb})" stroke-width="6" stroke-linecap="round" opacity=".5"/><circle cx="${TX}" cy="${TY}" r="10" fill="none" stroke="${K.crit}" stroke-opacity=".7" stroke-width="1.5"/>`;
@@ -840,13 +838,13 @@ function renderMap(){
       ["front","right","back","left"].forEach(k=>{const u=dirVec(d,k),a=Math.atan2(-u[1],u[0]),r=d.ranges[k],t=r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1);
         g+=`<path d="M${pt(a-sp)}A${R} ${R} 0 0 1 ${pt(a+sp)}" fill="none" stroke="${t>0?threatColor(t):"#3E483D"}" stroke-opacity="${t>0?(0.5+0.5*t).toFixed(2):0.8}" stroke-width="${t>0?(3.5+2.5*t).toFixed(1):2.5}" stroke-linecap="round"/>`;});
       const ru=d.ranges.up;if(ru!=null&&ru<MR.show){const t=clamp((MR.show-ru)/(MR.show-MR.trig),0,1),c=threatColor(t);
-        g+=`<path d="M${X-6} ${Y-34}L${X} ${Y-40}L${X+6} ${Y-34}" fill="none" stroke="${c}" stroke-width="2.5"/><text x="${X+10}" y="${Y-34}" fill="${c}" font-size="9">up ${ru.toFixed(2)}</text>`;}}
+        g+=`<path d="M${X-6} ${Y-34}L${X} ${Y-40}L${X+6} ${Y-34}" fill="none" stroke="${c}" stroke-width="2.5"/>`;}}
     // heading tick
     const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+21*Math.cos(hr)}" y2="${Y+21*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
     const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="${held?K.own:"#121712"}" stroke="${d.crashed||lostC?K.crit:gr?K.tx3:held?"#fff":K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
     g+=`<text x="${X}" y="${Y+5}" fill="${held?"#07120A":"#fff"}" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
     if(d.dh&&airborne(d)){g+=`<circle class="blink" cx="${X}" cy="${Y}" r="33" fill="none" stroke="${K.caut}" stroke-width="2"/>`;
-      g+=`<g transform="translate(${X},${Y-54})"><rect x="-70" y="-9" width="140" height="17" fill="#0B100C" stroke="${K.caut}"/><text x="0" y="3.5" fill="${K.caut}" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">DEFENSIVE HOVER · ${d.dh.dir.toUpperCase()} ${d.dh.range.toFixed(2)} m</text></g>`;}
+      g+=`<g transform="translate(${X},${Y-54})"><rect x="-50" y="-9" width="100" height="17" fill="#0B100C" stroke="${K.caut}"/><text x="0" y="3.5" fill="${K.caut}" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">DEFENSIVE HOVER</text></g>`;}
     if(d.crashed){g+=`<path d="M${X-9} ${Y-9}L${X+9} ${Y+9}M${X+9} ${Y-9}L${X-9} ${Y+9}" stroke="${K.crit}" stroke-width="3"/>`;
       g+=`<g transform="translate(${X},${Y-40})"><rect x="-40" y="-9" width="80" height="17" fill="#1A0605" stroke="${K.crit}"/><text x="0" y="3.5" fill="${K.crit}" font-size="9.5" font-weight="700" text-anchor="middle">COLLISION</text></g>`;}
     // altitude gradient bar (left of the icon, outside the proximity ring)
@@ -885,8 +883,7 @@ function renderTapes(){
     if(blk){const w=S.altBlock.why,lbl=w==="maximum altitude"?"MAX":w==="minimum altitude"?"MIN":"DH";s+=`<text x="${x+W/2}" y="${zy(cz)-10}" fill="${K.caut}" font-size="9" font-weight="700" text-anchor="middle">${lbl}</text>`;}
     s+=`<text x="${x+W/2}" y="${top-24}" fill="#fff" font-size="${Math.min(11,slot/2.6).toFixed(1)}" text-anchor="middle">${d.z.toFixed(2)}</text>`;
     s+=`<circle cx="${x+W/2}" cy="${top-10}" r="7" fill="#121712" stroke="${d.z>0.02&&!S.stopped?K.own:K.tx3}" stroke-width="1.5"/><text x="${x+W/2}" y="${top-6.5}" fill="#fff" font-size="9" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
-    s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${slot<30?(held?"H":"F"):(held?"Held":"Free")}</text></g>`;});
-  s+=`<text x="${TW/2}" y="${bot+34}" fill="${K.tx3}" font-size="9" text-anchor="middle">lim ${CONFIG.z.min.toFixed(2)}–${CONFIG.z.max.toFixed(2)} m</text>`;
+    s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${held?"Held":""}</text></g>`;});
   $("tapeSvg").innerHTML=s;
 }
 
@@ -902,20 +899,20 @@ function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
   if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(CAM.mirror?1-p.x:p.x)*W,p.y*H]);  // matches the preview (mirrored for the front camera)
     if((gAct()||g==="unrecognized")&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1],dz=GEST.dead*H;
       s+=`<rect x="0" y="${ny-dz}" width="${W}" height="${2*dz}" fill="#fff" fill-opacity=".08"/>`;
-      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-44}" y="${ny-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist), dead zone</text>`;
+      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-44}" y="${ny-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
       s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
     s+=`<g stroke="${K.own}" stroke-width="2" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}</g>`;
     P.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===0?3.5:2.4}" fill="${K.friend}"/>`);
     if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label+(g==="confirming"?` · confirming ${confirmPct()}%`:""),w=lbl.length*6.3+12,col=CAM.label.startsWith("Unrecognized")?K.caut:K.sel;
       s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${col}" stroke-width="2"/><rect x="${(x0+x1)/2-w/2}" y="${y0-22}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-9}" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;}}
   else if(CAM.tracking&&g==="lost"){s+=`<rect x="80" y="100" width="160" height="38" fill="#111" fill-opacity=".85" stroke="${K.caut}"/><text x="160" y="116" fill="${K.caut}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">No hand in frame</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">Held units holding altitude</text>`;}
-  if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">Gesture Recognizer ${CAM.fps} fps</text>`;
+  if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">${CAM.fps} fps</text>`;
   $("camSvg").innerHTML=s;}
 function renderCam(){
   if(CAM.on){renderLiveCam();return;}
   const g=S.gesture,act=gAct(),wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob;let s="";
-  s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${g!=="idle"&&g!=="lost"?" · SIMULATED GESTURE":""}</text>`;
-  if(act){const dz=GEST.dead*240;s+=`<rect x="0" y="${NEUT-dz}" width="320" height="${2*dz}" fill="#fff" fill-opacity=".08"/><line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="276" y="${NEUT-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral, dead zone</text>`;
+  s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${g!=="idle"&&g!=="lost"?" · SIM":""}</text>`;
+  if(act){const dz=GEST.dead*240;s+=`<rect x="0" y="${NEUT-dz}" width="320" height="${2*dz}" fill="#fff" fill-opacity=".08"/><line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="276" y="${NEUT-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
     const cy=NEUT+dy;s+=`<line x1="52" y1="${NEUT}" x2="52" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M46 ${cy+(dy<0?6:-6)}L52 ${cy}L58 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
   if(act||g==="locked"||g==="confirming"||g==="unrecognized"){
     const shape=g==="locked"?FIST:g==="unrecognized"?HALF:PALM,off=act?dy:wob,pts=shape.map(([x,y])=>[x+HX,y-5+HY+off]),col=g==="unrecognized"?K.caut:K.sel;
@@ -936,7 +933,7 @@ function renderCam(){
 function buildFeeds(){
   $("fheadSlot").appendChild($("fhead"));$("sideFeed").innerHTML="";
   $("feeds").innerHTML=drones.map(d=>`<div class="dfeed" data-f="${d.id}" role="img" aria-label="${U(d.id)} video">
-    <span class="fh"><span class="num">${d.n}</span>${U(d.id)}<span class="simtag">SIM</span><span class="st" id="fst-${d.id}">--</span></span>
+    <span class="fh"><span class="num">${d.n}</span>${U(d.id)}<span class="st" id="fst-${d.id}">--</span></span>
     <svg id="fv-${d.id}" viewBox="0 0 240 190" preserveAspectRatio="xMidYMid meet" style="overflow:hidden"></svg>
     <span class="fstat"><span class="lnk" id="flk-${d.id}">LINK OK</span>
       <span class="bat" id="fbat-${d.id}" title="Battery"><i></i></span><span class="m" id="fbatv-${d.id}">--</span></span></div>`).join("");
@@ -1001,7 +998,6 @@ function renderSide(){
   const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
   bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
   bt.querySelector("small").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
-  $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<span>${U(d.id)}<b class="m">${d.z.toFixed(2)} m</b></span>`).join(""):`<span class="none">No drone held</span>`);
 }
 
 /* =====================================================================
@@ -1014,30 +1010,20 @@ function renderTop(){
     dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
   // per-drone telemetry: link, battery voltage, flight state (§1.7.3.7)
   drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),[st,k]=flightState(d),pct=S.lowBatt&&d.id==="cf3"?12:d.batt,v=el.querySelector(".v"),em=el.querySelector("em");
-    el.querySelector(".sd").className="sd "+c;v.textContent=c==="lost"?"no link":volts(d).toFixed(2)+" V";v.className="m v"+(pct<CONFIG.lowBatt?" warn":"");
+    el.querySelector(".sd").className="sd "+c;v.textContent=c==="lost"?"no link":pct<CONFIG.lowBatt?volts(d).toFixed(2)+" V":"";v.className="m v"+(pct<CONFIG.lowBatt?" warn":"");
     em.textContent=st;em.className=k;});
   // trial clock (host-owned in the real system)
   const T=S.trial,tc=$("trialChip");
-  if(T.running){tc.className="trial run";tc.innerHTML=`<b>TRIAL ${trialId()}</b><span class="m">${fmtMS(S.t-T.t0)} / ${fmtMS(CONFIG.timeLimit)}</span><span>DH ${T.dh}</span>`;}
+  if(T.running){tc.className="trial run";tc.innerHTML=`<b>${trialId()}</b><span class="m">${fmtMS(S.t-T.t0)} / ${fmtMS(CONFIG.timeLimit)}</span>`;}
   else if(T.last){const f=T.last.outcome==="collision"||T.last.outcome==="timeout";tc.className="trial"+(f?" fail":"");
-    tc.innerHTML=`<b>${T.last.id}</b><span>${f?"Failed: "+T.last.outcome:T.last.outcome==="completed"?"Completed":"Hardware abort"} ${fmtMS(T.last.elapsed)}</span><span>DH ${T.last.dh}</span>`;}
-  else{tc.className="trial";tc.innerHTML=`<b>TRIAL ${trialId()}</b><span>Not started · ${OPT.mode==="course"?"course":"gesture sub-test"}</span>`;}
+    tc.innerHTML=`<b>${T.last.id}</b><span>${f?"Failed: "+T.last.outcome:T.last.outcome==="completed"?"Completed":"Aborted"} ${fmtMS(T.last.elapsed)}</span>`;}
+  else{tc.className="trial";tc.innerHTML=`<b>${trialId()}</b><span>${OPT.mode==="course"?"Ready":"Sub-test"}</span>`;}
 }
 function connState(d){if(S.cf3Lost&&d.id==="cf3")return"lost";return S.degraded?"weak":"ok";}
 function setLk(id,s,t){const e=$(id);e.dataset.s=s;e.querySelector("span").textContent=t;}
-function renderTimeline(){
-  const el=$("tlSvg"),W=el.clientWidth||600,H=el.clientHeight||76,span=CONFIG.timelineSec,t1=S.t,t0=t1-span,x=t=>8+(W-16)*(t-t0)/span;
-  el.setAttribute("viewBox",`0 0 ${W} ${H}`);let s=`<rect x="0" y="2" width="${W}" height="20" fill="#0B100C"/>`;
-  for(let t=Math.ceil(t0/10)*10;t<=t1;t+=10){const mj=t%60===0;s+=`<line x1="${x(t)}" y1="${mj?4:13}" x2="${x(t)}" y2="22" stroke="${mj?K.grn:"#2E4A33"}"/>`;
-    if(mj)s+=`<text x="${x(t)}" y="33" fill="${K.grn}" font-size="10" text-anchor="middle">${fmtT(t).slice(3)}</text>`;}
-  S.log.forEach(e=>{if(e.t<t0)return;const c={ok:K.friend,warn:K.caut,crit:K.crit,info:K.own}[e.k];s+=`<rect x="${x(e.t)-1.5}" y="3" width="3" height="10" fill="${c}"/>`;});
-  s+=`<line x1="${x(t1)}" y1="2" x2="${x(t1)}" y2="22" stroke="${K.friend}" stroke-width="2"/>`;
-  el.innerHTML=s;
-}
 function renderLog(){
   const L=S.log[S.log.length-1];
-  $("logLatest").innerHTML=L?`<span class="t">T+${fmtT(L.t)}</span>${L.text}`:"";$("lastDot").dataset.k=L?L.k:"";
-  $("logList").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");
+  $("logLatest").textContent=L?L.text:"";$("lastDot").dataset.k=L?L.k:"";
 }
 /* ---------- Telemetry / Logs tab ---------- */
 let TAB="map";
@@ -1070,8 +1056,7 @@ function renderTelemetry(){if(TAB!=="tel")return;
     <dt>Defensive hovers</dt><dd>${T.running?T.dh:L?L.dh:0}</dd>`;
   $("logCount").textContent=`${S.log.length} events`;
   $("telLog").innerHTML=[...S.log].reverse().map(e=>`<li><span class="t">T+${fmtT(e.t)}</span><span class="dot" data-k="${e.k}"></span><span>${e.text}</span></li>`).join("");}
-function toggleLog(){const o=$("app").classList.toggle("log-open");$("logToggle").setAttribute("aria-expanded",o);}
-$("logToggle").addEventListener("click",toggleLog);
+$("logToggle").addEventListener("click",()=>setTab("tel"));
 document.querySelectorAll(".sec>button").forEach(b=>b.addEventListener("click",()=>{const c=b.parentElement.classList.toggle("closed");b.setAttribute("aria-expanded",!c);}));
 
 /* =====================================================================
@@ -1136,7 +1121,7 @@ function frame(now){
   // one bad frame must never stop the loop: log the error once and keep going
   try{const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
     frames++;fpsAcc+=dt;acc+=dt;
-    if(acc>=0.2){acc=0;renderSide();renderTop();renderTimeline();renderTelemetry();renderAlert();}}
+    if(acc>=0.2){acc=0;renderSide();renderTop();renderTelemetry();renderAlert();}}
   catch(e){last=now;console.error(e);if(!S.frameErr){S.frameErr=true;log(`Display error: ${e.message}. The simulation keeps running.`,"crit");}}
   requestAnimationFrame(frame);}
 // banner after a collision or timeout, so a grounded, unresponsive map is explained
@@ -1181,7 +1166,7 @@ $("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
-    S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";log("Emergency stop cleared by operator","ok");}
+    S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="E-STOP";$("estopSub").textContent="Hold 1 s";log("Emergency stop cleared by operator","ok");}
   S.alert=null;const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
 // Trials (§1.7.4, §1.7.6): start on the ground; a collision or the time limit fails the trial and grounds the drones.
 // Defensive hovers are counted separately and do not fail a trial.
@@ -1201,10 +1186,10 @@ function exportLog(){const last=S.trial.last,data={trial:last||{id:trialId(),out
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})),a=document.createElement("a");
   a.href=url;a.download=`trial-${(last||{id:trialId()}).id}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);log("Trial log exported");}
 const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
-function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} / 1.0 s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
+function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
 function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
-function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s, cuts all motors";}
-function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="Motors cut";$("estopSub").textContent="Clears with Take off all once grounded";log("Emergency stop, all motors cut","crit");}
+function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s";}
+function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="MOTORS CUT";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
 estop.addEventListener("pointerdown",e=>{estop.setPointerCapture(e.pointerId);start();});
 estop.addEventListener("pointerup",cancel);estop.addEventListener("pointercancel",cancel);
 estop.addEventListener("keydown",e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat&&hs==null){e.preventDefault();start();}});
@@ -1254,7 +1239,6 @@ function syncSettings(){
   document.querySelectorAll("[data-o]").forEach(b=>b.setAttribute("aria-pressed",OPT[b.dataset.o]));
   document.querySelectorAll("[data-fs]").forEach(b=>b.setAttribute("aria-checked",b.dataset.fs===OPT.feed));
   document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===OPT.mode));
-  $("toLbl").textContent=`to ${CONFIG.takeoffZ.toFixed(2)} m`;
 }
 document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",()=>{
   const k=b.closest(".stp").dataset.k,c=STEP[k],v=Math.round((c.get()+(+b.dataset.d)*c.step)*100)/100,nv=clamp(v,val(c.lo),val(c.hi));
@@ -1291,7 +1275,7 @@ function applyFeeds(){
 document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;OPT.feed=k;S.video=k;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===k);log(`Camera feed: ${U(k)}`);applyFeeds();renderSide();});
 $("fsBtn").addEventListener("click",()=>{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el);setTimeout(layout,300);});
 function toggleSettings(open){const o=open??$("settings").hidden;$("settings").hidden=!o;$("setBtn").setAttribute("aria-expanded",o);}
-$("setBtn").addEventListener("click",()=>toggleSettings());$("setBtn2").addEventListener("click",()=>toggleSettings());$("setClose").addEventListener("click",()=>toggleSettings(false));
+$("setBtn").addEventListener("click",()=>toggleSettings());$("setClose").addEventListener("click",()=>toggleSettings(false));
 
 /* =====================================================================
    RESPONSIVE LAYOUT
@@ -1311,29 +1295,13 @@ function fitStage(){
 function layout(){
   fitStage();
   const vw=STAGE.w,vh=STAGE.h,app=$("app"),fOn=OPT.feeds;
-  const mode=vw<700?"compact":(vw/vh<1.15?"portrait":"landscape");app.dataset.mode=mode;
+  app.dataset.mode="landscape";
   const st=app.style;
-  if(mode==="landscape"){
-    // left: hand camera, video feed and altitude; the map takes the rest of the width
-    const topH=56,botH=vh<700?56:64,sideW=236,altW=96;
-    $("side").classList.remove("wide");
-    st.gridTemplateRows=`${topH}px 1fr ${botH}px`;
-    const cols=["44px",`${sideW}px`,`${altW}px`,"minmax(0,1fr)"],areas=["rail","side","alt","main"];
-    if(OPT.lefty){cols.reverse();areas.reverse();}   // mirror for left-handed operators
-    st.gridTemplateColumns=cols.join(" ");
-    st.gridTemplateAreas=`"top top top top" "${areas.join(" ")}" "plan plan plan plan"`;
-  }else if(mode==="portrait"){
-    $("side").classList.remove("wide");
-    const altW=Math.max(104,Math.min(130,vw*0.12)),mapW=vw-44-altW-10,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),rowMap=Math.min((mapW-32)/AR+56,(vh-104)*0.64);
-    st.gridTemplateRows=`56px ${rowMap|0}px 1fr 64px`;
-    st.gridTemplateColumns=OPT.lefty?`${altW|0}px 1fr 1fr 44px`:`44px 1fr 1fr ${altW|0}px`;
-    st.gridTemplateAreas=OPT.lefty?`"top top top top" "alt main main rail" "side side side rail" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side side side" "plan plan plan plan"`;
-  }else{
-    $("side").classList.remove("wide");
-    st.gridTemplateRows=`56px ${Math.min(vw,vh*0.62)|0}px 240px auto auto auto`;
-    st.gridTemplateColumns="minmax(0,1fr)";
-    st.gridTemplateAreas=`"top" "main" "alt" "side" "plan"`;
-  }
+  // one layout: top bar, then the side panel (cameras, take off / land, altitude) and the map
+  $("side").classList.remove("wide");
+  st.gridTemplateRows="48px 1fr";
+  st.gridTemplateColumns=OPT.lefty?"1fr 200px":"200px 1fr";
+  st.gridTemplateAreas=OPT.lefty?`"top top" "main side"`:`"top top" "side main"`;
   requestAnimationFrame(()=>{fitMap();measure();});
 }
 function measure(){
@@ -1347,7 +1315,7 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 /* =====================================================================
    INIT
    ===================================================================== */
-resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("side"));renderSide();renderTop();requestAnimationFrame(frame);autoCamera();
 // PWA: offline support + home-screen install
 if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Service worker not registered",e));
 </script>
