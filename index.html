@@ -495,19 +495,17 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .trdot{width:8px;height:8px;border-radius:50%;background:var(--own);box-shadow:0 0 6px var(--own);animation:trp 1.6s ease-in-out infinite}
 @keyframes trp{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.trdot{animation:none}}
-.crow{display:grid;grid-template-columns:62px 1fr 1fr;gap:6px;align-items:center}
-.side .foot .crow.act{padding:0;border-top:0;margin:0}
-.crow .rl{font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--tx-3);white-space:nowrap}
-.crow .pair{height:36px;flex-direction:row}
-.crow .pair small{display:none}
-.crow .pair span{font-size:12.5px}
-.crow .gbtn{height:36px;padding:0 4px;font-size:12px;letter-spacing:.04em;text-transform:none;border-width:1.5px;border-radius:2px}
+.crow{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:6px;align-items:stretch}
+.crow .pair{height:44px}
+.crow .pair[hidden]{display:none}
+.crow .pair span{font-size:12.5px} .crow .pair small{font-size:9.5px}
+.crow .gbtn{height:44px;padding:0 4px;font-size:11.5px;line-height:1.1;letter-spacing:.03em;text-transform:none;white-space:normal;border-width:1.5px;border-radius:2px}
 .foot .estop{width:100%;height:40px;flex-direction:row;justify-content:center;gap:10px;padding:0 8px;margin-top:2px}
 .foot .estop svg{width:24px;height:24px}
 .foot .estop span{display:flex;align-items:baseline;gap:8px}
 .foot .estop strong{font-size:13px}
 .foot .estop small{font-size:11px}
-@media (max-height:520px){.foot{gap:4px;padding:4px 6px 6px}.crow .pair,.crow .gbtn{height:32px}.foot .estop{height:34px}}
+@media (max-height:520px){.foot{gap:4px;padding:4px 6px 6px}.crow .pair,.crow .gbtn{height:36px}.foot .estop{height:34px}}
 .gbtn{height:46px;padding:0 16px;border:2px solid var(--grn);background:transparent;color:var(--grn);border-radius:3px;font-weight:800;font-size:13px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 .gbtn:active{background:var(--grn-dim)}
 .gbtn[disabled]{border-color:var(--line-2);color:var(--tx-3)}
@@ -596,14 +594,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
         <button class="trbtn" id="trGo"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor"/></svg><span>Start trial</span><small id="trNext">S1-T1</small></button>
         <div class="trrun" id="trRun" hidden><span class="trdot"></span><span class="trlab">Trial running</span></div>
       </div>
-      <!-- one row per scope: the selected drone (rounded) and all drones (square) -->
-      <div class="crow act"><span class="rl" id="oneLbl">DRONE 1</span>
+      <!-- one row: the selected drone's next action (rounded, names the drone), then all drones (square) -->
+      <div class="crow">
         <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
-        <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
-      </div>
-      <div class="crow gbar" id="gbar" role="group" aria-labelledby="allLbl"><span class="rl" id="allLbl">ALL</span>
-        <button class="gbtn" id="btnTakeoff" aria-label="Take off all drones">Take off</button>
-        <button class="gbtn" id="btnLand" aria-label="Land all drones">Land</button>
+        <button class="pair ld" id="btnLandSel" hidden><span>Land</span><small>DRONE 1</small></button>
+        <button class="gbtn" id="btnTakeoff">Take off all</button>
+        <button class="gbtn" id="btnLand">Land all</button>
       </div>
       <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
       <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
@@ -1230,7 +1226,9 @@ function renderSide(){
   // video panel: Take off / Land act on the drone shown (it follows the most recently touched held drone)
   const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
   bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
-  bt.querySelector("small").textContent=U(v.id);$("oneLbl").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
+  bt.querySelector("small").textContent=U(v.id);
+  // only one of the two is ever usable, so show just the selected drone's next action
+  const vUp=v.z>0.02&&!v.landing&&!v.crashed;bl.hidden=!vUp;bt.hidden=vUp;bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
   // right panel also shows the held drones' current altitude (§1.7.3.5)
   $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<div><span>${U(d.id)}</span><b class="m">${d.z.toFixed(2)} m</b></div>`).join(""):`<div class="none">No drone held</div>`);
 }
@@ -1238,7 +1236,7 @@ function renderSide(){
 /* =====================================================================
    TOP BAR + TIMELINE
    ===================================================================== */
-function renderTrialCtl(){const T=S.trial,run=T.running;$("trGo").hidden=run;$("trRun").hidden=!run;$("trVoid").disabled=!run;$("trCol").disabled=!run;
+function renderTrialCtl(){const T=S.trial,run=T.running;$("trSession").textContent=`Next participant (S${S.session+1})`;$("trGo").hidden=run;$("trRun").hidden=!run;$("trVoid").disabled=!run;$("trCol").disabled=!run;
   if(!run){$("trNext").textContent=trialId();$("trGo").classList.toggle("wait",!!trialBlocker());}}
 function renderTop(){renderTrialCtl();
   // on/off status dot on each video selector button
