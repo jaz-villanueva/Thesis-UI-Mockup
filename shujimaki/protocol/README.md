@@ -209,8 +209,8 @@ The command names are placeholders. The takeoff, landing, emergency-stop, and ar
 | `land` | `drones`: array of drone names | Starts landing. |
 | `stop` | `{}` | Emergency stop. Its effect and owner are open. |
 | `stop_reset` | `{}` | Clears a stop. The host accepts it only when every drone is grounded. |
-| `trial_start` | `trial_id`: string | Starts the trial clock and the trial file. |
-| `trial_end` | `outcome`: `completed`, `collision`, `timeout`, or `hardware_abort` | Ends the trial. Hardware aborts stay separate from participant failures ([OPEN-13](../CONTEXT.md#unknowns-contradictions-and-open-decisions)). |
+| `trial_start` | `trial_id`: string | Starts the trial clock and the trial file. The host rejects it with `not_allowed` unless every drone is grounded on its own start position, has a telemetry link, and the emergency stop is clear ([DEC-20](../CONTEXT.md#accepted-decisions-made-after-the-proposal)). |
+| `trial_end` | `outcome`: `collision` or `hardware_abort` | The experimenter ends the trial for a collision the host did not detect, or voids it for a hardware fault. The host ends trials itself: `completed` when every drone has passed H1, H2 and H3 in order and is grounded on its own start position, `timeout` at the time limit, and `collision` when a drone reports `sys.isTumbled` ([DEC-20](../CONTEXT.md#accepted-decisions-made-after-the-proposal)). Hardware aborts stay separate from participant failures ([OPEN-13](../CONTEXT.md#unknowns-contradictions-and-open-decisions)). |
 | `layout_read` | `{}` | Reads the marked rigid bodies from Motive ([DEC-16](../CONTEXT.md#accepted-decisions-made-after-the-proposal)) and sends a `course` message with `pending` set to `true`. The host rejects it with `not_allowed` while a trial runs or a drone is flying. |
 | `health_check` | `{}` | Runs the Crazyflie propeller and battery tests (`health.startPropTest`, then `health.startBatTest`) on every drone ([DEC-21](../CONTEXT.md#accepted-decisions-made-after-the-proposal)). The host rejects it with `not_allowed` while a trial runs or a drone is flying. Results arrive in `drones[].health`. |
 | `layout_apply` | `config_id`: string | Adopts the pending course with that `config_id`. The host sends a `course` message with `pending` set to `false`, and later trial records use it. |
@@ -224,7 +224,7 @@ The host sends `telemetry` from a fixed timer. Example: [telemetry-cf3-defensive
 | `host_ms` | number | Host clock when the host built the message. |
 | `ack.seq`, `ack.t_ms` | integer and number, or `null` | `seq` and `t_ms` of the latest valid `input`. |
 | `ack.host_rx_ms` | number or `null` | Host clock when that `input` arrived. |
-| `trial` | `{id, running, elapsed_ms}` or `null` | The current trial. `elapsed_ms` comes from the host trial clock. |
+| `trial` | `{id, running, elapsed_ms, outcome, hoops}` or `null` | The current or latest trial. `elapsed_ms` comes from the host trial clock. `outcome` is `null` while the trial runs, then `completed`, `collision`, `timeout`, or `hardware_abort`. `hoops` maps each drone to the number of hoops it has passed in order. |
 | `altitude.rate` | m/s | The shared rate that the host applied at this tick. |
 | `altitude.blocked_by` | drone name or `null` | A held drone that cannot follow the shared rate. |
 | `altitude.reason` | `z_max`, `z_min`, `defensive_hover`, or `null` | The cause of the block. The response to a block is [OPEN-03](../CONTEXT.md#unknowns-contradictions-and-open-decisions). |
@@ -306,7 +306,7 @@ The first draft, from 23 September 2026, was an earlier version of [input-three-
 6. Telemetry uses glossary names and measured units. `dh` becomes `defensive_hover`, `battery` becomes `battery_v`, and `stale` becomes `pos_age_ms`. `held`, `ack`, `altitude`, `mode`, and `trial` are new.
 7. The earlier examples used two different origins, (1.20, 0.85) and (−1.45, −1.02). Both were illustrative. The host configuration now supplies the frame.
 
-Changes staged on 27 September 2026, before the prototype freeze: `course`, `layout_read`, `layout_apply`, `health_check`, `drones[].link_quality`, `drones[].battery_level`, `drones[].pm_state`, `drones[].can_fly`, `drones[].tumbled` and `drones[].health` are new. `mode` and `set_mode` are removed: the restricted zone applies while a trial runs ([DEC-20](../CONTEXT.md#accepted-decisions-made-after-the-proposal)). Sessions and trials use short IDs such as `S1` and `S1-T2`. The example course follows proposal Figure 5, and the example altitude limits follow [DEC-15 and DEC-17](../CONTEXT.md#accepted-decisions-made-after-the-proposal).
+Changes staged on 27 September 2026, before the prototype freeze: `course`, `layout_read`, `layout_apply`, `health_check`, `drones[].link_quality`, `drones[].battery_level`, `drones[].pm_state`, `drones[].can_fly`, `drones[].tumbled` and `drones[].health` are new. `trial_start` has start conditions. `trial_end` now carries only `collision` or `hardware_abort`, because the host ends completed and timed-out trials itself. `trial.outcome` and `trial.hoops` are new. `mode` and `set_mode` are removed: the restricted zone applies while a trial runs ([DEC-20](../CONTEXT.md#accepted-decisions-made-after-the-proposal)). Sessions and trials use short IDs such as `S1` and `S1-T2`. The example course follows proposal Figure 5, and the example altitude limits follow [DEC-15 and DEC-17](../CONTEXT.md#accepted-decisions-made-after-the-proposal).
 
 ## Open items
 

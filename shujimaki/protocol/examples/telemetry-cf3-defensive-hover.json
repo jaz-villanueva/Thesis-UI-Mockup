@@ -4,7 +4,7 @@
     "seq": 24205,
     "host_ms": 5203551.0,
     "ack": { "seq": 24210, "t_ms": 812345.6, "host_rx_ms": 5203537.1 },
-    "trial": { "id": "S1-T2", "running": true, "elapsed_ms": 92418.0 },
+    "trial": { "id": "S1-T2", "running": true, "elapsed_ms": 92418.0, "outcome": null, "hoops": { "cf1": 1, "cf2": 1, "cf3": 0 } },
     "altitude": { "rate": 0.0, "blocked_by": "cf3", "reason": "defensive_hover" },
     "drones": [
         {
