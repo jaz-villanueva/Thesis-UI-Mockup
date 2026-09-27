@@ -1,6 +1,6 @@
 /* Service worker: offline app shell + cached MediaPipe hand-tracking files.
    Bump VERSION whenever index.html or the icons change, so installed copies update. */
-const VERSION = "v4";
+const VERSION = "v7";
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = "runtime-mediapipe";
 const SHELL_FILES = [

@@ -50,7 +50,7 @@ svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-nu
    On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
 html,body{background:#000}
 .stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:40px 1fr 64px;grid-template-columns:44px 284px 108px 216px 1fr;grid-template-areas:"top top top top top" "rail side alt feeds main" "plan plan plan plan plan";position:relative}
+.app{display:grid;height:800px;grid-template-rows:56px 1fr 64px;grid-template-columns:44px 236px 96px 1fr 236px;grid-template-areas:"top top top top top" "rail side alt main vid" "plan plan plan plan plan";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:18px}
@@ -297,6 +297,28 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .cbs[aria-checked="true"]{color:var(--grn-tx);border-color:var(--grn-2)}
 .cbs[aria-checked="true"]::before{background:var(--grn) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%230C0F0C' stroke-width='2.2'/%3E%3C/svg%3E") center/100% no-repeat;border-color:var(--grn)}
 /* all feeds off: column collapses to a slim strip that keeps the checkboxes */
+/* right panel: the single video feed and the held drones' altitude (§1.7.3.5) */
+.vid{grid-area:vid;padding:4px 4px 4px 0;display:flex;min-height:0}
+.app.lefty .vid{padding:4px 0 4px 4px}
+.vhead{height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--panel-2);color:var(--grn-tx);border-left:3px solid var(--grn-2);border-bottom:1px solid var(--line);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.vhead span{font-size:10px;font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--tx-3)}
+.vbody{flex:1;min-height:0;overflow:auto;padding:0 4px 4px;display:flex;flex-direction:column;gap:4px}
+.heldalt{border:1px solid var(--line);background:var(--panel-2);padding:6px 8px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.heldalt .t{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--grn-tx)}
+.heldalt div{display:flex;justify-content:space-between;gap:8px}
+.heldalt b{color:var(--own);font-weight:600} .heldalt .none{color:var(--tx-3)}
+/* top bar: per-drone telemetry and the trial clock */
+.dstat{display:flex;gap:6px;margin-left:10px}
+.ds{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;border:1px solid var(--line-2);background:var(--bg);font-size:12px;white-space:nowrap}
+.ds b{font-weight:700;letter-spacing:.03em}
+.ds .v{color:var(--tx-2)} .ds .v.warn{color:var(--caut)}
+.ds em{font-style:normal;color:var(--tx-2)} .ds em.caut{color:var(--caut)} .ds em.crit{color:var(--crit)} .ds em.own{color:var(--own)} .ds em.ok{color:var(--grn)}
+.trial{display:flex;align-items:center;gap:10px;height:30px;padding:0 10px;border:1px solid var(--line-2);font-size:12px;white-space:nowrap;color:var(--tx-2)}
+.trial b{color:var(--tx);font-weight:700;letter-spacing:.03em}
+.trial.run{border-color:var(--grn-2)} .trial.run b{color:var(--grn)}
+.trial.fail{border-color:var(--crit)} .trial.fail b{color:var(--crit)}
+.fstat .lnk{font-weight:700;letter-spacing:.04em;margin-right:2px} .fstat .lnk.warn{color:var(--caut)} .fstat .lnk.crit{color:var(--crit)}
+.settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
 /* Sim controls (mockup only) */
 .sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
 .sim.open{display:flex}
@@ -346,6 +368,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 <!-- =============================== TOP BAR =============================== -->
 <header class="top">
   <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L21 19 H3 Z" fill="none" stroke="#EDEDEE" stroke-width="1.6"/><path d="M12 9 L16 16 H8 Z" fill="#EDEDEE"/></svg>
+  <div class="dstat" id="dstat" aria-label="Drone telemetry">
+    <span class="ds" id="ds-cf1"><i class="sd"></i><b>DRONE 1</b><span class="m v">--</span><em>--</em></span>
+    <span class="ds" id="ds-cf2"><i class="sd"></i><b>DRONE 2</b><span class="m v">--</span><em>--</em></span>
+    <span class="ds" id="ds-cf3"><i class="sd"></i><b>DRONE 3</b><span class="m v">--</span><em>--</em></span>
+  </div>
+  <div class="trial" id="trialChip" aria-live="polite"></div>
   <div class="right">
     <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
       <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
@@ -362,7 +390,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== SIDE PANEL =============================== -->
 <aside class="side" id="side">
-  <section class="card" aria-label="Selected unit">
+  <section class="card" aria-label="Hand camera">
     <div class="scroll">
       <div class="sec" id="secCam">
         <button aria-expanded="true">Gesture Camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -372,15 +400,8 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
             <button class="cambtn" id="camBtn" aria-label="Turn tablet camera on or off"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="1"/><path d="m16 10 5-3v10l-5-3"/></svg><span id="camBtnTxt">Enable camera</span></button>
             <span class="camnote" id="camNote" hidden></span></div>
           <div class="gstat" id="gstat"><b id="gMain">--</b><span id="gSub"></span></div>
-          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Drone camera feed"><span class="fl">DRONE CAM</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 camera feed">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 camera feed">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 camera feed">3</button></div></div>
-          <div id="sideFeed"></div>
         </div>
       </div>
-
-
-    </div>
-    <div class="act">
-      <button class="primary" id="btnLandSel">Land DRONE 1</button>
     </div>
   </section>
 </aside>
@@ -400,30 +421,51 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
   </section>
 </main>
 
-<!-- =============================== DRONE CAMERA FEEDS (right) =============================== -->
+<!-- =============================== VIDEO FEED (right panel, §1.7.3.5) =============================== -->
+<aside class="vid" id="vid" aria-label="Video feed">
+  <section class="card">
+    <div class="vhead">Video feed<span>one drone at a time</span></div>
+    <div class="vbody">
+      <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><span class="fl">SHOW</span><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
+      <div id="sideFeed"></div>
+      <div class="heldalt" id="heldAlt"></div>
+    </div>
+    <div class="act">
+      <button class="primary" id="btnLandSel">Land DRONE 1</button>
+    </div>
+  </section>
+</aside>
+
+<!-- hidden store for the video tiles that are not shown -->
 <aside class="feeds" aria-label="Drone camera feeds" id="feeds"></aside>
 
 <!-- =============================== SETTINGS DRAWER =============================== -->
 <section class="settings" id="settings" aria-label="Settings" hidden>
   <div class="set-h"><span>Settings</span><button id="setClose" aria-label="Close settings"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="set-b">
-    <div class="set-g">Flight limits</div>
+    <div class="set-g">Trial (experimenter)</div>
+    <div class="seg" id="modeSeg"><button data-mode="course">Course trial</button><button data-mode="gesture_subtest">Gesture sub-test</button></div>
+    <div class="seg"><button id="trStart">Start trial</button><button id="trDone">End: completed</button><button id="trAbort" style="grid-column:span 2">End: hardware abort</button></div>
+    <button class="sw-row reset" id="trExport">Export trial log (JSON)</button>
+    <div class="set-g">Ground station configuration</div>
+    <p class="note">Set by the flight host in the real system. Values are placeholders until lab tests.</p>
     <div class="stp" data-k="zmin"><span>Minimum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="zmax"><span>Maximum altitude</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="takeoff"><span>Takeoff height</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="rate"><span>Gesture climb rate</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="aw"><span>Volume width (x)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="ad"><span>Volume depth (y)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
-    <div class="stp" data-k="nfzr"><span>No-fly size</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="rate"><span>Maximum climb rate</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="dhtrig"><span>Defensive hover distance</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="tlim"><span>Trial time limit</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="stp" data-k="prox"><span>Proximity warning</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="nfzr"><span>Restricted zone size</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="aw"><span>Room width (x)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
+    <div class="stp" data-k="ad"><span>Room depth (y)</span><button data-d="-1" aria-label="Decrease">−</button><b class="m"></b><button data-d="1" aria-label="Increase">+</button></div>
     <div class="set-g">Display</div>
     <button class="sw-row" data-o="lefty">Left-handed layout</button>
     <button class="sw-row" data-o="latch">Tap to hold (mouse testing)</button>
-    <button class="sw-row" data-o="nfz">No-fly zone (center)</button>
     <button class="sw-row" data-o="course">Boxes and hoops</button>
     <button class="sw-row" data-o="trails">Flight trails</button>
     <div class="fpick" role="radiogroup" aria-label="Drone camera feed">
-      <span>Camera feeds</span>
+      <span>Video feed</span>
       <div class="fp-row">
         <button class="cb" data-fs="cf1" role="radio">DRONE 1</button>
         <button class="cb" data-fs="cf2" role="radio">DRONE 2</button>
@@ -432,12 +474,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
     </div>
     <div class="set-g">Simulation (mockup only)</div>
-    <div class="seg" id="gestSeg"><button data-g="idle">Idle</button><button data-g="climb">Active climb</button><button data-g="descend">Active descend</button><button data-g="locked">Locked</button><button data-g="lost" style="grid-column:span 2">Tracking lost</button></div>
+    <div class="seg" id="gestSeg"><button data-g="idle">Idle</button><button data-g="confirming">Confirming</button><button data-g="climb">Active climb</button><button data-g="descend">Active descend</button><button data-g="locked">Locked</button><button data-g="unrecognized">Unrecognized pose</button><button data-g="lost" style="grid-column:span 2">Tracking lost</button></div>
     <button class="sw-row" data-t="simHold">Hold DRONE 1 + DRONE 2</button>
     <button class="sw-row" data-t="degraded">Link degraded</button>
     <button class="sw-row" data-t="lowBatt">DRONE 3 low battery</button>
     <button class="sw-row" data-t="cf3Lost">DRONE 3 disconnected</button>
-    <button class="sw-row" data-t="proximity">Proximity scenario</button>
+    <button class="sw-row" data-t="proximity">Send DRONE 3 toward DRONE 2</button>
     <button class="sw-row reset" id="simReset">Reset scenario</button>
     <div class="set-g">Display target</div>
     <div class="dispinfo m" id="dispInfo">--</div>
@@ -465,27 +507,28 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
    MOCK DATA
    ===================================================================== */
 const CONFIG={
-  arena:{xMin:0,xMax:5.31,yMin:0,yMax:3.55,margin:0.20},   // Miguel 409: 531 x 355 cm, origin at room corner (Fig. 5)
+  arena:{xMin:0,xMax:5.31,yMin:0,yMax:3.55,margin:0.25},   // Miguel 409: 531 x 355 cm, origin at room corner (Fig. 5); 0.25 m capture-volume margin is a placeholder
   z:{min:0.50,max:1.75,displayMax:2.00},   // 0.5 m floor (SO2); 175 cm cam #5 ceiling (Fig. 5)
-  nfz:{x:2.655,y:1.775,h:0.59},   // 118 cm square, room centre
+  nfz:{x:2.655,y:1.775,h:0.59},   // 118 cm restricted zone at the room centre (§1.7.6 prose; Fig. 5 draws it ~11 cm lower)
   boxes:[{id:"O1",x:1.31,y:1.56,hx:0.265,hy:0.255,h:1.02},{id:"O2",x:2.60,y:2.71,hx:0.265,hy:0.255,h:1.53}],   // balikbayan stacks 53x51 cm
   hoops:[{id:"H1",x:1.31,y:2.70,type:"horizontal",z:1.00,r:0.20},{id:"H2",x:3.99,y:2.70,ang:90,z:0.50,r:0.20},{id:"H3",x:3.99,y:1.49,ang:90,z:1.50,r:0.20}],   // 40 cm hoops
-  dbuf:0.15,   // interface-level collision buffer (d_buf)
-  gestureRate:0.15,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  zoneMargin:0.06,   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
+  rateMax:0.20,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  timeLimit:300,   // placeholder: the proposal sets it from two expert pilots' mean times x 2 (§1.7.4)
   sessionStart:12*60+31,timelineSec:300,
   drones:[
-    {id:"cf1",n:1,x:2.36,y:0.45,z:0.60,batt:86,volt:3.94,link:98,yaw:20},
-    {id:"cf2",n:2,x:2.66,y:0.45,z:0.60,batt:81,volt:3.90,link:97,yaw:350},
-    {id:"cf3",n:3,x:2.96,y:0.45,z:0.60,batt:77,volt:3.87,link:96,yaw:95}],
-  initialLog:[[-151,"Session start, participant P07, trial 3","info"],[-148,"MoCap lock, 3 of 3 rigid bodies","ok"],[-140,"Take off all, target 0.60 m","info"],
-    [-9,"Drones hovering at start row D1–D3, 30 cm spacing","ok"]]
+    {id:"cf1",n:1,x:2.36,y:0.45,z:0,batt:86,volt:3.94,link:98,yaw:20},
+    {id:"cf2",n:2,x:2.66,y:0.45,z:0,batt:81,volt:3.90,link:97,yaw:350},
+    {id:"cf3",n:3,x:2.96,y:0.45,z:0,batt:77,volt:3.87,link:96,yaw:95}],
+  initialLog:[[-151,"Session start, participant P07","info"],[-148,"MoCap lock, 3 of 3 rigid bodies","ok"],
+    [-9,"Drones on start pads D1–D3, 30 cm spacing","ok"]]
 };
 const K={bg:"#0A0E0B",panel:"#181C18",line:"#2C342C",line2:"#3E483D",tx:"#E1E8DF",tx2:"#9DAA9B",tx3:"#687566",grn:"#5FD068",grnDim:"#1B2E1D",friend:"#5FD068",own:"#25C6E8",sel:"#F5D90A",caut:"#FF9A1F",crit:"#F2453D"};
 
 /* =====================================================================
    STATE + HELPERS
    ===================================================================== */
-const S={liveRate:0,obsNear:{},obsHi:{},t:CONFIG.sessionStart,gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,focus:"cf1"};
+const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:3,running:false,t0:0,dh:0,last:null}};
 let drones=[];const pointers=new Map();
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -494,10 +537,11 @@ const fmtT=s=>{s=Math.max(0,Math.floor(s));return[s/3600,s%3600/60,s%60].map(n=>
 const U=s=>/^cf\d$/i.test(s)?`DRONE ${s.slice(2)}`:s.toUpperCase();
 let SC=128,OX=300,OY=300,VW=600,VH=600;const px=x=>OX+x*SC,py=y=>OY-y*SC;
 const isHeld=d=>d.pHeld||d.latched||(S.simHold&&(d.id==="cf1"||d.id==="cf2"));
-const airborne=d=>d.z>0.08&&!S.stopped;
+const airborne=d=>d.z>0.08&&!S.stopped&&!d.crashed;
 const gAct=()=>S.gesture==="climb"||S.gesture==="descend";
 /* ---------- live camera + hand tracking ---------- */
-const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
+const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,conf:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
+const GEST={confirmMs:500,still:0.04,dead:0.03,full:0.18};   // confirmation hold, steadiness, dead zone and full-rate displacement (fractions of frame height); placeholders (OPEN-07)
 const MP_VER="0.4.1675469240",MP_BASE=`https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MP_VER}/`;
 function camNote(t){const n=$("camNote");if(!n)return;n.hidden=!t;n.textContent=t||"";}
 async function toggleCamera(){if(CAM.on){stopCamera();return;}await startCamera(CAM.deviceId);}
@@ -543,113 +587,113 @@ async function handLoop(){if(!CAM.on||!CAM.tracking)return;const v=$("camVideo")
   if(!CAM.busy&&v.readyState>=2&&now-CAM.last>=45){CAM.busy=true;CAM.last=now;try{await CAM.hands.send({image:v});}catch(e){}CAM.busy=false;}
   if(now-CAM.ft>1000){CAM.fps=CAM.fc;CAM.fc=0;CAM.ft=now;}
   requestAnimationFrame(handLoop);}
-// classify + drive the altitude channel from real landmarks (same rules as the simulation)
-function liveGesture(){if(!CAM.tracking)return;const L=CAM.lm;
-  if(!L){if(gAct())setGesture("lost");CAM.label="";return;}
-  const W=L[0],dd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let ext=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(dd(L[t],W)>dd(L[p],W)*1.12)ext++;});
-  const open=ext>=4,fist=ext<=1;CAM.label=open?"Open Palm":fist?"Closed Fist":"";CAM.score=open||fist?0.95:0.6;
-  if(fist){if(S.gesture!=="locked"){CAM.neutral=null;setGesture("locked");}return;}
-  if(open){ if(!gAct()){CAM.neutral=W.y;S.liveRate=0;setGesture("climb");}
-    const disp=CAM.neutral-W.y;S.liveRate=clamp(disp*1.6,-2*CONFIG.gestureRate,2*CONFIG.gestureRate); // proportional, up to a max rate
-    S.gesture=S.liveRate>=0?"climb":"descend";}}
-const rateCmd=()=>CAM.tracking&&gAct()?S.liveRate:S.gesture==="climb"?CONFIG.gestureRate:S.gesture==="descend"?-CONFIG.gestureRate:0;
-const focusD=()=>drones.find(d=>d.id===S.focus);
+// Gesture channel (§1.7.3.6). An open palm must be held steady for GEST.confirmMs before the wrist height
+// is captured as the neutral point, so a resting hand in view does not activate altitude control.
+function classify(L){const W=L[0],dd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let ext=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(dd(L[t],W)>dd(L[p],W)*1.12)ext++;});return ext>=4?"open":ext<=1?"fist":"other";}
+// proportional to displacement from neutral, zero inside the dead zone, capped at the maximum rate
+function gestureRate(disp){const a=Math.abs(disp);if(a<=GEST.dead)return 0;return Math.sign(disp)*CONFIG.rateMax*Math.min(1,(a-GEST.dead)/(GEST.full-GEST.dead));}
+function liveGesture(){if(!CAM.tracking)return;const L=CAM.lm,now=performance.now();
+  if(!L){CAM.label="";CAM.conf=null;S.liveRate=0;
+    if(gAct()||S.gesture==="unrecognized")setGesture("lost");else if(S.gesture==="confirming")setGesture(S.beforeConfirm||"idle");return;}
+  const c=classify(L),W=L[0];CAM.label=c==="open"?"Open Palm":c==="fist"?"Closed Fist":"Unrecognized";
+  if(c==="fist"){CAM.conf=null;S.liveRate=0;if(S.gesture!=="locked"){CAM.neutral=null;setGesture("locked");}return;}
+  if(c==="other"){S.liveRate=0;if(gAct())setGesture("unrecognized");else if(S.gesture==="confirming"){CAM.conf=null;setGesture(S.beforeConfirm||"idle");}return;}
+  // open palm: keep driving the rate, resume after an unrecognised pose, or confirm a fresh activation
+  if(gAct()||(S.gesture==="unrecognized"&&CAM.neutral!=null)){S.liveRate=gestureRate(CAM.neutral-W.y);
+    if(!gAct())setGesture(S.liveRate<0?"descend":"climb");else if(S.liveRate)S.gesture=S.liveRate>0?"climb":"descend";return;}
+  if(S.gesture!=="confirming"||!CAM.conf){CAM.conf={t0:now,y0:W.y};setGesture("confirming");return;}
+  if(Math.abs(W.y-CAM.conf.y0)>GEST.still){CAM.conf={t0:now,y0:W.y};return;}   // hand still moving: restart the hold
+  if(now-CAM.conf.t0>=GEST.confirmMs){CAM.neutral=W.y;CAM.conf=null;S.liveRate=0;setGesture("climb");}}
+const confirmPct=()=>CAM.conf?Math.round(clamp((performance.now()-CAM.conf.t0)/GEST.confirmMs,0,1)*100):0;
+const rateCmd=()=>CAM.tracking&&gAct()?S.liveRate:S.gesture==="climb"?0.75*CONFIG.rateMax:S.gesture==="descend"?-0.75*CONFIG.rateMax:0;
+const videoD=()=>drones.find(d=>d.id===S.video);
+const fmtMS=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
+const volts=d=>3.4+0.8*(S.lowBatt&&d.id==="cf3"?12:d.batt)/100;   // simulated battery voltage from charge
 function log(text,k="info"){S.log.push({t:S.t,text,k});renderLog();}
 function dtgZ(){const d=new Date(),mo=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"],dw=["SUN","MON","TUE","WED","THU","FRI","SAT"],p=n=>String(n).padStart(2,"0");
   return{long:`${dw[d.getUTCDay()]} ${mo[d.getUTCMonth()]} ${p(d.getUTCDate())} ${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} ZULU`,
          hms:`${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}Z`};}
 
 function resetScenario(){
-  drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[]}));
-  Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),focus:"cf1"});
+  drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[],ranges:{},dh:null,crashed:false}));
+  Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0});
+  S.trial.running=false;S.trial.last=null;
   S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
   $("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";
-  syncSim();renderLog();buildTabs();buildFeeds();if(window.__ready)applyFeeds();
+  if(window.__ready){OPT.feed="cf1";Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x==="cf1");}
+  syncSim();renderLog();buildFeeds();buildSensorScene();if(window.__ready)applyFeeds();
 }
-// square no-fly zone: anything inside (plus a buffer) is pushed out through the nearest edge
-function outsideNFZ(x,y,buf){const N=CONFIG.nfz;if(!OPT.nfz)return{x,y,moved:false};const H=N.h+buf,dx=x-N.x,dy=y-N.y;
-  if(Math.abs(dx)>=H||Math.abs(dy)>=H)return{x,y,moved:false};
-  if(H-Math.abs(dx)<H-Math.abs(dy))return{x:N.x+(dx>=0?H:-H),y,moved:true,nx:dx>=0?1:-1,ny:0};return{x,y:N.y+(dy>=0?H:-H),moved:true,nx:0,ny:dy>=0?1:-1};}
-function outsideRect(x,y,cx,cy,hx,hy,buf){const HX=hx+buf,HY=hy+buf,dx=x-cx,dy=y-cy;
-  if(Math.abs(dx)>=HX||Math.abs(dy)>=HY)return{x,y,moved:false};
-  if(HX-Math.abs(dx)<HY-Math.abs(dy))return{x:cx+(dx>=0?HX:-HX),y,moved:true,nx:dx>=0?1:-1,ny:0};return{x,y:cy+(dy>=0?HY:-HY),moved:true,nx:0,ny:dy>=0?1:-1};}
-// boxes only block drones flying lower than the box top (plus clearance)
-function clearBoxes(d,x,y,buf){let r={x,y,moved:false,box:null};if(!OPT.course)return r;
-  CONFIG.boxes.forEach(b=>{const o=outsideRect(r.x,r.y,b.x,b.y,b.hx,b.hy,buf);if(o.moved)r={x:o.x,y:o.y,moved:true,box:b.id,nx:o.nx,ny:o.ny};});return r;}
-const rectDist=(x,y,cx,cy,hx,hy)=>Math.hypot(Math.max(Math.abs(x-cx)-hx,0),Math.max(Math.abs(y-cy)-hy,0));
-const OBS_WARN=0.30,OBS_CRIT=0.08; // d_buf edge (0.15 m) reads amber, not red
-const HOOP_WARN=0.12,HOOP_CRIT=0.06; // clearance to the hoop ring; a centred pass through a 0.20 m hoop stays clear
-const HOOP_STOP=0.07; // drones halt this far from the ring (about a Crazyflie's radius plus margin)
-// cut a move from a to b short so it never gets closer than HOOP_STOP to any ring; moving away is always allowed
-function hoopStop(a,b){if(!OPT.course)return null;let t=1,hit=null;const at=f=>({x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,z:a.z+(b.z-a.z)*f});
-  for(const h of CONFIG.hoops){const d0=hoopRim(h,a).dist,bad=f=>{const r=hoopRim(h,at(f)).dist;return r<HOOP_STOP&&r<d0;};
-    if(!bad(t))continue;let lo=0,hi=t;for(let i=0;i<12;i++){const m=(lo+hi)/2;if(bad(m))hi=m;else lo=m;}t=lo;hit=h;}
-  return hit?{p:at(t),h:hit}:null;}
-// 3D distance from a drone to a hoop's ring (the frame, not the opening) and the nearest rim point
-function hoopRim(h,d){const a=(h.ang||0)*Math.PI/180,n=h.type==="horizontal"?[0,0,1]:[-Math.sin(a),Math.cos(a),0],
-  v=[d.x-h.x,d.y-h.y,d.z-h.z],vn=v[0]*n[0]+v[1]*n[1]+v[2]*n[2],p=[v[0]-vn*n[0],v[1]-vn*n[1],v[2]-vn*n[2]],pl=Math.hypot(p[0],p[1],p[2])||1e-6;
-  return{dist:Math.hypot(vn,pl-h.r),pt:[h.x+p[0]/pl*h.r,h.y+p[1]/pl*h.r,h.z+p[2]/pl*h.r]};}
-// plan-view half extents of a hoop, for the map highlight
-function hoopFoot(h){if(h.type==="horizontal")return[h.r,h.r];const a=h.ang*Math.PI/180;return[Math.abs(Math.cos(a))*h.r+0.04,Math.abs(Math.sin(a))*h.r+0.04];}
-function obstacleList(){const L=[];if(OPT.course)CONFIG.boxes.forEach(b=>L.push({id:b.id,name:b.id,x:b.x,y:b.y,hx:b.hx,hy:b.hy}));
-  if(OPT.nfz){const N=CONFIG.nfz;L.push({id:"NFZ",name:"No-fly zone",x:N.x,y:N.y,hx:N.h,hy:N.h});}return L;}
-function detectObstacles(){const near={};
-  obstacleList().forEach(o=>{let best=null;drones.forEach(d=>{if(!airborne(d))return;const dist=rectDist(d.x,d.y,o.x,o.y,o.hx,o.hy);
-      if(dist<OBS_WARN&&(!best||dist<best.dist))best={dist,d};
-      const key=d.id+"|"+o.id,was=S.obsNear[key];
-      if(dist<OBS_WARN&&!was){S.obsNear[key]=true;log(`${U(d.id)} near ${o.name}, ${dist.toFixed(2)} m`,dist<OBS_CRIT?"crit":"warn");}
-      else if(dist>=OBS_WARN+0.05&&was)delete S.obsNear[key];});
-    if(best)near[o.id]={...o,dist:best.dist,drone:best.d};});
-  if(OPT.course)CONFIG.hoops.forEach(h=>{let best=null;
-    drones.forEach(d=>{if(!airborne(d))return;const r=hoopRim(h,d),key=d.id+"|"+h.id,was=S.obsNear[key];
-      if(r.dist<HOOP_WARN&&(!best||r.dist<best.dist))best={dist:r.dist,d,pt:r.pt};
-      if(r.dist<HOOP_WARN&&!was){S.obsNear[key]=true;log(`${U(d.id)} near ${h.id} rim, ${r.dist.toFixed(2)} m`,r.dist<HOOP_CRIT?"crit":"warn");}
-      else if(r.dist>=HOOP_WARN+0.03&&was)delete S.obsNear[key];});
-    if(best){const[fx,fy]=hoopFoot(h);near[h.id]={id:h.id,name:h.id,x:h.x,y:h.y,hx:fx,hy:fy,dist:best.dist,drone:best.d,pt:best.pt,hoop:true,stopped:best.d.hoopHold===h.id};}});
-  S.obsHi=near;}
-// green (clear) -> amber (near) -> red (contact / collision)
+/* ---------- restricted zone: interface-level, course trials only (§1.7.6) ---------- */
+function restrictedZones(){const N=CONFIG.nfz;return OPT.mode==="course"?[{id:"NFZ",name:"restricted zone",x:N.x,y:N.y,hx:N.h,hy:N.h}]:[];}
+// green (clear) -> amber (near) -> red (at the defensive-hover distance)
 function threatColor(t){const L=(a,b,k)=>Math.round(a+(b-a)*k),A=[95,208,104],B=[255,154,31],C=[242,69,61];
   const [p,q,k]=t<0.5?[A,B,t/0.5]:[B,C,(t-0.5)/0.5];return `rgb(${L(p[0],q[0],k)},${L(p[1],q[1],k)},${L(p[2],q[2],k)})`;}
-// Restricted = obstacle/no-fly footprint + d_buf, plus d_buf around other drones.
-function dragBlocked(d,x,y){const B=CONFIG.dbuf;
-  for(const o of obstacleList())if(Math.abs(x-o.x)<o.hx+B&&Math.abs(y-o.y)<o.hy+B)return o.name;
-  for(const e of drones){if(e===d||!airborne(e))continue;if(Math.hypot(x-e.x,y-e.y)<B+0.05||Math.hypot(x-e.tx,y-e.ty)<B+0.05)return U(e.id);}
-  return null;}
-function dragPathBlocked(d,ax,ay,bx,by){const B=CONFIG.dbuf;for(const o of obstacleList())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;return dragBlocked(d,bx,by);}
-// rounded path through points: quadratic curves between midpoints, no corners
-function smoothPath(P){if(P.length<3)return `M${P[0][0]} ${P[0][1]} L${P[1][0]} ${P[1][1]}`;let d=`M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
-  for(let i=1;i<P.length-1;i++){const m=[(P[i][0]+P[i+1][0])/2,(P[i][1]+P[i+1][1])/2];d+=` Q${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${i===P.length-2?P[i+1][0].toFixed(1):m[0].toFixed(1)} ${i===P.length-2?P[i+1][1].toFixed(1):m[1].toFixed(1)}`;}return d;}
+// The touch surface rejects any drag that would place a drone entity inside the restricted zone.
+// Physical obstacles are not blocked here: they exist to test the onboard Multi-ranger stop (§1.7.6).
+function dragBlocked(x,y){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(Math.abs(x-o.x)<o.hx+B&&Math.abs(y-o.y)<o.hy+B)return o.name;return null;}
+function dragPathBlocked(ax,ay,bx,by){const B=CONFIG.zoneMargin;for(const o of restrictedZones())if(segHitsRect(ax,ay,bx,by,o.x,o.y,o.hx+B,o.hy+B))return o.name;return dragBlocked(bx,by);}
 function segHitsRect(ax,ay,bx,by,cx,cy,hx,hy){let t0=0,t1=1;const dx=bx-ax,dy=by-ay;
   const P=[-dx,dx,-dy,dy],Q=[ax-(cx-hx),(cx+hx)-ax,ay-(cy-hy),(cy+hy)-ay];
   for(let i=0;i<4;i++){if(Math.abs(P[i])<1e-9){if(Q[i]<0)return false;}else{const r=Q[i]/P[i];if(P[i]<0){if(r>t1)return false;if(r>t0)t0=r;}else{if(r<t0)return false;if(r<t1)t1=r;}}}
   return t1-t0>1e-4;}
-// simple route planner: if the straight line to the target crosses an inflated obstacle, fly via its best corner
-function waypoint(d){const INF=0.17,EPS=0.02;let best=null;
-  for(const o of obstacleList()){const hx=o.hx+INF,hy=o.hy+INF;if(!segHitsRect(d.x,d.y,d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS))continue;
-    const C=[[o.x-hx,o.y-hy],[o.x+hx,o.y-hy],[o.x+hx,o.y+hy],[o.x-hx,o.y+hy]];
-    for(const c of C){if(Math.hypot(c[0]-d.x,c[1]-d.y)<0.06)continue;if(segHitsRect(d.x,d.y,c[0],c[1],o.x,o.y,hx-EPS,hy-EPS))continue;const blocked=segHitsRect(c[0],c[1],d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS);let c2=null,L;
-      if(blocked){for(const e of C){if(e===c||segHitsRect(c[0],c[1],e[0],e[1],o.x,o.y,hx-EPS,hy-EPS)||segHitsRect(e[0],e[1],d.tx,d.ty,o.x,o.y,hx-EPS,hy-EPS))continue;
-          const l2=Math.hypot(e[0]-c[0],e[1]-c[1])+Math.hypot(d.tx-e[0],d.ty-e[1]);if(!c2||l2<c2.l)c2={x:e[0],y:e[1],l:l2};}
-        L=Math.hypot(c[0]-d.x,c[1]-d.y)+(c2?c2.l:5+Math.hypot(d.tx-c[0],d.ty-c[1]));}
-      else L=Math.hypot(c[0]-d.x,c[1]-d.y)+Math.hypot(d.tx-c[0],d.ty-c[1]);
-      if(!best||L<best.L)best={x:c[0],y:c[1],L,next:c2};}}
-  return best;}
+// 3D distance from a point to a hoop's ring (the frame, not the opening)
+function hoopRim(h,d){const a=(h.ang||0)*Math.PI/180,n=h.type==="horizontal"?[0,0,1]:[-Math.sin(a),Math.cos(a),0],
+  v=[d.x-h.x,d.y-h.y,d.z-h.z],vn=v[0]*n[0]+v[1]*n[1]+v[2]*n[2],p=[v[0]-vn*n[0],v[1]-vn*n[1],v[2]-vn*n[2]],pl=Math.hypot(p[0],p[1],p[2])||1e-6;
+  return{dist:Math.hypot(vn,pl-h.r),pt:[h.x+p[0]/pl*h.r,h.y+p[1]/pl*h.r,h.z+p[2]/pl*h.r]};}
+
+/* ---------- simulated Multi-ranger deck (§1.7.3.2) ----------
+   Five time-of-flight sensors facing front, back, left, right and up, about 4 m range. There is no downward sensor.
+   Each sensor sees a cone of about 27°. Readings drive the proximity ring and the onboard defensive hover.
+   Trigger and clear distances are placeholders until bench tests (OPEN-04). */
+const MR={half:13.5*Math.PI/180,max:4.0,trig:0.15,clear:0.20,show:0.60,body:0.05,ceil:2.55};
+const DIRS=["front","right","back","left","up"];
+let HOOP_PTS=[];
+function buildSensorScene(){HOOP_PTS=[];if(!OPT.course)return;CONFIG.hoops.forEach(h=>{const a=(h.ang||0)*Math.PI/180;
+  for(let i=0;i<72;i++){const t=i/72*2*Math.PI,c=Math.cos(t)*h.r,s=Math.sin(t)*h.r;
+    HOOP_PTS.push(h.type==="horizontal"?[h.x+c,h.y+s,h.z]:[h.x+Math.cos(a)*c,h.y+Math.sin(a)*c,h.z+s]);}});}
+function dirVec(d,k){const y=d.yaw*Math.PI/180,f=[Math.sin(y),Math.cos(y),0],r=[Math.cos(y),-Math.sin(y),0];
+  return k==="front"?f:k==="back"?[-f[0],-f[1],0]:k==="right"?r:k==="left"?[-r[0],-r[1],0]:[0,0,1];}
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l];};
+function coneRays(u){ // the sensor axis plus eight rays around the edge of its field of view
+  const v=unit(cross(u,Math.abs(u[2])>0.9?[1,0,0]:[0,0,1])),w=cross(u,v),c=Math.cos(MR.half),s=Math.sin(MR.half),R=[u];
+  for(let i=0;i<8;i++){const t=i/8*2*Math.PI,ct=Math.cos(t),st=Math.sin(t);R.push([u[0]*c+(v[0]*ct+w[0]*st)*s,u[1]*c+(v[1]*ct+w[1]*st)*s,u[2]*c+(v[2]*ct+w[2]*st)*s]);}
+  return R;}
+function rayBox(p,u,b){let t0=0,t1=1e9;const lo=[b.x-b.hx,b.y-b.hy,0],hi=[b.x+b.hx,b.y+b.hy,b.h];
+  for(let i=0;i<3;i++){if(Math.abs(u[i])<1e-9){if(p[i]<lo[i]||p[i]>hi[i])return null;}
+    else{let a=(lo[i]-p[i])/u[i],c=(hi[i]-p[i])/u[i];if(a>c){const t=a;a=c;c=t;}t0=Math.max(t0,a);t1=Math.min(t1,c);if(t0>t1)return null;}}
+  return t0;}
+function sensorRange(d,k){const p=[d.x,d.y,d.z],u=dirVec(d,k),A=CONFIG.arena,ca=Math.cos(MR.half);let best=MR.max;
+  [[0,A.xMin],[0,A.xMax],[1,A.yMin],[1,A.yMax],[2,MR.ceil]].forEach(([i,v])=>{if(Math.abs(u[i])>1e-9){const t=(v-p[i])/u[i];if(t>0&&t<best)best=t;}});
+  if(OPT.course){const rays=coneRays(u);
+    CONFIG.boxes.forEach(b=>rays.forEach(r=>{const t=rayBox(p,r,b);if(t!=null&&t<best)best=t;}));
+    for(const q of HOOP_PTS){const vx=q[0]-p[0],vy=q[1]-p[1],vz=q[2]-p[2],L=Math.hypot(vx,vy,vz);if(L<1e-6||L-0.01>=best)continue;
+      if((vx*u[0]+vy*u[1]+vz*u[2])/L>=ca)best=Math.max(0,L-0.01);}}
+  drones.forEach(e=>{if(e===d||e.z<0.02)return;const vx=e.x-p[0],vy=e.y-p[1],vz=e.z-p[2],L=Math.hypot(vx,vy,vz);if(L<1e-6)return;
+    if((vx*u[0]+vy*u[1]+vz*u[2])/L>=ca&&L-MR.body<best)best=Math.max(0,L-MR.body);});
+  return best<MR.max?best:null;}
+function senseAll(){drones.forEach(d=>{d.ranges={};if(!airborne(d))return;DIRS.forEach(k=>d.ranges[k]=sensorRange(d,k));});}
+// physical contact: drone body against a box, a hoop frame or another drone. A collision fails the trial (§1.7.6).
+function collisionOf(d){
+  if(OPT.course){for(const b of CONFIG.boxes){const dx=Math.max(Math.abs(d.x-b.x)-b.hx,0),dy=Math.max(Math.abs(d.y-b.y)-b.hy,0),dz=Math.max(d.z-b.h,0);if(Math.hypot(dx,dy,dz)<MR.body)return{what:b.id};}
+    for(const h of CONFIG.hoops)if(hoopRim(h,d).dist<MR.body+0.01)return{what:`${h.id} frame`};}
+  for(const e of drones){if(e===d||e.crashed||e.z<0.03)continue;if(Math.hypot(d.x-e.x,d.y-e.y,d.z-e.z)<2*MR.body)return{what:U(e.id),other:e};}
+  return null;}
 function segCross(ax,ay,bx,by,cx,cy,dx,dy){const d1=(dx-cx)*(ay-cy)-(dy-cy)*(ax-cx),d2=(dx-cx)*(by-cy)-(dy-cy)*(bx-cx),d3=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax),d4=(bx-ax)*(dy-ay)-(by-ay)*(dx-ax);return d1*d2<0&&d3*d4<0;}
 function checkHoops(d,x0,y0,z0){if(!OPT.course)return;CONFIG.hoops.forEach(h=>{
   if(h.type==="horizontal"){ // pass by climbing/descending through the ring
-    if((z0-h.z)*(d.z-h.z)<0){const r=Math.hypot(d.x-h.x,d.y-h.y);if(r<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");else if(r<=h.r+0.10)log(`${U(d.id)} hit ${h.id} rim`,"warn");}return;}
+    if((z0-h.z)*(d.z-h.z)<0){const r=Math.hypot(d.x-h.x,d.y-h.y);if(r<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");}return;}
   const a=h.ang*Math.PI/180,ux=Math.cos(a)*h.r,uy=Math.sin(a)*h.r;
-  if(segCross(x0,y0,d.x,d.y,h.x-ux,h.y-uy,h.x+ux,h.y+uy)){
-    if(Math.abs(d.z-h.z)<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");else log(`${U(d.id)} missed ${h.id}, altitude ${d.z.toFixed(2)} m vs ${h.z.toFixed(2)} m`,"warn");}});}
+  if(segCross(x0,y0,d.x,d.y,h.x-ux,h.y-uy,h.x+ux,h.y+uy)&&Math.abs(d.z-h.z)<=h.r*0.8)log(`${U(d.id)} passed ${h.id}`,"ok");});}
 function flightState(d){
+  if(d.crashed)return["Collision","crit"];
   if(S.stopped)return["Motors cut","crit"];
   if(connState(d)==="lost")return["No link","crit"];
-  if(d.hoopHold&&d.z>0.02)return[`Stopped at ${d.hoopHold}`,"caut"];
+  if(d.dh&&d.z>0.02)return["Defensive hover","caut"];
   if(d.landing)return d.z>0.02?["Landing","own"]:["Grounded",""];
   if(d.z<=0.02&&d.zTarget==null)return["Grounded",""];
   if(d.zTarget!=null)return["Taking off","own"];
   if(isHeld(d)&&S.gesture==="lost")return["Holding altitude","caut"];
-  const mv=Math.hypot(d.tx-d.x,d.ty-d.y)>0.03||(isHeld(d)&&gAct()&&!(d.clampMax&&rateCmd()>0)&&!(d.clampMin&&rateCmd()<0));
+  const mv=Math.hypot(d.tx-d.x,d.ty-d.y)>0.03||(isHeld(d)&&S.appliedRate!==0);
   return mv?["Moving","own"]:["Hovering","ok"];
 }
 
@@ -684,7 +728,7 @@ function buildMapStatic(){
   const m=a.margin;
   g+=`<rect x="${px(a.xMin)}" y="${py(a.yMax)}" width="${(a.xMax-a.xMin)*SC}" height="${(a.yMax-a.yMin)*SC}" fill="none" stroke="#3E8F46" stroke-width="1.5"/>`;
   g+=`<rect x="${px(a.xMin+m)}" y="${py(a.yMax-m)}" width="${(a.xMax-a.xMin-2*m)*SC}" height="${(a.yMax-a.yMin-2*m)*SC}" fill="none" stroke="${K.caut}" stroke-opacity=".5" stroke-dasharray="6 5"/>`;
-  g+=`<text x="${px(a.xMin+m)+6}" y="${py(a.yMax-m)+14}" fill="${K.caut}" fill-opacity=".8" font-size="10">Geofence ${m.toFixed(2)} m</text>`;
+  g+=`<text x="${px(a.xMin+m)+6}" y="${py(a.yMax-m)+14}" fill="${K.caut}" fill-opacity=".8" font-size="10">Capture volume, ${m.toFixed(2)} m from walls</text>`;
   // altitude gradient (bottom → top: below-min caution, safe band green, above-max caution)
   const Z=CONFIG.z,p=z=>(1-z/Z.displayMax)*100;
   g+=`<defs><linearGradient id="altGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5FD068" stop-opacity=".9"/><stop offset="40%" stop-color="#F5D90A" stop-opacity=".82"/><stop offset="70%" stop-color="#FF9A1F" stop-opacity=".78"/><stop offset="100%" stop-color="#F2453D" stop-opacity=".75"/></linearGradient></defs>`;
@@ -710,16 +754,16 @@ function buildMapStatic(){
       g+=`<circle cx="${x1}" cy="${y1}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/><circle cx="${x2}" cy="${y2}" r="4" fill="#0B100C" stroke="${K.sel}" stroke-width="2"/>`;
       g+=`<text x="${cx+nx*22}" y="${cy-ny*22+(ny>0.5?0:4)}" fill="${K.sel}" font-size="11" font-weight="700" text-anchor="${nx<-0.5?"end":nx>0.5?"start":"middle"}" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${h.id}<tspan fill="#D9C95A" font-weight="400" font-size="9" dx="4">z ${h.z.toFixed(2)} m</tspan></text>`;});
   }
-  // d_buf ring around restricted zones (where drags stop)
-  obstacleList().forEach(o=>{const B=CONFIG.dbuf;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" rx="${B*SC}" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="1" stroke-dasharray="2 4"/>`;});
-  // no-fly zone
-  const N=CONFIG.nfz;
-  if(OPT.nfz){const s0=N.h*SC;
+  // drag margin around the restricted zone (where drags stop)
+  restrictedZones().forEach(o=>{const B=CONFIG.zoneMargin;g+=`<rect x="${px(o.x-o.hx-B)}" y="${py(o.y+o.hy+B)}" width="${(2*(o.hx+B))*SC}" height="${(2*(o.hy+B))*SC}" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1" stroke-dasharray="2 4"/>`;});
+  // restricted zone: active only in course-trial mode
+  const N=CONFIG.nfz,s0=N.h*SC;
+  if(OPT.mode==="course"){
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="${K.crit}" fill-opacity=".10"/>`;
     g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="url(#nfzHatch)" stroke="${K.crit}" stroke-width="2.5"/>`;
-    g+=`<rect x="${px(N.x)-38}" y="${py(N.y)-10}" width="76" height="20" fill="#1A0605" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="11" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">NO-FLY</text>`;
+    g+=`<rect x="${px(N.x)-52}" y="${py(N.y)-10}" width="104" height="20" fill="#1A0605" stroke="${K.crit}"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.crit}" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">RESTRICTED</text>`;
     g+=`<text x="${px(N.x)}" y="${py(N.y)+N.h*SC+14}" fill="${K.crit}" font-size="10" text-anchor="middle">${(2*N.h).toFixed(2)} × ${(2*N.h).toFixed(2)} m</text>`;}
-  if(!OPT.nfz)g+=`<g stroke="${K.grn}" stroke-opacity=".7"><circle cx="${OX}" cy="${OY}" r="5" fill="none"/><path d="M${OX-12} ${OY}H${OX-7}M${OX+7} ${OY}H${OX+12}M${OX} ${OY-12}V${OY-7}M${OX} ${OY+7}V${OY+12}"/></g>`;
+  else g+=`<rect x="${px(N.x)-s0}" y="${py(N.y)-s0}" width="${2*s0}" height="${2*s0}" fill="none" stroke="${K.tx3}" stroke-dasharray="4 5"/><text x="${px(N.x)}" y="${py(N.y)+4}" fill="${K.tx3}" font-size="10" text-anchor="middle">Restricted zone off (sub-test)</text>`;
   g+=`<text x="${px(a.xMax)+6}" y="${OY+3}" fill="${K.tx3}" font-size="10">+X</text><text x="${OX}" y="${py(a.yMax)-20}" fill="${K.tx3}" font-size="10" text-anchor="middle">+Y</text>`;
   $("mapStatic").innerHTML=g;
 }
@@ -729,47 +773,44 @@ function renderMap(){
   drones.forEach(d=>{const T=d.trail;if(!OPT.trails||T.length<2)return;const LIFE=0.7;
     for(let i=1;i<T.length;i++){const age=S.t-T[i][2];if(age>LIFE)continue;const a=1-age/LIFE;
       g+=`<line x1="${px(T[i-1][0]).toFixed(1)}" y1="${py(T[i-1][1]).toFixed(1)}" x2="${px(T[i][0]).toFixed(1)}" y2="${py(T[i][1]).toFixed(1)}" stroke="${K.grn}" stroke-width="${(0.8+2.6*a).toFixed(2)}" stroke-opacity="${(0.75*a*a).toFixed(3)}" stroke-linecap="round"/>`;}});
-  // obstacle detection highlight
-  Object.values(S.obsHi||{}).forEach(o=>{const crit=o.stopped||o.dist<(o.hoop?HOOP_CRIT:OBS_CRIT),col=crit?K.crit:K.caut,X=px(o.x-o.hx)-4,Y=py(o.y+o.hy)-4,W=2*o.hx*SC+8,H=2*o.hy*SC+8;
-    g+=`<rect class="blink" x="${X}" y="${Y}" width="${W}" height="${H}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="7 4"/>`;
-    const tx=px(o.x),ty=Y-8;g+=`<g transform="translate(${tx},${ty})"><rect x="-72" y="-12" width="144" height="18" fill="#0B100C" stroke="${col}"/><text x="0" y="1.5" fill="${col}" font-size="10" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${o.hoop?(o.stopped?"STOPPED AT RIM":crit?"RIM CONTACT":"HOOP RIM"):(crit?"CONTACT RISK":"OBSTACLE")} ${o.dist.toFixed(2)} m</text></g>`;
-    const D=o.drone,cx=o.pt?o.pt[0]:clamp(D.x,o.x-o.hx,o.x+o.hx),cy=o.pt?o.pt[1]:clamp(D.y,o.y-o.hy,o.y+o.hy);g+=`<line x1="${px(D.x)}" y1="${py(D.y)}" x2="${px(cx)}" y2="${py(cy)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;});
   S.prox.forEach((dist,key)=>{const[a,b]=key.split("|").map(id=>drones.find(d=>d.id===id)),crit=dist<CONFIG.proxCrit,col=crit?K.crit:K.caut,mx=(px(a.x)+px(b.x))/2,my=(py(a.y)+py(b.y))/2;
     g+=`<line x1="${px(a.x)}" y1="${py(a.y)}" x2="${px(b.x)}" y2="${py(b.y)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
-    [a,b].forEach(d=>g+=`<circle class="blink" cx="${px(d.x)}" cy="${py(d.y)}" r="30" fill="none" stroke="${col}" stroke-width="2"/>`);
-    g+=`<g transform="translate(${mx},${my-50})"><rect x="-80" y="-12" width="160" height="22" fill="#111" stroke="${col}"/><text x="0" y="3" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${crit?"Collision risk":"Proximity warning"} ${dist.toFixed(2)} m</text></g>`;});
+    g+=`<g transform="translate(${mx},${my+58})"><rect x="-80" y="-12" width="160" height="22" fill="#111" stroke="${col}"/><text x="0" y="3" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${crit?"Collision risk":"Proximity warning"} ${dist.toFixed(2)} m</text></g>`;});
   drones.forEach(d=>{
-    const X=px(d.x),Y=py(d.y),held=isHeld(d),foc=d.id===S.focus,gr=d.z<=0.02||S.stopped,dist=Math.hypot(d.tx-d.x,d.ty-d.y);
-    if(dist>0.03){const TX=px(d.tx),TY=py(d.ty);
-      // soft wisp to the target: curved, fading in from the drone, with a faint glow underlay
-      {const gid=`wisp-${d.id}`,ex=d.wp?px(d.wp.x):TX,ey=d.wp?py(d.wp.y):TY,L=Math.hypot(TX-X,TY-Y),nx=-(TY-Y)/(L||1),ny=(TX-X)/(L||1),bend=Math.min(18,L*0.08)*Math.sin(S.t*1.3+d.n);
-       const cx=d.wp?px(d.wp.x):(X+TX)/2+nx*bend,cy=d.wp?py(d.wp.y):(Y+TY)/2+ny*bend,path=d.wp?smoothPath([[X,Y],[cx,cy],...(d.wp.next?[[px(d.wp.next.x),py(d.wp.next.y)]]:[]),[TX,TY]]):`M${X.toFixed(1)} ${Y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${TX.toFixed(1)} ${TY.toFixed(1)}`;
-       g+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${X}" y1="${Y}" x2="${TX}" y2="${TY}"><stop offset="0" stop-color="${K.own}" stop-opacity="0"/><stop offset=".45" stop-color="${K.own}" stop-opacity=".22"/><stop offset="1" stop-color="${K.own}" stop-opacity=".55"/></linearGradient>`;
-       g+=`<path d="${path}" fill="none" stroke="url(#${gid})" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>`;
-       g+=`<path d="${path}" fill="none" stroke="url(#${gid})" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;}
+    const X=px(d.x),Y=py(d.y),held=isHeld(d),gr=d.z<=0.02||S.stopped||d.crashed,dist=Math.hypot(d.tx-d.x,d.ty-d.y);
+    if(dist>0.03&&!d.crashed){const TX=px(d.tx),TY=py(d.ty),gid=`wisp-${d.id}`;
+      // straight line to the operator's target: the drone flies it directly, with no route planning (§1.6.3)
+      g+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${X}" y1="${Y}" x2="${TX}" y2="${TY}"><stop offset="0" stop-color="${K.own}" stop-opacity="0"/><stop offset=".45" stop-color="${K.own}" stop-opacity=".22"/><stop offset="1" stop-color="${K.own}" stop-opacity=".6"/></linearGradient>`;
+      g+=`<path d="M${X.toFixed(1)} ${Y.toFixed(1)}L${TX.toFixed(1)} ${TY.toFixed(1)}" fill="none" stroke="url(#${gid})" stroke-width="2.2" stroke-linecap="round"/>`;
       g+=`<circle cx="${TX}" cy="${TY}" r="11" fill="${K.own}" fill-opacity=".07"/><circle cx="${TX}" cy="${TY}" r="6" fill="none" stroke="${K.own}" stroke-opacity=".55" stroke-width="1.2"/><circle cx="${TX}" cy="${TY}" r="1.8" fill="${K.own}" fill-opacity=".8"/>`;
       g+=`<text x="${TX+13}" y="${TY+4}" fill="${K.own}" fill-opacity=".75" font-size="10">${dist.toFixed(2)} m</text>`;}
     if(d.blockPt){const BX=px(d.blockPt[0]),BY=py(d.blockPt[1]),TX=px(d.tx),TY=py(d.ty),gb=`blk-${d.id}`;
       g+=`<linearGradient id="${gb}" gradientUnits="userSpaceOnUse" x1="${TX}" y1="${TY}" x2="${BX}" y2="${BY}"><stop offset="0" stop-color="${K.crit}" stop-opacity=".6"/><stop offset="1" stop-color="${K.crit}" stop-opacity="0"/></linearGradient>`;
       g+=`<path d="M${TX} ${TY} L${BX} ${BY}" stroke="url(#${gb})" stroke-width="6" stroke-linecap="round" opacity=".5"/><circle cx="${TX}" cy="${TY}" r="10" fill="none" stroke="${K.crit}" stroke-opacity=".7" stroke-width="1.5"/>`;
-      g+=`<text x="${TX}" y="${TY-15}" fill="${K.crit}" font-size="10" font-weight="700" text-anchor="middle">BLOCKED: ${d.blocked}</text>`;}
-    g+=`<g data-drone="${d.id}" style="cursor:pointer"><circle cx="${X}" cy="${Y}" r="28" fill="transparent"/>`;
-    {const lv=gr?0:(d.threat||0),c=threatColor(lv),gid=`tr-${d.id}`,R0=lv>0.98?29+Math.sin(S.t*14)*2:28;
-      g+=`<radialGradient id="${gid}"><stop offset="55%" stop-color="${c}" stop-opacity="0"/><stop offset="72%" stop-color="${c}" stop-opacity="${(0.35+0.4*lv).toFixed(2)}"/><stop offset="86%" stop-color="${c}" stop-opacity="${(0.55+0.4*lv).toFixed(2)}"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
-      g+=`<circle cx="${X}" cy="${Y}" r="${R0}" fill="url(#${gid})"/>`;
-      g+=`<circle cx="${X}" cy="${Y}" r="${(R0*0.84).toFixed(1)}" fill="none" stroke="${c}" stroke-opacity="${(0.55+0.45*lv).toFixed(2)}" stroke-width="${lv>0.5?2:1.2}"/>`;}
+      g+=`<text x="${TX}" y="${TY-15}" fill="${K.crit}" font-size="10" font-weight="700" text-anchor="middle">DRAG REJECTED: ${d.blocked}</text>`;}
+    g+=`<g data-drone="${d.id}" style="cursor:pointer"><circle cx="${X}" cy="${Y}" r="30" fill="transparent"/>`;
+    // proximity ring (§1.7.3.5): one segment per side sensor; a segment fills in as an obstacle gets closer on that side
+    if(airborne(d)){const R=26,sp=38*Math.PI/180,pt=a=>`${(X+R*Math.cos(a)).toFixed(1)} ${(Y+R*Math.sin(a)).toFixed(1)}`;
+      ["front","right","back","left"].forEach(k=>{const u=dirVec(d,k),a=Math.atan2(-u[1],u[0]),r=d.ranges[k],t=r==null?0:clamp((MR.show-r)/(MR.show-MR.trig),0,1);
+        g+=`<path d="M${pt(a-sp)}A${R} ${R} 0 0 1 ${pt(a+sp)}" fill="none" stroke="${t>0?threatColor(t):"#3E483D"}" stroke-opacity="${t>0?(0.5+0.5*t).toFixed(2):0.8}" stroke-width="${t>0?(3.5+2.5*t).toFixed(1):2.5}" stroke-linecap="round"/>`;});
+      const ru=d.ranges.up;if(ru!=null&&ru<MR.show){const t=clamp((MR.show-ru)/(MR.show-MR.trig),0,1),c=threatColor(t);
+        g+=`<path d="M${X-6} ${Y-34}L${X} ${Y-40}L${X+6} ${Y-34}" fill="none" stroke="${c}" stroke-width="2.5"/><text x="${X+10}" y="${Y-34}" fill="${c}" font-size="9">up ${ru.toFixed(2)}</text>`;}}
     // heading tick
-    const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+23*Math.cos(hr)}" y2="${Y+23*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
-    const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="${held?K.own:"#121712"}" stroke="${lostC?K.crit:gr?K.tx3:held?"#fff":K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
+    const hr=(d.yaw-90)*Math.PI/180;g+=`<line x1="${X+17*Math.cos(hr)}" y1="${Y+17*Math.sin(hr)}" x2="${X+21*Math.cos(hr)}" y2="${Y+21*Math.sin(hr)}" stroke="${K.own}" stroke-width="2.5"/>`;
+    const lostC=connState(d)==="lost";g+=`<circle cx="${X}" cy="${Y}" r="15" fill="${held?K.own:"#121712"}" stroke="${d.crashed||lostC?K.crit:gr?K.tx3:held?"#fff":K.own}" stroke-width="2.5" ${gr||lostC?'stroke-dasharray="4 3"':""}/>`;
     g+=`<text x="${X}" y="${Y+5}" fill="${held?"#07120A":"#fff"}" font-size="14" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
-    // altitude gradient bar (left of the icon)
-    {const Zc=CONFIG.z,bh=40,bw=5,bx=X-30,by=Y-bh/2,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
+    if(d.dh&&airborne(d)){g+=`<circle class="blink" cx="${X}" cy="${Y}" r="33" fill="none" stroke="${K.caut}" stroke-width="2"/>`;
+      g+=`<g transform="translate(${X},${Y-54})"><rect x="-70" y="-9" width="140" height="17" fill="#0B100C" stroke="${K.caut}"/><text x="0" y="3.5" fill="${K.caut}" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">DEFENSIVE HOVER · ${d.dh.dir.toUpperCase()} ${d.dh.range.toFixed(2)} m</text></g>`;}
+    if(d.crashed){g+=`<path d="M${X-9} ${Y-9}L${X+9} ${Y+9}M${X+9} ${Y-9}L${X-9} ${Y+9}" stroke="${K.crit}" stroke-width="3"/>`;
+      g+=`<g transform="translate(${X},${Y-40})"><rect x="-40" y="-9" width="80" height="17" fill="#1A0605" stroke="${K.crit}"/><text x="0" y="3.5" fill="${K.crit}" font-size="9.5" font-weight="700" text-anchor="middle">COLLISION</text></g>`;}
+    // altitude gradient bar (left of the icon, outside the proximity ring)
+    {const Zc=CONFIG.z,bh=40,bw=5,bx=X-40,by=Y-bh/2,f=clamp(d.z/Zc.displayMax,0,1),ly=by+bh*(1-f),zy=z=>by+bh*(1-z/Zc.displayMax),cid=`ac-${d.id}`;
      g+=`<clipPath id="${cid}"><rect x="${bx}" y="${ly}" width="${bw}" height="${by+bh-ly}"/></clipPath>`;
      g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="#FFFFFF" fill-opacity=".07" stroke="#FFFFFF" stroke-opacity=".22" stroke-width=".8"/>`;
      g+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2.5" fill="url(#altGlass)" clip-path="url(#${cid})"/>`;
      g+=`<path d="M${bx-2} ${zy(Zc.max)}H${bx+bw+2}M${bx-2} ${zy(Zc.min)}H${bx+bw+2}" stroke="${K.caut}" stroke-opacity=".7" stroke-width="1"/>`;
      g+=`<circle cx="${bx+bw/2}" cy="${ly}" r="6" fill="#fff" fill-opacity=".12"/><circle cx="${bx+bw/2}" cy="${ly}" r="3" fill="#fff" fill-opacity=".95"/>`;}
-    g+=`<text x="${X}" y="${Y+34}" fill="${K.tx2}" font-size="10" text-anchor="middle">${d.z.toFixed(2)} m</text></g>`;
+    g+=`<text x="${X}" y="${Y+42}" fill="${K.tx2}" font-size="10" text-anchor="middle">${d.z.toFixed(2)} m</text></g>`;
   });
   $("mapDyn").innerHTML=g;
 }
@@ -786,17 +827,16 @@ function renderTapes(){
   const slot=(TW-32)/3,TWD=Math.max(14,Math.min(40,slot-8)),XS=[0,1,2].map(i=>28+slot*i+(slot-TWD)/2);
   s+=`<defs><pattern id="hx" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${K.caut}" stroke-opacity=".35" stroke-width="1.4"/></pattern></defs>`;
   for(let i=0;i<=20;i++){const v=i/10,mj=i%5===0;s+=`<line x1="${mj?17:20}" y1="${zy(v)}" x2="24" y2="${zy(v)}" stroke="${mj?K.grn:K.tx3}"/>`;if(mj)s+=`<text x="15" y="${zy(v)+3}" fill="${K.grn}" font-size="9" text-anchor="end">${v.toFixed(1)}</text>`;}
-  XS.forEach((x,i)=>{const d=drones[i],held=isHeld(d),foc=d.id===S.focus,col=held?K.own:K.tx2,W=TWD,cz=clamp(d.z,0,Z.displayMax);
-    s+=`<g opacity="${held||foc?1:.55}">`;
-    s+=`<rect x="${x}" y="${top}" width="${W}" height="${h}" fill="#0B100C" stroke="${foc?"#fff":K.line2}"/>`;
+  XS.forEach((x,i)=>{const d=drones[i],held=isHeld(d),col=held?K.own:K.tx2,W=TWD,cz=clamp(d.z,0,Z.displayMax);
+    s+=`<g opacity="${held?1:.6}">`;
+    s+=`<rect x="${x}" y="${top}" width="${W}" height="${h}" fill="#0B100C" stroke="${held?K.own:K.line2}"/>`;
     s+=`<rect x="${x+1}" y="${top+1}" width="${W-2}" height="${zy(Z.max)-top-1}" fill="url(#hx)"/><rect x="${x+1}" y="${zy(Z.min)}" width="${W-2}" height="${bot-zy(Z.min)-1}" fill="url(#hx)"/>`;
     s+=`<line x1="${x}" y1="${zy(Z.max)}" x2="${x+W}" y2="${zy(Z.max)}" stroke="${K.caut}" stroke-width="1.5"/><line x1="${x}" y1="${zy(Z.min)}" x2="${x+W}" y2="${zy(Z.min)}" stroke="${K.caut}" stroke-width="1.5"/>`;
     s+=`<rect x="${x+W*0.2}" y="${zy(cz)}" width="${W*0.6}" height="${bot-zy(cz)}" fill="url(#heatT)" opacity=".9"/>`;
     s+=`<path d="M${x-2} ${zy(cz)}L${x+6} ${zy(cz)-6}H${x+W+2}V${zy(cz)+6}H${x+6}Z" fill="#0B100C" stroke="${col}" stroke-width="1.5"/>`;
-    const r=held&&gAct()&&!S.stopped?rateCmd():0,blk=(r>0&&d.clampMax)||(r<0&&d.clampMin);
-    if(r&&!blk){const cx=x+W/2,dir=r>0?-1:1;for(let k=0;k<2;k++){const ay=zy(cz)+dir*(16+k*8);s+=`<path d="M${cx-6} ${ay-dir*3}L${cx} ${ay+dir*3}L${cx+6} ${ay-dir*3}" fill="none" stroke="${K.own}" stroke-width="2"/>`;}}
-    if(d.clampMax&&r>0)s+=`<text x="${x+W/2}" y="${zy(Z.max)-5}" fill="${K.caut}" font-size="9" font-weight="600" text-anchor="middle">MAX</text>`;
-    if(d.clampMin&&r<0)s+=`<text x="${x+W/2}" y="${zy(Z.min)+12}" fill="${K.caut}" font-size="9" font-weight="600" text-anchor="middle">MIN</text>`;
+    const r=held&&airborne(d)?S.appliedRate:0,blk=S.altBlock&&S.altBlock.d===d;
+    if(r){const cx=x+W/2,dir=r>0?-1:1;for(let k=0;k<2;k++){const ay=zy(cz)+dir*(16+k*8);s+=`<path d="M${cx-6} ${ay-dir*3}L${cx} ${ay+dir*3}L${cx+6} ${ay-dir*3}" fill="none" stroke="${K.own}" stroke-width="2"/>`;}}
+    if(blk){const w=S.altBlock.why,lbl=w==="maximum altitude"?"MAX":w==="minimum altitude"?"MIN":"DH";s+=`<text x="${x+W/2}" y="${zy(cz)-10}" fill="${K.caut}" font-size="9" font-weight="700" text-anchor="middle">${lbl}</text>`;}
     s+=`<text x="${x+W/2}" y="${top-24}" fill="#fff" font-size="${Math.min(11,slot/2.6).toFixed(1)}" text-anchor="middle">${d.z.toFixed(2)}</text>`;
     s+=`<circle cx="${x+W/2}" cy="${top-10}" r="7" fill="#121712" stroke="${d.z>0.02&&!S.stopped?K.own:K.tx3}" stroke-width="1.5"/><text x="${x+W/2}" y="${top-6.5}" fill="#fff" font-size="9" font-weight="700" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${d.n}</text>`;
     s+=`<text x="${x+W/2}" y="${bot+16}" fill="${held?K.own:K.tx3}" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${slot<30?(held?"H":"F"):(held?"Held":"Free")}</text></g>`;});
@@ -811,31 +851,33 @@ const PALM=[[100,130],[80,120],[66,105],[56,92],[48,80],[85,90],[82,68],[80,54],
 const FIST=[[100,130],[80,120],[74,108],[82,100],[92,98],[85,90],[84,76],[90,82],[92,92],[100,88],[100,74],[104,82],[104,92],[114,90],[114,76],[116,84],[114,93],[126,96],[128,84],[128,92],[124,98]];
 const BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
 const HX=40,HY=50,OFF=24,MMPX=1.6,NEUT=130-5+HY; // neutral = wrist landmark height
+const HALF=PALM.map((p,i)=>[(p[0]+FIST[i][0])/2,(p[1]+FIST[i][1])/2]);   // a half-closed hand for the unrecognised pose
 function renderLiveCam(){let s="";const g=S.gesture,W=320,H=240;
   if(CAM.tracking&&CAM.lm){const P=CAM.lm.map(p=>[(CAM.mirror?1-p.x:p.x)*W,p.y*H]);  // matches the preview (mirrored for the front camera)
-    if(gAct()&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1];
-      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-8}" y="${ny-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist)</text>`;
+    if((gAct()||g==="unrecognized")&&CAM.neutral!=null){const ny=CAM.neutral*H,cy=P[0][1],dz=GEST.dead*H;
+      s+=`<rect x="0" y="${ny-dz}" width="${W}" height="${2*dz}" fill="#fff" fill-opacity=".08"/>`;
+      s+=`<line x1="0" y1="${ny}" x2="${W}" y2="${ny}" stroke="#fff" stroke-opacity=".8" stroke-dasharray="4 4"/><text x="${W-44}" y="${ny-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral (wrist), dead zone</text>`;
       s+=`<line x1="${P[0][0]}" y1="${ny}" x2="${P[0][0]}" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/>`;}
     s+=`<g stroke="${K.own}" stroke-width="2" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}</g>`;
     P.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===0?3.5:2.4}" fill="${K.friend}"/>`);
-    if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label,w=lbl.length*6.3+12;
-      s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${K.sel}" stroke-width="2"/><rect x="${(x0+x1)/2-w/2}" y="${y0-22}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-9}" fill="${K.sel}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;}}
+    if(CAM.label){const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=CAM.label+(g==="confirming"?` · confirming ${confirmPct()}%`:""),w=lbl.length*6.3+12,col=CAM.label==="Unrecognized"?K.caut:K.sel;
+      s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${col}" stroke-width="2"/><rect x="${(x0+x1)/2-w/2}" y="${y0-22}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-9}" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;}}
   else if(CAM.tracking&&g==="lost"){s+=`<rect x="80" y="100" width="160" height="38" fill="#111" fill-opacity=".85" stroke="${K.caut}"/><text x="160" y="116" fill="${K.caut}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">No hand in frame</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">Held units holding altitude</text>`;}
   if(CAM.tracking)s+=`<text x="46" y="232" fill="${CAM.fps>=15?K.grn:K.caut}" font-size="10" font-weight="700">MediaPipe ${CAM.fps} fps</text>`;
   $("camSvg").innerHTML=s;}
 function renderCam(){
   if(CAM.on){renderLiveCam();return;}
-  const g=S.gesture,wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob,conf=g==="locked"?93:96;let s="";
-  s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${gAct()||g==="locked"?" · SIMULATED GESTURE":""}</text>`;
-  if(gAct()){s+=`<line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="312" y="${NEUT-4}" fill="#fff" font-size="9" text-anchor="end">neutral</text>`;
-    const cy=NEUT+dy;s+=`<line x1="20" y1="${NEUT}" x2="20" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M14 ${cy+(dy<0?6:-6)}L20 ${cy}L26 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
-  if(gAct()||g==="locked"){
-    const pts=(g==="locked"?FIST:PALM).map(([x,y])=>[x+HX,y-5+HY+(g==="locked"?wob:dy)]);
+  const g=S.gesture,act=gAct(),wob=Math.sin(S.wob)*1.6,dy=(g==="climb"?-OFF:g==="descend"?OFF:0)+wob;let s="";
+  s+=`<rect width="320" height="240" fill="#000"/><text x="160" y="22" fill="#687566" font-size="10" font-weight="700" text-anchor="middle" letter-spacing=".08em">CAMERA OFF${g!=="idle"&&g!=="lost"?" · SIMULATED GESTURE":""}</text>`;
+  if(act){const dz=GEST.dead*240;s+=`<rect x="0" y="${NEUT-dz}" width="320" height="${2*dz}" fill="#fff" fill-opacity=".08"/><line x1="0" y1="${NEUT}" x2="320" y2="${NEUT}" stroke="#FFFFFF" stroke-opacity=".75" stroke-dasharray="4 4"/><text x="276" y="${NEUT-dz-4}" fill="#fff" font-size="9" text-anchor="end">neutral, dead zone</text>`;
+    const cy=NEUT+dy;s+=`<line x1="52" y1="${NEUT}" x2="52" y2="${cy}" stroke="${K.own}" stroke-width="2.5"/><path d="M46 ${cy+(dy<0?6:-6)}L52 ${cy}L58 ${cy+(dy<0?6:-6)}" fill="none" stroke="${K.own}" stroke-width="2.5"/>`;}
+  if(act||g==="locked"||g==="confirming"||g==="unrecognized"){
+    const shape=g==="locked"?FIST:g==="unrecognized"?HALF:PALM,off=act?dy:wob,pts=shape.map(([x,y])=>[x+HX,y-5+HY+off]),col=g==="unrecognized"?K.caut:K.sel;
     s+=`<g stroke="${K.own}" stroke-width="1.5" stroke-linecap="round">${BONES.map(([a,b])=>`<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}"/>`).join("")}</g>`;
     pts.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="${i===9?3:2.2}" fill="${K.friend}"/>`);
-    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=`${g==="locked"?"Closed Fist":"Open Palm"} ${conf}%`,w=lbl.length*6.3+12;
-    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${K.sel}" stroke-width="2"/>`;
-    s+=`<rect x="${(x0+x1)/2-w/2}" y="${y0-24}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-11}" fill="${K.sel}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;
+    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs)-8,y0=Math.min(...ys)-8,x1=Math.max(...xs)+8,y1=Math.max(...ys)+8,lbl=g==="locked"?"Closed Fist":g==="unrecognized"?"Unrecognized":g==="confirming"?"Open Palm · confirming":"Open Palm",w=lbl.length*6.3+12;
+    s+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    s+=`<rect x="${(x0+x1)/2-w/2}" y="${y0-24}" width="${w}" height="18" fill="#111"/><text x="${(x0+x1)/2}" y="${y0-11}" fill="${col}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lbl}</text>`;
   }else{const lost=g==="lost";
     s+=`<rect x="80" y="100" width="160" height="38" fill="#111" stroke="${lost?K.caut:"#555"}"/>`;
     s+=`<text x="160" y="116" fill="${lost?K.caut:"#fff"}" font-size="11" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"No hand in frame":"Camera off"}</text><text x="160" y="130" fill="#BBB" font-size="9" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif">${lost?"Held units holding altitude":"Tap Enable camera to start"}</text>`;}
@@ -847,12 +889,11 @@ function renderCam(){
    ===================================================================== */
 function buildFeeds(){
   $("fheadSlot").appendChild($("fhead"));$("sideFeed").innerHTML="";
-  $("feeds").innerHTML=drones.map(d=>`<button class="dfeed" data-f="${d.id}" aria-label="Select ${d.id} and view its camera">
+  $("feeds").innerHTML=drones.map(d=>`<div class="dfeed" data-f="${d.id}" role="img" aria-label="${U(d.id)} video">
     <span class="fh"><span class="num">${d.n}</span>${U(d.id)}<span class="simtag">SIM</span><span class="st" id="fst-${d.id}">--</span></span>
     <svg id="fv-${d.id}" viewBox="0 0 240 190" preserveAspectRatio="xMidYMid meet" style="overflow:hidden"></svg>
-    <span class="fstat"><span class="sig" id="fsig-${d.id}" title="Signal"><i></i><i></i><i></i><i></i></span><span class="m" id="fsigv-${d.id}">--</span>
-      <span class="bat" id="fbat-${d.id}" title="Battery"><i></i></span><span class="m" id="fbatv-${d.id}">--</span></span></button>`).join("");
-  $("feeds").querySelectorAll(".dfeed").forEach(b=>b.addEventListener("click",()=>{S.focus=b.dataset.f;renderSide();}));
+    <span class="fstat"><span class="lnk" id="flk-${d.id}">LINK OK</span>
+      <span class="bat" id="fbat-${d.id}" title="Battery"><i></i></span><span class="m" id="fbatv-${d.id}">--</span></span></div>`).join("");
 }
 const FS={};
 function renderFeed(d){
@@ -878,8 +919,7 @@ function renderFeed(d){
   // HUD
   s+=`<g stroke="#E1E8DF" stroke-width="1.2" fill="none" opacity=".85"><path d="M${cx-18} ${H/2}H${cx-6}M${cx+6} ${H/2}H${cx+18}M${cx} ${H/2-12}V${H/2-4}M${cx} ${H/2+4}V${H/2+12}"/></g>`;
   s+=`<g stroke="${K.grn}" stroke-width="1.4" fill="none" transform="rotate(${-d.roll} ${cx} ${H/2})"><path d="M${cx-60} ${H/2+d.pitch*4}H${cx-30}M${cx+30} ${H/2+d.pitch*4}H${cx+60}"/></g>`;
-  const lk=S.degraded?61:d.link;
-  if(lk<70)s+=`<rect x="0" y="${H-18}" width="${W}" height="18" fill="#000" opacity=".55"/><text x="6" y="${H-5}" fill="${K.caut}" font-size="11">LINK ${lk}%</text>`;
+  if(S.degraded&&connState(d)!=="lost")s+=`<rect x="0" y="${H-18}" width="${W}" height="18" fill="#000" opacity=".55"/><text x="6" y="${H-5}" fill="${K.caut}" font-size="11">LINK WEAK (sim)</text>`;
   if(connState(d)==="lost")s+=`<rect x="-900" y="-900" width="2040" height="2040" fill="#050505"/><text x="${cx}" y="${H/2+4}" fill="#F2453D" font-size="13" font-weight="700" text-anchor="middle">NO SIGNAL</text>`;
   // widen/heighten the viewBox so the scene fills the tile without letterboxing
   const ar=box.w/box.h;let vb;
@@ -889,42 +929,51 @@ function renderFeed(d){
   const[st,k]=flightState(d),e=$("fst-"+d.id);e.textContent=st;e.style.color={ok:K.grn,own:K.own,caut:K.caut,crit:K.crit,"":K.tx2}[k];
 }
 function updFeedStat(d){
-  const low=S.lowBatt&&d.id==="cf3",bat=low?12:Math.round(d.batt),lost=connState(d)==="lost",lk=lost?0:S.degraded?61:d.link;
-  const bk=bat<10?"crit":bat<CONFIG.lowBatt?"warn":"",lkk=lk<50?"crit":lk<70?"warn":"",bars=lost?0:lk>90?4:lk>70?3:lk>45?2:1;
-  const sg_=$("fsig-"+d.id);sg_.className="sig "+lkk;[...sg_.children].forEach((i,n)=>i.classList.toggle("on",n<bars));
-  const sv=$("fsigv-"+d.id);sv.textContent=lk+"%";sv.className="m "+lkk;
-  const bt=$("fbat-"+d.id);bt.className="bat "+bk;bt.firstElementChild.style.width=Math.max(4,bat)*0.14+"px";
-  const bv=$("fbatv-"+d.id);bv.textContent=bat+"%";bv.className="m "+bk;
+  const pct=S.lowBatt&&d.id==="cf3"?12:d.batt,c=connState(d),bk=pct<10?"crit":pct<CONFIG.lowBatt?"warn":"";
+  const lk=$("flk-"+d.id);lk.textContent=c==="lost"?"LINK LOST":c==="weak"?"LINK WEAK":"LINK OK";lk.className="lnk "+(c==="lost"?"crit":c==="weak"?"warn":"");
+  const bt=$("fbat-"+d.id);bt.className="bat "+bk;bt.firstElementChild.style.width=Math.max(4,pct)*0.14+"px";
+  const bv=$("fbatv-"+d.id);bv.textContent=volts(d).toFixed(2)+" V";bv.className="m "+bk;
 }
-function renderFeeds(){drones.forEach(d=>{const t=document.querySelector(`.dfeed[data-f="${d.id}"]`);if(t&&!t.classList.contains("off"))renderFeed(d);});document.querySelectorAll(".dfeed").forEach(b=>{b.classList.toggle("on",b.dataset.f===S.focus);b.classList.toggle("held",isHeld(drones.find(x=>x.id===b.dataset.f)));});}
+function renderFeeds(){drones.forEach(d=>{const t=document.querySelector(`.dfeed[data-f="${d.id}"]`);if(t&&!t.classList.contains("off"))renderFeed(d);});document.querySelectorAll(".dfeed").forEach(b=>{b.classList.toggle("on",b.dataset.f===S.video);b.classList.toggle("held",isHeld(drones.find(x=>x.id===b.dataset.f)));});}
 
 /* =====================================================================
    SIDE PANEL
    ===================================================================== */
-function buildTabs(){
-}
 function renderSide(){
-  const d=focusD();
-  if(window.__ready&&OPT.feed!==d.id){OPT.feed=d.id;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===d.id);applyFeeds();}
-  // Essential only: what the gesture is commanding, and to which drones
-  const g=S.gesture,hl=drones.filter(isHeld).map(x=>U(x.id)),to=hl.length?hl.join(" + "):"no drone held";let main,sub,k;
-  if(g==="climb"||g==="descend"){if(hl.length){main=Math.abs(rateCmd())<0.01?"Palm at neutral, holding":`${g==="climb"?"▲ Climbing":"▼ Descending"} ${Math.abs(rateCmd()).toFixed(2)} m/s`;sub=to;k="ok";}else{main="Hold a drone to use altitude";sub="Gesture active";k="idle";}}
+  // left panel: what the gesture is commanding, and for which held drones
+  const g=S.gesture,hl=drones.filter(isHeld),to=hl.length?hl.map(x=>U(x.id)).join(" + "):"no drone held";let main,sub,k;
+  if(gAct()){if(!hl.length){main="Hold a drone to use altitude";sub="Gesture active";k="idle";}
+    else if(S.altBlock){main=`Paused: ${U(S.altBlock.d.id)} at ${S.altBlock.why}`;sub="Release it or reverse the gesture";k="warn";}
+    else{const r=S.appliedRate;main=Math.abs(r)<0.005?"Palm at neutral, holding":`${r>0?"▲ Climbing":"▼ Descending"} ${Math.abs(r).toFixed(2)} m/s`;sub=to;k="ok";}}
+  else if(g==="confirming"){main="Hold the open palm steady";sub=CAM.tracking?`Confirming, ${confirmPct()}%`:"Confirming";k="idle";}
   else if(g==="locked"){main="Altitude locked";sub=to;k="lock";}
-  else if(g==="lost"){main="Hand lost, holding altitude";sub=to;k="warn";}
-  else{main="Show open palm to start";sub="";k="idle";}
+  else if(g==="lost"){main="Hand lost, holding altitude";sub="Show an open palm to activate again";k="warn";}
+  else if(g==="unrecognized"){main="Pose not recognised, holding";sub="Open palm resumes, fist locks";k="warn";}
+  else{main="Show an open palm to start";sub="";k="idle";}
   const gs=$("gstat");gs.dataset.k=k;$("gMain").textContent=main;$("gSub").textContent=sub;
-  const btn=$("btnLandSel");btn.textContent=`Land ${U(d.id)}`;btn.disabled=d.z<=0.02||d.landing||S.stopped;
+  // right panel: the video drone, independent of touch (DEC-08), and the held drones' altitude
+  const v=videoD(),btn=$("btnLandSel");btn.textContent=`Land ${U(v.id)}`;btn.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
+  $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<div><span>${U(d.id)}</span><b class="m">${d.z.toFixed(2)} m</b></div>`).join(""):`<div class="none">No drone held</div>`);
 }
 
 /* =====================================================================
    TOP BAR + TIMELINE
    ===================================================================== */
 function renderTop(){
-  const deg=S.degraded,z=dtgZ();
-  // on/off status dot on each drone selector button (DRONE CAM + Settings)
+  // on/off status dot on each video selector button
   document.querySelectorAll("[data-fs]").forEach(b=>{const d=drones.find(x=>x.id===b.dataset.fs);if(!d)return;const c=connState(d);
     let dot=b.querySelector(".sd");if(!dot){dot=document.createElement("i");dot.className="sd";b.prepend(dot);}
     dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
+  // per-drone telemetry: link, battery voltage, flight state (§1.7.3.7)
+  drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),[st,k]=flightState(d),pct=S.lowBatt&&d.id==="cf3"?12:d.batt,v=el.querySelector(".v"),em=el.querySelector("em");
+    el.querySelector(".sd").className="sd "+c;v.textContent=c==="lost"?"no link":volts(d).toFixed(2)+" V";v.className="m v"+(pct<CONFIG.lowBatt?" warn":"");
+    em.textContent=st;em.className=k;});
+  // trial clock (host-owned in the real system)
+  const T=S.trial,tc=$("trialChip");
+  if(T.running){tc.className="trial run";tc.innerHTML=`<b>TRIAL ${trialId()}</b><span class="m">${fmtMS(S.t-T.t0)} / ${fmtMS(CONFIG.timeLimit)}</span><span>DH ${T.dh}</span>`;}
+  else if(T.last){const f=T.last.outcome==="collision"||T.last.outcome==="timeout";tc.className="trial"+(f?" fail":"");
+    tc.innerHTML=`<b>${T.last.id}</b><span>${f?"Failed: "+T.last.outcome:T.last.outcome==="completed"?"Completed":"Hardware abort"} ${fmtMS(T.last.elapsed)}</span><span>DH ${T.last.dh}</span>`;}
+  else{tc.className="trial";tc.innerHTML=`<b>TRIAL ${trialId()}</b><span>Not started · ${OPT.mode==="course"?"course":"gesture sub-test"}</span>`;}
 }
 function connState(d){if(S.cf3Lost&&d.id==="cf3")return"lost";return S.degraded?"weak":"ok";}
 function setLk(id,s,t){const e=$(id);e.dataset.s=s;e.querySelector("span").textContent=t;}
@@ -951,31 +1000,38 @@ document.querySelectorAll(".sec>button").forEach(b=>b.addEventListener("click",(
    ===================================================================== */
 function update(dt){
   S.t+=dt;liveGesture();S.wob+=dt*2.2;const Z=CONFIG.z;
+  senseAll();
+  // Onboard defensive hover (§1.7.3.7): a reading under the trigger distance stops translation and holds
+  // position until that side clears, or the operator drags the drone the other way.
+  drones.forEach(d=>{if(!airborne(d)){d.dh=null;return;}
+    if(d.dh){const r=d.ranges[d.dh.dir];if(r==null||r>=MR.clear){log(`${U(d.id)} defensive hover cleared`,"ok");d.dh=null;}else d.dh.range=r;}
+    if(!d.dh){let k=null;DIRS.forEach(dir=>{const r=d.ranges[dir];if(r!=null&&r<MR.trig&&(!k||r<d.ranges[k]))k=dir;});
+      if(k){d.dh={dir:k,range:d.ranges[k]};d.mvx=d.mvy=0;log(`${U(d.id)} defensive hover, obstacle ${d.ranges[k].toFixed(2)} m ${k}`,"warn");if(S.trial.running)S.trial.dh++;}}});
+  // Shared altitude rate (§1.7.2): the same rate for every held drone. If one cannot follow,
+  // the rate pauses for all of them so their altitude offsets hold (OPEN-03).
+  const rate=gAct()&&!S.stopped?rateCmd():0;let block=null;
+  if(rate)drones.forEach(d=>{if(block||!isHeld(d)||!airborne(d))return;
+    if(rate>0&&d.z>=Z.max-1e-3)block={d,why:"maximum altitude"};
+    else if(rate<0&&d.z<=Z.min+1e-3)block={d,why:"minimum altitude"};
+    else if(d.dh&&!(d.dh.dir==="up"&&rate<0))block={d,why:"defensive hover"};});
+  const bk=block?block.d.id+block.why:null;
+  if(bk!==S.altBlockKey){S.altBlockKey=bk;if(block)log(`Shared ${rate>0?"climb":"descent"} paused: ${U(block.d.id)} at ${block.why}`,"warn");}
+  S.altBlock=block;S.appliedRate=block?0:rate;
   drones.forEach(d=>{
     const x0=d.x,y0=d.y,z0=d.z;d.batt=Math.max(5,d.batt-dt*0.004);
-    if(S.stopped){d.z=Math.max(0,d.z-dt*2.2);d.mvx=d.mvy=0;}
+    if(S.stopped||d.crashed){d.z=Math.max(0,d.z-dt*2.2);d.mvx=d.mvy=0;}
     else{
       if(d.zTarget!=null){const dz=d.zTarget-d.z,st=0.35*dt;if(Math.abs(dz)<=st){d.z=d.zTarget;d.zTarget=null;if(d.landing){d.landing=false;d.z=0;log(`${U(d.id)} landed`,"ok");}}else d.z+=Math.sign(dz)*st;}
-      else if(airborne(d)&&isHeld(d)&&gAct()){const nz=clamp(d.z+rateCmd()*dt,Z.min,Z.max);
-        if(nz>=Z.max&&d.z<Z.max){d.clampMax=true;log(`${U(d.id)} clamped at z max ${Z.max.toFixed(2)} m`,"warn");}
-        if(nz<=Z.min&&d.z>Z.min){d.clampMin=true;log(`${U(d.id)} clamped at z min ${Z.min.toFixed(2)} m`,"warn");}d.z=nz;}
-      d.hoopHold=null;
-      {const hs=d.z!==z0&&hoopStop({x:x0,y:y0,z:z0},{x:x0,y:y0,z:d.z});
-        if(hs){const up=d.z>z0;d.z=hs.p.z;d.hoopHold=hs.h.id;if(d.hoopZFlag!==hs.h.id){d.hoopZFlag=hs.h.id;log(`${U(d.id)} ${up?"climb stopped under":"descent stopped over"} ${hs.h.id} rim, ${d.z.toFixed(2)} m`,"warn");}}
-        else if(d.z!==z0)d.hoopZFlag=null;}
-      if(d.z<Z.max-1e-3)d.clampMax=false;if(d.z>Z.min+1e-3)d.clampMin=false;
-      if(airborne(d)){ // velocity with inertia: turns become smooth curves instead of sharp corners
-        const wp=waypoint(d);d.wp=wp;const gx=wp?wp.x:d.tx,gy=wp?wp.y:d.ty,dx=gx-d.x,dy=gy-d.y,hl=Math.hypot(dx,dy),dist=hl+(wp?Math.hypot(d.tx-wp.x,d.ty-wp.y):0),sp=Math.min(CONFIG.hSpeed,dist*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
-        d.mvx=(d.mvx||0)+(dvx-(d.mvx||0))*k;d.mvy=(d.mvy||0)+(dvy-(d.mvy||0))*k;d.x+=d.mvx*dt;d.y+=d.mvy*dt;
-        {const hs=hoopStop({x:x0,y:y0,z:d.z},{x:d.x,y:d.y,z:d.z});
-          if(hs){d.x=hs.p.x;d.y=hs.p.y;d.mvx=d.mvy=0;d.hoopHold=hs.h.id;if(d.hoopXYFlag!==hs.h.id){d.hoopXYFlag=hs.h.id;log(`${U(d.id)} stopped at ${hs.h.id} rim, altitude ${d.z.toFixed(2)} m vs centre ${hs.h.z.toFixed(2)} m`,"warn");}}
-          else if(Math.hypot(d.x-x0,d.y-y0)>1e-4)d.hoopXYFlag=null;}
-        // on contact: cancel velocity into the obstacle and slide along its edge toward the target
-        const slide=o=>{const vn=d.mvx*o.nx+d.mvy*o.ny;if(vn<0){d.mvx-=vn*o.nx;d.mvy-=vn*o.ny;}const tx_=-o.ny,ty_=o.nx,side=Math.sign((d.tx-d.x)*tx_+(d.ty-d.y)*ty_)||1;
-          d.mvx+=tx_*side*CONFIG.hSpeed*0.12;d.mvy+=ty_*side*CONFIG.hSpeed*0.12;const v=Math.hypot(d.mvx,d.mvy),vmax=CONFIG.hSpeed;if(v>vmax){d.mvx*=vmax/v;d.mvy*=vmax/v;}};
-        if(OPT.nfz){const o=outsideNFZ(d.x,d.y,0.02);if(o.moved){d.x=o.x;d.y=o.y;slide(o);}}
-        {const o=clearBoxes(d,d.x,d.y,0.12);if(o.moved){d.x=o.x;d.y=o.y;slide(o);if(!d.boxFlag){d.boxFlag=o.box;log(`${U(d.id)} stopped at obstacle ${o.box}`,"warn");}}else d.boxFlag=null;}
+      else if(airborne(d)&&isHeld(d)&&S.appliedRate)d.z=clamp(d.z+S.appliedRate*dt,Z.min,Z.max);
+      d.clampMax=d.z>=Z.max-1e-3;d.clampMin=d.z<=Z.min+1e-3;
+      if(airborne(d)){ // straight toward the operator's target (no route planning, §1.6.3), with inertia for smooth motion
+        const dx=d.tx-d.x,dy=d.ty-d.y,hl=Math.hypot(dx,dy);let hold=false;
+        if(d.dh){const u=dirVec(d,d.dh.dir);hold=!(hl>0.03&&(d.dh.dir==="up"||(dx*u[0]+dy*u[1])/hl<-0.2));}
+        if(hold){d.mvx=d.mvy=0;}
+        else{const sp=Math.min(CONFIG.hSpeed,hl*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
+          d.mvx=(d.mvx||0)+(dvx-(d.mvx||0))*k;d.mvy=(d.mvy||0)+(dvy-(d.mvy||0))*k;d.x+=d.mvx*dt;d.y+=d.mvy*dt;}
         checkHoops(d,x0,y0,z0);}
+      if(d.z>0.02){const hit=collisionOf(d);if(hit){crash(d,hit.what);if(hit.other)crash(hit.other,U(d.id));}}
     }
     const a=Math.min(1,dt*6);d.vx+=((d.x-x0)/dt-d.vx)*a;d.vy+=((d.y-y0)/dt-d.vy)*a;d.vz+=((d.z-z0)/dt-d.vz)*a;
     const yr=d.yaw*Math.PI/180,fwd=d.vx*Math.sin(yr)+d.vy*Math.cos(yr),rgt=d.vx*Math.cos(yr)-d.vy*Math.sin(yr),air=airborne(d)?1:0;
@@ -988,14 +1044,10 @@ function update(dt){
       else if(dd<CONFIG.proxCrit&&was>=CONFIG.proxCrit)log(`Collision risk, ${U(a.id)} and ${U(b.id)} at ${dd.toFixed(2)} m`,"crit");}}
   S.prox=now;
   drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
-  // threat level per drone (0 = clear, 1 = contact/collision) from nearest obstacle or other drone
-  drones.forEach(d=>{let lv=0;if(airborne(d)){
-      obstacleList().forEach(o=>{const r=rectDist(d.x,d.y,o.x,o.y,o.hx,o.hy);lv=Math.max(lv,clamp((OBS_WARN-r)/(OBS_WARN-OBS_CRIT),0,1));});
-      if(OPT.course)CONFIG.hoops.forEach(h=>{const r=hoopRim(h,d).dist;lv=Math.max(lv,clamp((HOOP_WARN-r)/(HOOP_WARN-HOOP_CRIT),0,1));});
-      drones.forEach(e=>{if(e===d||!airborne(e))return;const r=Math.hypot(d.x-e.x,d.y-e.y);lv=Math.max(lv,clamp((CONFIG.proxWarn-r)/(CONFIG.proxWarn-CONFIG.proxCrit),0,1));});}
-    d.threat=d.threat==null?lv:d.threat+(lv-d.threat)*0.25;});
-  detectObstacles();
+  if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
 }
+function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
+  log(`Collision: ${U(d.id)} hit ${what}`,"crit");if(S.trial.running)endTrial("collision");}
 let last=performance.now(),acc=0,frames=0,fpsAcc=0;
 let fN=0;
 function frame(now){const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);renderMap();fN++;if(fN%2===0){renderTapes();renderCam();}if(fN%3===0)renderFeeds();
@@ -1009,7 +1061,7 @@ function frame(now){const dt=Math.min((now-last)/1000,0.05);last=now;update(dt);
 const svg=$("mapSvg");
 function toM(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[(q.x-OX)/SC,(OY-q.y)/SC];}
 
-svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);S.focus=d.id;
+svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);   // holding never changes the video feed (DEC-08)
   if(!airborne(d)){log(`${U(d.id)} is grounded, take off before positioning`,"warn");return;}
   if([...pointers.values()].includes(d.id))return;
   e.preventDefault();pointers.set(e.pointerId,d.id);svg.setPointerCapture(e.pointerId);
@@ -1018,12 +1070,12 @@ svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");
   else{d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);}});
 svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
   $("cursor").textContent=inside?t:"--";
-  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d,d.tx,d.ty,cx,cy);
+  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed)return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
   if(!hit){d.tx=cx;d.ty=cy;d.blocked=null;}
-  else{ // slide the target up to the edge of the restricted zone, never into it
-    let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d,d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
+  else{ // reject the part of the drag that enters the restricted zone: the target stops at its edge
+    let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
     d.tx+=(cx-d.tx)*lo;d.ty+=(cy-d.ty)*lo;
-    if(d.blocked!==hit){d.blocked=hit;log(`${U(d.id)} drag blocked by ${hit}`,"warn");}}
+    if(d.blocked!==hit){d.blocked=hit;log(`${U(d.id)} drag rejected at the ${hit}`,"warn");}}
   d.blockPt=hit?[cx,cy]:null;});
 svg.addEventListener("pointerleave",()=>{$("cursor").textContent="--";});
 function release(e){const id=pointers.get(e.pointerId);if(!id)return;pointers.delete(e.pointerId);const d=drones.find(x=>x.id===id);d.nfzFlag=false;d.blocked=null;d.blockPt=null;
@@ -1034,17 +1086,35 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
 /* =====================================================================
    COMMANDS
    ===================================================================== */
-function landOne(d){if(d.z<=0.02||S.stopped)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
-$("btnLandSel").addEventListener("click",()=>landOne(focusD()));
-$("btnLand").addEventListener("click",()=>{if(S.stopped)return;log("Land all");drones.forEach(d=>{if(d.z>0.02){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;}});});
+function landOne(d){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} landing`);}
+function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
+$("btnLandSel").addEventListener("click",()=>landOne(videoD()));
+$("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
-  if(S.stopped){S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";log("Emergency stop cleared by operator","ok");}
-  const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
+  if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
+    S.stopped=false;$("estop").classList.remove("fired");$("estopTitle").textContent="Emergency stop";$("estopSub").textContent="Hold 1 s, cuts all motors";log("Emergency stop cleared by operator","ok");}
+  const g=drones.filter(d=>d.z<=0.05);if(!g.length)return;log(`Take off all, target ${CONFIG.takeoffZ.toFixed(2)} m`);g.forEach(d=>{d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;});});
+// Trials (§1.7.4, §1.7.6): start on the ground; a collision or the time limit fails the trial and grounds the drones.
+// Defensive hovers are counted separately and do not fail a trial.
+const trialId=()=>`P07-TV-${S.trial.n}`;
+function startTrial(){const T=S.trial;if(T.running)return;
+  if(S.stopped){log("Clear the emergency stop before starting a trial","warn");return;}
+  if(drones.some(d=>d.z>0.02)){log("Start the trial with every drone on its pad","warn");return;}
+  Object.assign(T,{running:true,t0:S.t,dh:0,last:null});log(`Trial ${trialId()} started, ${OPT.mode==="course"?"course":"gesture sub-test"} mode, limit ${fmtMS(CONFIG.timeLimit)}`,"ok");}
+function endTrial(outcome){const T=S.trial;if(!T.running)return;T.running=false;const el=S.t-T.t0,fail=outcome==="collision"||outcome==="timeout";
+  log(`Trial ${trialId()} ${outcome==="completed"?"completed":outcome==="hardware_abort"?"ended, hardware abort":"failed: "+outcome} at ${fmtMS(el)}, ${T.dh} defensive hover${T.dh===1?"":"s"}`,fail?"crit":outcome==="completed"?"ok":"warn");
+  T.last={id:trialId(),outcome,elapsed:el,dh:T.dh};T.n++;
+  if(fail||outcome==="hardware_abort")landAll(fail?"Trial failed, grounding all drones":"Grounding all drones");}
+function exportLog(){const last=S.trial.last,data={trial:last||{id:trialId(),outcome:S.trial.running?"running":null},mode:OPT.mode,
+    config:{room:CONFIG.arena,altitude:CONFIG.z,restricted_zone:CONFIG.nfz,obstacles:CONFIG.boxes,hoops:CONFIG.hoops,rate_max:CONFIG.rateMax,defensive_hover:{trigger_m:MR.trig,clear_m:MR.clear},time_limit_s:CONFIG.timeLimit},
+    events:S.log.map(e=>({t_s:+e.t.toFixed(3),kind:e.k,text:e.text}))};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})),a=document.createElement("a");
+  a.href=url;a.download=`trial-${(last||{id:trialId()}).id}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);log("Trial log exported");}
 const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
 function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} / 1.0 s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
 function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
 function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s, cuts all motors";}
-function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="Motors cut";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
+function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="Motors cut";$("estopSub").textContent="Clears with Take off all once grounded";log("Emergency stop, all motors cut","crit");}
 estop.addEventListener("pointerdown",e=>{estop.setPointerCapture(e.pointerId);start();});
 estop.addEventListener("pointerup",cancel);estop.addEventListener("pointercancel",cancel);
 estop.addEventListener("keydown",e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat&&hs==null){e.preventDefault();start();}});
@@ -1054,10 +1124,12 @@ estop.addEventListener("keyup",e=>{if(e.key===" "||e.key==="Enter")cancel();});
    SIM CONTROLS (mockup only)
    ===================================================================== */
 function syncSim(){document.querySelectorAll("#gestSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===S.gesture));document.querySelectorAll("#settings [data-t]").forEach(b=>b.setAttribute("aria-pressed",!!S[b.dataset.t]));}
-function setGesture(g){if(g===S.gesture)return;const was=S.gesture;S.gesture=g;const wa=was==="climb"||was==="descend";
-  if(gAct()&&!wa)log("Open palm confirmed, neutral point captured","ok");
-  if(g==="climb"||g==="descend")log(`Rate command ${sg(rateCmd())} m/s, shared by held units`);
-  if(g==="locked")log("Closed fist, altitude locked, neutral point discarded");if(g==="lost")log("Hand tracking lost, held units holding altitude","warn");
+function setGesture(g){if(g===S.gesture)return;const was=S.gesture,wa=was==="climb"||was==="descend";if(g==="confirming")S.beforeConfirm=was;S.gesture=g;
+  if((g==="climb"||g==="descend")&&!wa)log(was==="unrecognized"?"Open palm again, altitude control resumed":"Open palm confirmed, neutral point captured","ok");
+  if(g==="confirming")log("Open palm seen, confirming");
+  if(g==="locked")log("Closed fist, altitude locked, neutral point discarded");
+  if(g==="lost")log("Hand tracking lost, held drones holding altitude","warn");
+  if(g==="unrecognized")log("Hand pose not recognised, held drones holding altitude","warn");
   if(g==="idle")log("Gesture idle, waiting for open palm");syncSim();}
 document.querySelectorAll("#gestSeg button").forEach(b=>b.addEventListener("click",()=>setGesture(b.dataset.g)));
 $("camBtn").addEventListener("click",toggleCamera);$("camSw").addEventListener("click",switchCamera);
@@ -1072,16 +1144,18 @@ $("simReset").addEventListener("click",()=>{pointers.clear();resetScenario();});
 /* =====================================================================
    SETTINGS
    ===================================================================== */
-const OPT={trails:true,feeds:false,nfz:true,course:true,lefty:false,latch:false,feedSel:{cf1:true,cf2:false,cf3:false},feed:"cf1"};
+const OPT={trails:true,feeds:false,mode:"course",course:true,lefty:false,latch:false,feedSel:{cf1:true,cf2:false,cf3:false},feed:"cf1"};
 const feedCount=()=>1;
 const STEP={
   zmin:{get:()=>CONFIG.z.min,set:v=>CONFIG.z.min=v,step:0.05,lo:0.10,hi:()=>CONFIG.z.max-0.30,fmt:v=>v.toFixed(2)+" m",name:"Minimum altitude"},
   zmax:{get:()=>CONFIG.z.max,set:v=>CONFIG.z.max=v,step:0.05,lo:()=>CONFIG.z.min+0.30,hi:2.00,fmt:v=>v.toFixed(2)+" m",name:"Maximum altitude"},
   takeoff:{get:()=>CONFIG.takeoffZ,set:v=>CONFIG.takeoffZ=v,step:0.05,lo:()=>CONFIG.z.min,hi:()=>CONFIG.z.max,fmt:v=>v.toFixed(2)+" m",name:"Takeoff height"},
-  rate:{get:()=>CONFIG.gestureRate,set:v=>CONFIG.gestureRate=v,step:0.05,lo:0.05,hi:0.40,fmt:v=>v.toFixed(2)+" m/s",name:"Gesture climb rate"},
-  aw:{get:()=>CONFIG.arena.xMax-CONFIG.arena.xMin,set:v=>{CONFIG.arena.xMin=0;CONFIG.arena.xMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Volume width"},
-  ad:{get:()=>CONFIG.arena.yMax-CONFIG.arena.yMin,set:v=>{CONFIG.arena.yMin=0;CONFIG.arena.yMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Volume depth"},
-  nfzr:{get:()=>CONFIG.nfz.h*2,set:v=>CONFIG.nfz.h=v/2,step:0.10,lo:0.30,hi:1.60,fmt:v=>v.toFixed(2)+" m",name:"No-fly size"},
+  rate:{get:()=>CONFIG.rateMax,set:v=>CONFIG.rateMax=v,step:0.05,lo:0.05,hi:0.40,fmt:v=>v.toFixed(2)+" m/s",name:"Maximum climb rate"},
+  dhtrig:{get:()=>MR.trig,set:v=>{MR.trig=v;MR.clear=Math.round((v+0.05)*100)/100;},step:0.05,lo:0.10,hi:0.50,fmt:v=>v.toFixed(2)+" m",name:"Defensive hover distance"},
+  tlim:{get:()=>CONFIG.timeLimit,set:v=>CONFIG.timeLimit=v,step:30,lo:60,hi:900,fmt:v=>fmtMS(v),name:"Trial time limit"},
+  aw:{get:()=>CONFIG.arena.xMax-CONFIG.arena.xMin,set:v=>{CONFIG.arena.xMin=0;CONFIG.arena.xMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Room width"},
+  ad:{get:()=>CONFIG.arena.yMax-CONFIG.arena.yMin,set:v=>{CONFIG.arena.yMin=0;CONFIG.arena.yMax=v;},step:0.05,lo:2,hi:10,fmt:v=>v.toFixed(2)+" m",name:"Room depth"},
+  nfzr:{get:()=>CONFIG.nfz.h*2,set:v=>CONFIG.nfz.h=v/2,step:0.10,lo:0.30,hi:1.60,fmt:v=>v.toFixed(2)+" m",name:"Restricted zone size"},
   prox:{get:()=>CONFIG.proxWarn,set:v=>CONFIG.proxWarn=v,step:0.05,lo:()=>CONFIG.proxCrit+0.05,hi:1.00,fmt:v=>v.toFixed(2)+" m",name:"Proximity warning"}
 };
 const val=x=>typeof x==="function"?x():x;
@@ -1089,6 +1163,7 @@ function syncSettings(){
   document.querySelectorAll(".stp").forEach(r=>{const c=STEP[r.dataset.k];r.querySelector("b").textContent=c.fmt(c.get());});
   document.querySelectorAll("[data-o]").forEach(b=>b.setAttribute("aria-pressed",OPT[b.dataset.o]));
   document.querySelectorAll("[data-fs]").forEach(b=>b.setAttribute("aria-checked",b.dataset.fs===OPT.feed));
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===OPT.mode));
   $("toLbl").textContent=`to ${CONFIG.takeoffZ.toFixed(2)} m`;
 }
 document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",()=>{
@@ -1098,7 +1173,17 @@ document.querySelectorAll(".stp button").forEach(b=>b.addEventListener("click",(
   if(k==="aw"||k==="ad")layout();else buildMapStatic();
   syncSettings();}));
 document.querySelectorAll("[data-o]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.o;OPT[k]=!OPT[k];
-  if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="course"){buildMapStatic();log(OPT.course?"Course obstacles shown":"Course obstacles hidden");}if(k==="nfz"){buildMapStatic();log(OPT.nfz?"No-fly zone enabled":"No-fly zone disabled",OPT.nfz?"info":"warn");}syncSettings();}));
+  if(k==="feeds"){$("app").classList.toggle("nofeeds",!OPT.feeds);layout();}if(k==="latch"){if(!OPT.latch)drones.forEach(d=>d.latched=false);log(OPT.latch?"Tap-to-hold on: tap drones to hold, tap again to release":"Tap-to-hold off");}if(k==="lefty"){$("app").classList.toggle("lefty",OPT.lefty);layout();log(OPT.lefty?"Left-handed layout":"Right-handed layout");}if(k==="course"){buildMapStatic();buildSensorScene();log(OPT.course?"Boxes and hoops in the room":"Boxes and hoops removed");}syncSettings();}));
+document.querySelectorAll("#modeSeg button").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.mode;if(m===OPT.mode)return;
+  if(S.trial.running){log("The mode cannot change while a trial runs","warn");return;}
+  OPT.mode=m;buildMapStatic();log(m==="course"?"Course trial mode: restricted zone active":"Gesture sub-test mode: restricted zone off");syncSettings();}));
+$("trStart").addEventListener("click",startTrial);$("trDone").addEventListener("click",()=>endTrial("completed"));
+$("trAbort").addEventListener("click",()=>endTrial("hardware_abort"));$("trExport").addEventListener("click",exportLog);
+// A hidden page cannot keep streaming input, so release every contact and idle the altitude channel (protocol v1).
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)return;let n=0;
+  drones.forEach(d=>{if(d.pHeld||d.latched)n++;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;});pointers.clear();
+  if(S.gesture!=="idle"){CAM.neutral=null;CAM.conf=null;setGesture("idle");}
+  if(n)log(`Page hidden: ${n} drone${n>1?"s":""} released, altitude channel idle`,"warn");});
 // 0–1 feeds: checkbox bar + the single feed sit under the CV camera (default).
 // 2–3 feeds: bar and feeds move into their own column, sized to fill its height.
 function placeFeeds(){
@@ -1113,7 +1198,7 @@ function applyFeeds(){
   placeFeeds();
   $("app").classList.toggle("nofeeds",!OPT.feeds);syncSettings();layout();
 }
-document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;OPT.feed=k;S.focus=k;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===k);log(`Camera feed: ${U(k)}`);applyFeeds();renderSide();});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;OPT.feed=k;S.video=k;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===k);log(`Camera feed: ${U(k)}`);applyFeeds();renderSide();});
 $("fsBtn").addEventListener("click",()=>{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el);setTimeout(layout,300);});
 function toggleSettings(open){const o=open??$("settings").hidden;$("settings").hidden=!o;$("setBtn").setAttribute("aria-expanded",o);}
 $("setBtn").addEventListener("click",()=>toggleSettings());$("setBtn2").addEventListener("click",()=>toggleSettings());$("setClose").addEventListener("click",()=>toggleSettings(false));
@@ -1139,29 +1224,25 @@ function layout(){
   const mode=vw<700?"compact":(vw/vh<1.15?"portrait":"landscape");app.dataset.mode=mode;
   const st=app.style;
   if(mode==="landscape"){
-    const topH=56,botH=vh<700?56:64,bodyH=vh-topH-botH-8-2,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),squareMainW=(bodyH-46)*AR+42;
-    const nF=feedCount(),altW=96,feedW=fOn?Math.round(((bodyH-48-8)/3-28)*4/3+6):0; // fixed narrow column (three-feed width) so the map stays dominant
-    // width left for the side panel if the map were exactly square
-    const rest=vw-44-altW-feedW-squareMainW;
-    // wide (info beside camera) only when it fits without shrinking the map below square
-    const wide=false, sideW=Math.max(250,Math.min(380,rest));
-    $("side").classList.toggle("wide",wide);
+    // three panels (§1.7.3.5): hand camera and altitude on the left, map in the centre, video feed on the right
+    const topH=56,botH=vh<700?56:64,sideW=236,altW=96,vidW=236;
+    $("side").classList.remove("wide");
     st.gridTemplateRows=`${topH}px 1fr ${botH}px`;
-    const cols=["44px",`${sideW|0}px`,`${altW}px`,`${feedW}px`,"minmax(0,1fr)"],areas=["rail","side","alt","feeds","main"];
-    if(OPT.lefty){cols.reverse();areas.reverse();}   // mirror for left-handed operators: map on the left
+    const cols=["44px",`${sideW}px`,`${altW}px`,"minmax(0,1fr)",`${vidW}px`],areas=["rail","side","alt","main","vid"];
+    if(OPT.lefty){cols.reverse();areas.reverse();}   // mirror for left-handed operators
     st.gridTemplateColumns=cols.join(" ");
     st.gridTemplateAreas=`"top top top top top" "${areas.join(" ")}" "plan plan plan plan plan"`;
   }else if(mode==="portrait"){
     $("side").classList.remove("wide");
     const altW=Math.max(104,Math.min(130,vw*0.12)),mapW=vw-44-altW-10,AR=(CONFIG.arena.xMax-CONFIG.arena.xMin)/(CONFIG.arena.yMax-CONFIG.arena.yMin),rowMap=Math.min((mapW-32)/AR+56,(vh-104)*0.64);
-    st.gridTemplateRows=`40px ${rowMap|0}px 1fr 64px`;
+    st.gridTemplateRows=`56px ${rowMap|0}px 1fr 64px`;
     st.gridTemplateColumns=OPT.lefty?`${altW|0}px 1fr 1fr 44px`:`44px 1fr 1fr ${altW|0}px`;
-    st.gridTemplateAreas=OPT.lefty?(fOn?`"top top top top" "alt main main rail" "feeds feeds side rail" "plan plan plan plan"`:`"top top top top" "alt main main rail" "side side side rail" "plan plan plan plan"`):fOn?`"top top top top" "rail main main alt" "rail side feeds feeds" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side side side" "plan plan plan plan"`;
+    st.gridTemplateAreas=OPT.lefty?`"top top top top" "alt main main rail" "vid vid side rail" "plan plan plan plan"`:`"top top top top" "rail main main alt" "rail side vid vid" "plan plan plan plan"`;
   }else{
     $("side").classList.remove("wide");
-    st.gridTemplateRows=`40px ${Math.min(vw,vh*0.62)|0}px 240px auto auto auto`;
+    st.gridTemplateRows=`56px ${Math.min(vw,vh*0.62)|0}px 240px auto auto auto`;
     st.gridTemplateColumns="minmax(0,1fr)";
-    st.gridTemplateAreas=`"top" "main" "alt" "side" "feeds" "plan"`;
+    st.gridTemplateAreas=`"top" "main" "alt" "side" "vid" "plan"`;
   }
   requestAnimationFrame(()=>{fitMap();measure();});
 }
@@ -1176,7 +1257,7 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 /* =====================================================================
    INIT
    ===================================================================== */
-resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("feeds"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("vid"));ro.observe($("side"));renderSide();renderTop();renderTimeline();requestAnimationFrame(frame);autoCamera();
 // PWA: offline support + home-screen install
 if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Service worker not registered",e));
 </script>
