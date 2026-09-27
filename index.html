@@ -575,7 +575,7 @@ const K={bg:"#0A0E0B",panel:"#181C18",line:"#2C342C",line2:"#3E483D",tx:"#E1E8DF
 /* =====================================================================
    STATE + HELPERS
    ===================================================================== */
-const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:3,running:false,t0:0,dh:0,last:null}};
+const S={liveRate:0,t:CONFIG.sessionStart,gesture:"idle",beforeConfirm:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,log:[],prox:new Map(),wob:0,video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0,trial:{n:3,running:false,t0:0,dh:0,last:null}};
 let drones=[];const pointers=new Map();
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -667,7 +667,7 @@ function dtgZ(){const d=new Date(),mo=["JAN","FEB","MAR","APR","MAY","JUN","JUL"
 
 function resetScenario(){
   drones=CONFIG.drones.map(d=>({...d,tx:d.x,ty:d.y,vx:0,vy:0,vz:0,roll:0,pitch:0,pHeld:false,zTarget:null,landing:false,clampMax:false,clampMin:false,trail:[],ranges:{},dh:null,crashed:false}));
-  Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",altBlock:null,altBlockKey:null,appliedRate:0});
+  Object.assign(S,{gesture:"idle",simHold:false,degraded:false,lowBatt:false,cf3Lost:false,proximity:false,stopped:false,prox:new Map(),video:"cf1",holdOrder:[],altBlock:null,altBlockKey:null,appliedRate:0});
   S.trial.running=false;S.trial.last=null;S.alert=null;S.frameErr=false;
   S.log=CONFIG.initialLog.map(([dt,text,k])=>({t:S.t+dt,text,k}));
   $("estop").classList.remove("fired");$("estopTitle").textContent="E-STOP";$("estopSub").textContent="Hold 1 s";
@@ -999,7 +999,7 @@ function renderSide(){
   else if(g==="unrecognized"){main="Pose not recognised, holding";sub="Open palm resumes, fist locks";k="warn";}
   else{main="Show an open palm to start";sub="";k="idle";}
   const gs=$("gstat");gs.dataset.k=k;$("gMain").textContent=main;$("gSub").textContent=sub;
-  // right panel: the video drone, independent of touch (DEC-08), and the held drones' altitude
+  // video panel: Take off / Land act on the drone shown (it follows the most recently touched held drone)
   const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
   bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
   bt.querySelector("small").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
@@ -1138,13 +1138,13 @@ function renderAlert(){const el=$("alertBar"),A=S.alert;el.hidden=!A;if(!A)retur
 const svg=$("mapSvg");
 function toM(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[(q.x-OX)/SC,(OY-q.y)/SC];}
 
-svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);   // holding never changes the video feed (DEC-08)
-  if(!airborne(d)){log(`${U(d.id)} is grounded, take off before positioning`,"warn");return;}
+svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);
+  if(!airborne(d)){if(d.id!==S.video)setVideo(d.id,true);log(`${U(d.id)} is grounded, take off before positioning`,"warn");return;}  // a tap still selects it for Take off
   if([...pointers.values()].includes(d.id))return;
   e.preventDefault();pointers.set(e.pointerId,d.id);svg.setPointerCapture(e.pointerId);
   d.dragStart=[e.clientX,e.clientY];d.dragMoved=false;
   if(OPT.latch&&d.latched){/* tapping a latched drone releases it on pointerup (unless dragged) */}
-  else{d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);}});
+  else{d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
 svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
   $("cursor").textContent=inside?t:"--";
   const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed)return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
@@ -1156,8 +1156,16 @@ svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDef
   d.blockPt=hit?[cx,cy]:null;});
 svg.addEventListener("pointerleave",()=>{$("cursor").textContent="--";});
 function release(e){const id=pointers.get(e.pointerId);if(!id)return;pointers.delete(e.pointerId);const d=drones.find(x=>x.id===id);d.nfzFlag=false;d.blocked=null;d.blockPt=null;
-  if(OPT.latch){ if(d.latched&&!d.pHeld&&!d.dragMoved){d.latched=false;log(`${U(d.id)} released`);} d.pHeld=false; if(d.dragMoved)log(`${U(d.id)} target ${sg(d.tx)}, ${sg(d.ty)} m`); return; }
-  d.pHeld=false;log(`${U(d.id)} released, target ${sg(d.tx)}, ${sg(d.ty)} m`);}
+  if(OPT.latch){ if(d.latched&&!d.pHeld&&!d.dragMoved){d.latched=false;log(`${U(d.id)} released`);} d.pHeld=false; if(d.dragMoved)log(`${U(d.id)} target ${sg(d.tx)}, ${sg(d.ty)} m`); followVideo(); return; }
+  d.pHeld=false;log(`${U(d.id)} released, target ${sg(d.tx)}, ${sg(d.ty)} m`);followVideo();}
+// The video feed follows touch: holding a drone selects it (§1.7.3.5), and the operator selects the feed (§1.6.3).
+// With several drones held, the one touched most recently is shown. When it is released, the feed moves to the
+// most recently touched drone still held; with none held it stays where it is. The 1 / 2 / 3 buttons still override.
+function followVideo(){S.holdOrder=S.holdOrder.filter(id=>{const d=drones.find(x=>x.id===id);return d&&isHeld(d);});
+  const id=S.holdOrder[S.holdOrder.length-1];if(id&&id!==S.video)setVideo(id,true);}
+function setVideo(id,auto){OPT.feed=id;S.video=id;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===id);
+  document.querySelectorAll(".dfeed").forEach(t=>t.classList.toggle("off",!OPT.feedSel[t.dataset.f]));placeFeeds();syncSettings();measure();renderSide();
+  log(`Video: ${U(id)}${auto?"":" (manual)"}`);}
 svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",release);
 
 /* =====================================================================
@@ -1277,7 +1285,7 @@ function applyFeeds(){
   placeFeeds();
   $("app").classList.toggle("nofeeds",!OPT.feeds);syncSettings();layout();
 }
-document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;OPT.feed=k;S.video=k;Object.keys(OPT.feedSel).forEach(x=>OPT.feedSel[x]=x===k);log(`Camera feed: ${U(k)}`);applyFeeds();renderSide();});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-fs]");if(!b)return;const k=b.dataset.fs;if(k===OPT.feed)return;setVideo(k,false);});
 $("fsBtn").addEventListener("click",()=>{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el);setTimeout(layout,300);});
 function toggleSettings(open){const o=open??$("settings").hidden;$("settings").hidden=!o;$("setBtn").setAttribute("aria-expanded",o);}
 $("setBtn").addEventListener("click",()=>toggleSettings());$("setClose").addEventListener("click",()=>toggleSettings(false));
