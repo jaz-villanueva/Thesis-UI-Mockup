@@ -50,7 +50,7 @@ svg text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-variant-nu
    On any other window the stage is scaled uniformly to fit (letterboxed), never re-flowed. */
 html,body{background:#000}
 .stage{position:fixed;left:50%;top:50%;width:1280px;height:800px;transform-origin:50% 50%;overflow:hidden;background:var(--bg)}
-.app{display:grid;height:800px;grid-template-rows:48px 1fr;grid-template-columns:200px 88px 1fr;grid-template-areas:"top top top" "side alt main";position:relative}
+.app{display:grid;height:800px;grid-template-rows:48px 1fr;grid-template-columns:200px 88px 1fr 210px;grid-template-areas:"top top top top" "side alt main vid";position:relative}
 .top{grid-area:top;display:flex;align-items:center;gap:8px;padding:0 6px;border-bottom:2px solid var(--grn-2);background:var(--panel)}
 .top .ttl{font-weight:700;font-size:16px;letter-spacing:.06em;color:var(--grn)}
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -359,9 +359,6 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .vtabs button[aria-selected="true"]{background:var(--grn-dim);color:var(--grn)}
 .tbtn2{height:38px;padding:0 12px;border:1px solid var(--grn-2);background:var(--grn-dim);color:var(--grn-tx);border-radius:var(--r);font-weight:700;font-size:13px;white-space:nowrap}
 .tbtn2:active{border-color:var(--grn)}
-.tbtn2[disabled]{border-color:var(--line);background:var(--panel-2);color:var(--tx-3);cursor:not-allowed}
-.pair.hm{border:1px solid var(--own);background:#0C2A30;color:var(--own)}
-.pair.hm:active{background:#10404A}
 .gear{width:38px;height:38px;display:grid;place-items:center;color:var(--tx-2);border:1px solid var(--line-2);border-radius:var(--r)}
 .gear[aria-expanded="true"]{color:var(--grn);border-color:var(--grn)}
 .side{padding:2px 0 2px 2px}
@@ -383,6 +380,26 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 .sync .df{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
 .sync .apply{height:38px;padding:0 16px;background:var(--task);color:#07120A;border-radius:var(--r);font-weight:700}
 .sync .apply[disabled]{background:var(--panel-3);color:var(--tx-3)}
+.vid{grid-area:vid;padding:2px 2px 2px 0;display:flex;min-height:0}
+.app.lefty .vid{padding:2px 0 2px 2px}
+.vid .card{overflow:hidden}
+.vid .vhead{height:30px;flex:none;display:flex;align-items:center;padding:0 10px;background:var(--panel-2);color:var(--grn-tx);border-left:3px solid var(--grn-2);border-bottom:1px solid var(--line);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.vid .vbody{flex:1;min-height:0;overflow:auto;padding:4px;display:flex;flex-direction:column;gap:4px}
+.vid #sideFeed .dfeed svg{aspect-ratio:4/3!important}
+.vid .act{padding:4px;border-top:1px solid var(--line)}
+.vid .pair{height:42px;font-size:13px}
+.heldalt{border:1px solid var(--line);background:var(--panel-2);padding:6px 8px;display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.heldalt .t{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--grn-tx)}
+.heldalt div{display:flex;justify-content:space-between} .heldalt b{color:var(--own);font-weight:600} .heldalt .none{color:var(--tx-3)}
+/* top bar: battery and signal per drone */
+.ds .bt{position:relative;width:18px;height:9px;border:1.2px solid var(--tx-2);margin-right:3px}
+.ds .bt::after{content:"";position:absolute;right:-3.5px;top:2px;width:2px;height:3px;background:var(--tx-2)}
+.ds .bt i{position:absolute;left:1px;top:1px;bottom:1px;background:var(--grn)}
+.ds .bt.warn i{background:var(--caut)} .ds .bt.crit i{background:var(--crit)}
+.ds .sg{display:flex;align-items:flex-end;gap:1px;height:11px;margin-left:4px}
+.ds .sg i{width:3px;background:#3a423a}.ds .sg i:nth-child(1){height:3px}.ds .sg i:nth-child(2){height:5.5px}.ds .sg i:nth-child(3){height:8px}.ds .sg i:nth-child(4){height:11px}
+.ds .sg i.on{background:var(--grn)} .ds .sg.warn i.on{background:var(--caut)} .ds .sg.crit i.on{background:var(--crit)}
+.ds .v{min-width:30px;text-align:right}
 .settings .note{font-size:11.5px;color:var(--tx-3);line-height:1.4}
 /* Sim controls (mockup only) */
 .sim{position:absolute;top:6px;right:158px;z-index:9;width:230px;background:var(--panel);border:1px solid var(--line-2);display:none;padding:8px;gap:6px;flex-direction:column}
@@ -437,14 +454,13 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
     <button role="tab" id="tabTel" aria-selected="false" aria-controls="telPane">Telemetry</button>
   </div>
   <div class="dstat" id="dstat" aria-label="Drone status">
-    <span class="ds" id="ds-cf1"><i class="sd"></i><b>1</b><span class="m v"></span><em>--</em></span>
-    <span class="ds" id="ds-cf2"><i class="sd"></i><b>2</b><span class="m v"></span><em>--</em></span>
-    <span class="ds" id="ds-cf3"><i class="sd"></i><b>3</b><span class="m v"></span><em>--</em></span>
+    <span class="ds" id="ds-cf1"><b>1</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
+    <span class="ds" id="ds-cf2"><b>2</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
+    <span class="ds" id="ds-cf3"><b>3</b><span class="bt"><i></i></span><span class="m v">--</span><span class="sg"><i></i><i></i><i></i><i></i></span></span>
   </div>
   <div class="trial" id="trialChip" aria-live="polite"></div>
   <div class="right">
     <button class="tbtn2" id="btnTakeoff">Take off all</button>
-    <button class="tbtn2" id="btnHome">Home all</button>
     <button class="tbtn2" id="btnLand">Land all</button>
     <button class="estop" id="estop" aria-label="Emergency stop. Press and hold for one second.">
       <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle class="rbg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/><circle class="rfg" id="estopRing" cx="19" cy="19" r="15" fill="none" stroke-width="4" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 19 19)"/><rect x="13.5" y="13.5" width="11" height="11" rx="1" fill="#F2453D"/></svg>
@@ -456,7 +472,7 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
 
 <!-- =============================== SIDE PANEL =============================== -->
 <aside class="side" id="side">
-  <section class="card" aria-label="Hand camera and video feed">
+  <section class="card" aria-label="Hand camera">
     <div class="scroll">
       <div class="sec" id="secCam">
         <button aria-expanded="true">Hand camera<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -468,25 +484,29 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
           <div class="gstat" id="gstat"><b id="gMain">--</b><span id="gSub"></span></div>
         </div>
       </div>
-      <div class="sec" id="secVid">
-        <button aria-expanded="true">Video<svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="m6 15 6-6 6 6"/></svg></button>
-        <div class="sbody">
-          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
-          <div id="sideFeed"></div>
-        </div>
-      </div>
-    </div>
-    <div class="act">
-      <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
-      <button class="pair hm" id="btnHomeSel"><span>Home</span><small>DRONE 1</small></button>
-      <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
-    </div>
+          </div>
   </section>
 </aside>
 
-<!-- altitude bars, beside the cameras -->
+<!-- altitude readout, part of the left panel (§1.7.3.5) -->
 <aside class="altcol" aria-label="Altitude">
   <div class="alt"><div class="h">ALT<span class="m dim" style="font-weight:400">m</span></div><svg id="tapeSvg" viewBox="0 0 100 600" preserveAspectRatio="none"></svg></div>
+</aside>
+
+<!-- =============================== VIDEO FEED (right panel, §1.7.3.5) =============================== -->
+<aside class="vid" id="vid" aria-label="Video feed">
+  <section class="card">
+    <div class="vhead">Video</div>
+    <div class="vbody">
+          <div id="fheadSlot"><div class="fhead" id="fhead" role="radiogroup" aria-label="Video feed source"><button class="cbs" data-fs="cf1" role="radio" aria-label="Show DRONE 1 video">1</button><button class="cbs" data-fs="cf2" role="radio" aria-label="Show DRONE 2 video">2</button><button class="cbs" data-fs="cf3" role="radio" aria-label="Show DRONE 3 video">3</button></div></div>
+          <div id="sideFeed"></div>
+      <div class="heldalt" id="heldAlt"></div>
+    </div>
+    <div class="act">
+      <button class="pair to" id="btnTakeoffSel"><span>Take off</span><small>DRONE 1</small></button>
+      <button class="pair ld" id="btnLandSel"><span>Land</span><small>DRONE 1</small></button>
+    </div>
+  </section>
 </aside>
 
 <!-- =============================== MAP =============================== -->
@@ -585,13 +605,12 @@ html:has(.app[data-mode="compact"]),html:has(.app[data-mode="compact"]) body{ove
    ===================================================================== */
 const CONFIG={
   arena:{xMin:0,xMax:5.31,yMin:0,yMax:3.55,margin:0.25},   // Miguel 409: 531 x 355 cm, origin at room corner (Fig. 5); 0.25 m capture-volume margin is a placeholder
-  z:{min:0.50,max:1.75,displayMax:2.00},   // 0.5 m floor (SO2); 175 cm cam #5 ceiling (Fig. 5)
+  z:{min:0.50,max:1.44,displayMax:2.00},   // 0.5 m flight floor (SO2); 1.44 m "all cams" ceiling (Figs. 5-7) until the capture volume is measured
   nfz:{x:2.655,y:1.775,h:0.59},   // 118 cm restricted zone at the room centre (§1.7.6 prose; Fig. 5 draws it ~11 cm lower)
   boxes:[{id:"O1",x:1.31,y:1.56,hx:0.265,hy:0.255,h:1.02},{id:"O2",x:2.60,y:2.71,hx:0.265,hy:0.255,h:1.53}],   // balikbayan stacks 53x51 cm
   hoops:[{id:"H1",x:1.31,y:2.70,type:"horizontal",z:1.00,r:0.20},{id:"H2",x:3.99,y:2.70,ang:90,z:0.50,r:0.20},{id:"H3",x:3.99,y:1.49,ang:90,z:1.50,r:0.20}],   // 40 cm hoops
   zoneMargin:0.06,   // targets stay this far outside the restricted zone (protocol v1 zone_margin placeholder)
-  rateMax:0.20,hSpeed:1.0,homeSpeed:0.5,   // homing flies slower than operator drags (placeholder)
-  proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
+  rateMax:0.20,hSpeed:1.0,proxWarn:0.25,proxCrit:0.15,takeoffZ:0.60,lowBatt:20,
   timeLimit:300,   // placeholder: the proposal sets it from two expert pilots' mean times x 2 (§1.7.4)
   sessionStart:12*60+31,timelineSec:300,
   drones:[
@@ -619,11 +638,12 @@ const airborne=d=>d.z>0.08&&!S.stopped&&!d.crashed;
 const gAct=()=>S.gesture==="climb"||S.gesture==="descend";
 /* ---------- live camera + hand tracking ---------- */
 const CAM={on:false,stream:null,hands:null,tracking:false,lm:null,cat:null,lastFrame:-1,busy:false,last:0,fps:0,fc:0,ft:0,neutral:null,conf:null,label:"",score:0,deviceId:null,mirror:true,devices:[]};
-const GEST={confirmMs:500,still:0.04,dead:0.03,full:0.18};   // confirmation hold, steadiness, dead zone and full-rate displacement (fractions of frame height); placeholders (OPEN-07)
-// MediaPipe Gesture Recognizer (DEC-06): hand landmarks, including the wrist, plus the built-in Open_Palm and
-// Closed_Fist labels. Package and model are pinned to the versions recorded in the project README.
-const MP_BASE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1",
-      MP_MODEL="https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task";
+const GEST={confirmMs:500,still:0.04,dead:0.03,full:0.18,landHold:1.0};   // landHold: seconds of lowering at the floor before a gesture landing   // confirmation hold, steadiness, dead zone and full-rate displacement (fractions of frame height); placeholders (OPEN-07)
+// MediaPipe Gesture Recognizer (DEC-06): the MediaPipe Hands landmark model (SO2) plus a landmark-based classifier
+// with the built-in Open_Palm and Closed_Fist labels. Served from local files (README: no cloud dependency):
+// tasks-vision 1.0.1 and gesture_recognizer.task float16 v1, SHA-256 97952348...b0482 as pinned in the README.
+const MP_BASE=new URL("vendor/mediapipe/tasks-vision-1.0.1",location.href).href,
+      MP_MODEL=new URL("vendor/mediapipe/models/gesture_recognizer.task",location.href).href;
 function camNote(t){const n=$("camNote");if(!n)return;n.hidden=!t;n.textContent=t||"";}
 async function toggleCamera(){if(CAM.on){stopCamera();return;}await startCamera(CAM.deviceId);}
 // open a real camera: a specific deviceId, else the front (user-facing) camera
@@ -656,7 +676,7 @@ async function autoCamera(){
   await startCamera(null,true);}
 async function loadHands(){if(CAM.hands){CAM.tracking=true;handLoop();return;}
   camNote("Loading MediaPipe Gesture Recognizer…");
-  const fail=()=>camNote("Live video only: the gesture recognizer could not load (it needs internet the first time). Gestures stay on the simulation controls.");
+  const fail=()=>camNote("Live video only: the gesture recognizer could not load. Gestures stay on the simulation controls.");
   let V,files;try{V=await import(MP_BASE+"/vision_bundle.mjs");files=await V.FilesetResolver.forVisionTasks(MP_BASE+"/wasm");}catch(e){fail();return;}
   const make=delegate=>V.GestureRecognizer.createFromOptions(files,{baseOptions:{modelAssetPath:MP_MODEL,delegate},runningMode:"VIDEO",numHands:1,minHandDetectionConfidence:0.6,minHandPresenceConfidence:0.6,minTrackingConfidence:0.5});
   try{CAM.hands=await make("GPU");}catch(e){try{CAM.hands=await make("CPU");}catch(e2){fail();return;}}
@@ -771,7 +791,6 @@ function flightState(d){
   if(S.stopped)return["Motors cut","crit"];
   if(connState(d)==="lost")return["No link","crit"];
   if(d.dh&&d.z>0.02)return["Defensive hover","caut"];
-  if(d.homing&&d.z>0.02)return["Returning home","own"];
   if(d.landing)return d.z>0.02?["Landing","own"]:["Grounded",""];
   if(d.z<=0.02&&d.zTarget==null)return["Grounded",""];
   if(d.zTarget!=null)return["Taking off","own"];
@@ -1022,7 +1041,11 @@ function renderFeeds(){drones.forEach(d=>{const t=document.querySelector(`.dfeed
 function renderSide(){
   // left panel: what the gesture is commanding, and for which held drones
   const g=S.gesture,hl=drones.filter(isHeld),to=hl.length?hl.map(x=>U(x.id)).join(" + "):"no drone held";let main,sub,k;
-  if(gAct()){if(!hl.length){main="Hold a drone to use altitude";sub="Gesture active";k="idle";}
+  const landing=hl.find(d=>d.landT>0),down=hl.find(d=>d.landing&&d.z>0.02),up=hl.find(d=>d.zTarget!=null&&!d.landing);
+  if(gAct()&&landing){main=`Keep lowering to land ${U(landing.id)}`;sub=`${Math.max(0,GEST.landHold-landing.landT).toFixed(1)} s`;k="warn";}
+  else if(down){main=`Landing ${U(down.id)}`;sub=to;k="ok";}
+  else if(up){main=`Lifting off ${U(up.id)}`;sub=to;k="ok";}
+  else if(gAct()){if(!hl.length){main="Hold a drone to use altitude";sub="Gesture active";k="idle";}
     else if(S.altBlock){main=`Paused: ${U(S.altBlock.d.id)} at ${S.altBlock.why}`;sub="Release it or reverse the gesture";k="warn";}
     else{const r=S.appliedRate;main=Math.abs(r)<0.005?"Palm at neutral, holding":`${r>0?"▲ Climbing":"▼ Descending"} ${Math.abs(r).toFixed(2)} m/s`;sub=to;k="ok";}}
   else if(g==="confirming"){main="Hold the open palm steady";sub=CAM.tracking?`Confirming, ${confirmPct()}%`:"Confirming";k="idle";}
@@ -1035,8 +1058,8 @@ function renderSide(){
   const v=videoD(),bl=$("btnLandSel"),bt=$("btnTakeoffSel");
   bl.querySelector("small").textContent=U(v.id);bl.disabled=v.z<=0.02||v.landing||S.stopped||v.crashed;
   bt.querySelector("small").textContent=U(v.id);bt.disabled=v.z>0.05||v.zTarget!=null||S.stopped||connState(v)==="lost";
-  const bh=$("btnHomeSel");bh.querySelector("small").textContent=U(v.id);bh.disabled=!canHome(v);
-  $("btnHome").disabled=!drones.some(canHome);
+  // right panel also shows the held drones' current altitude (§1.7.3.5)
+  $("heldAlt").innerHTML=`<span class="t">HELD ALTITUDE</span>`+(hl.length?hl.map(d=>`<div><span>${U(d.id)}</span><b class="m">${d.z.toFixed(2)} m</b></div>`).join(""):`<div class="none">No drone held</div>`);
 }
 
 /* =====================================================================
@@ -1047,10 +1070,13 @@ function renderTop(){
   document.querySelectorAll("[data-fs]").forEach(b=>{const d=drones.find(x=>x.id===b.dataset.fs);if(!d)return;const c=connState(d);
     let dot=b.querySelector(".sd");if(!dot){dot=document.createElement("i");dot.className="sd";b.prepend(dot);}
     dot.className="sd "+c;b.title=`${U(d.id)} ${c==="lost"?"offline":c==="weak"?"online, weak signal":"online"}`;});
-  // per-drone telemetry: link, battery voltage, flight state (§1.7.3.7)
-  drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),[st,k]=flightState(d),pct=S.lowBatt&&d.id==="cf3"?12:d.batt,v=el.querySelector(".v"),em=el.querySelector("em");
-    el.querySelector(".sd").className="sd "+c;v.textContent=c==="lost"?"no link":pct<CONFIG.lowBatt?volts(d).toFixed(2)+" V":"";v.className="m v"+(pct<CONFIG.lowBatt?" warn":"");
-    em.textContent=st;em.className=k;});
+  // per-drone battery and radio signal (Figure 1; telemetry §1.7.3.7). Flight state lives in Telemetry and the video header.
+  drones.forEach(d=>{const el=$("ds-"+d.id);if(!el)return;const c=connState(d),pct=Math.round(S.lowBatt&&d.id==="cf3"?12:d.batt),lq=linkQ(d),
+      bk=pct<10?"crit":pct<CONFIG.lowBatt?"warn":"",sk=lq===0?"crit":lq<70?"warn":"",bars=lq===0?0:lq>90?4:lq>70?3:lq>45?2:1;
+    const bt=el.querySelector(".bt");bt.className="bt "+bk;bt.firstElementChild.style.width=Math.max(1,pct*0.14)+"px";
+    const v=el.querySelector(".v");v.textContent=pct+"%";v.className="m v "+bk;
+    const sg=el.querySelector(".sg");sg.className="sg "+sk;[...sg.children].forEach((b,i)=>b.classList.toggle("on",i<bars));
+    el.title=`${U(d.id)}: battery ${volts(d).toFixed(2)} V (${pct}%), radio link ${lq}%`;});
   // trial clock (host-owned in the real system)
   const T=S.trial,tc=$("trialChip");
   if(T.running){tc.className="trial run";tc.innerHTML=`<b>${trialId()}</b><span class="m">${fmtMS(S.t-T.t0)} / ${fmtMS(CONFIG.timeLimit)}</span>`;}
@@ -1058,6 +1084,8 @@ function renderTop(){
     tc.innerHTML=`<b>${T.last.id}</b><span>${f?"Failed: "+T.last.outcome:T.last.outcome==="completed"?"Completed":"Aborted"} ${fmtMS(T.last.elapsed)}</span>`;}
   else{tc.className="trial";tc.innerHTML=`<b>${trialId()}</b><span>${OPT.mode==="course"?"Ready":"Sub-test"}</span>`;}
 }
+// radio link quality in % (Crazyradio acknowledged packets); 0 when the link is lost
+function linkQ(d){return connState(d)==="lost"?0:S.degraded?61:d.link;}
 function connState(d){if(S.cf3Lost&&d.id==="cf3")return"lost";return S.degraded?"weak":"ok";}
 function setLk(id,s,t){const e=$(id);e.dataset.s=s;e.querySelector("span").textContent=t;}
 function renderLog(){
@@ -1113,12 +1141,18 @@ function update(dt){
   // Shared altitude rate (§1.7.2): the same rate for every held drone. If one cannot follow,
   // the rate pauses for all of them so their altitude offsets hold (OPEN-03).
   const rate=gAct()&&!S.stopped?rateCmd():0;let block=null;
+  // Lift-off and landing with the altitude channel (§1.7.6): raising the hand lifts held grounded drones to the
+  // 0.5 m flight floor (SO2); lowering the hand for GEST.landHold s with a held drone at the floor lands it.
+  drones.forEach(d=>{if(!isHeld(d)||S.stopped||d.crashed||connState(d)==="lost"){d.landT=0;return;}
+    if(d.z<=0.02&&d.zTarget==null&&rate>0){d.landing=false;d.zTarget=Z.min;log(`${U(d.id)} lifting off (gesture) to ${Z.min.toFixed(2)} m`);}
+    if(airborne(d)&&!d.landing&&d.zTarget==null&&rate<0&&d.z<=Z.min+1e-3){d.landT=(d.landT||0)+dt;
+      if(d.landT>=GEST.landHold){d.landT=0;landOne(d,`${U(d.id)} landing (gesture)`);}}else d.landT=0;});
   if(rate)drones.forEach(d=>{if(block||!isHeld(d)||!airborne(d))return;
     if(rate>0&&d.z>=Z.max-1e-3)block={d,why:"maximum altitude"};
     else if(rate<0&&d.z<=Z.min+1e-3)block={d,why:"minimum altitude"};
     else if(d.dh&&!(d.dh.dir==="up"&&rate<0))block={d,why:"defensive hover"};});
   const bk=block?block.d.id+block.why:null;
-  if(bk!==S.altBlockKey){S.altBlockKey=bk;if(block)log(`Shared ${rate>0?"climb":"descent"} paused: ${U(block.d.id)} at ${block.why}`,"warn");}
+  if(bk!==S.altBlockKey){S.altBlockKey=bk;if(block&&block.why!=="minimum altitude")log(`Shared ${rate>0?"climb":"descent"} paused: ${U(block.d.id)} at ${block.why}`,"warn");}
   S.altBlock=block;S.appliedRate=block?0:rate;
   drones.forEach(d=>{
     const x0=d.x,y0=d.y,z0=d.z;d.batt=Math.max(5,d.batt-dt*0.004);
@@ -1131,10 +1165,9 @@ function update(dt){
         const dx=d.tx-d.x,dy=d.ty-d.y,hl=Math.hypot(dx,dy);let hold=false;
         if(d.dh){const u=dirVec(d,d.dh.dir);hold=!(hl>0.03&&(d.dh.dir==="up"||(dx*u[0]+dy*u[1])/hl<-0.2));}
         if(hold){d.mvx=d.mvy=0;}
-        else{const sp=Math.min(d.homing?CONFIG.homeSpeed:CONFIG.hSpeed,hl*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
+        else{const sp=Math.min(CONFIG.hSpeed,hl*2.2),dvx=hl>0.002?dx/hl*sp:0,dvy=hl>0.002?dy/hl*sp:0,k=Math.min(1,dt*3.5);
           d.mvx=(d.mvx||0)+(dvx-(d.mvx||0))*k;d.mvy=(d.mvy||0)+(dvy-(d.mvy||0))*k;d.x+=d.mvx*dt;d.y+=d.mvy*dt;}
-        checkHoops(d,x0,y0,z0);
-        if(d.homing&&hl<0.015&&Math.hypot(d.mvx,d.mvy)<0.04){d.homing=false;log(`${U(d.id)} home, landing on its pad`,"ok");landOne(d,true);}}
+        checkHoops(d,x0,y0,z0);}
       if(d.z>0.02){const hit=collisionOf(d);if(hit){crash(d,hit.what);if(hit.other)crash(hit.other,U(d.id));}}
     }
     const a=Math.min(1,dt*6);d.vx+=((d.x-x0)/dt-d.vx)*a;d.vy+=((d.y-y0)/dt-d.vy)*a;d.vz+=((d.z-z0)/dt-d.vz)*a;
@@ -1150,7 +1183,7 @@ function update(dt){
   drones.forEach(d=>{const T=d.trail,l=T[T.length-1];if(!l||Math.hypot(d.x-l[0],d.y-l[1])>0.006)T.push([d.x,d.y,S.t]);while(T.length&&S.t-T[0][2]>0.8)T.shift();});
   if(S.trial.running&&S.t-S.trial.t0>=CONFIG.timeLimit)endTrial("timeout");
 }
-function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.homing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
+function crash(d,what){if(d.crashed)return;d.crashed=true;d.zTarget=null;d.landing=false;d.dh=null;d.pHeld=false;d.latched=false;d.tx=d.x;d.ty=d.y;
   log(`Collision: ${U(d.id)} hit ${what}`,"crit");
   S.alert=S.trial.running?`Collision: ${U(d.id)} hit ${what}. Trial ${trialId()} failed, so all drones are landing. Press Take off all to fly again.`
     :`Collision: ${U(d.id)} hit ${what} and is down. Take off ${U(d.id)} or Take off all to fly it again.`;
@@ -1174,15 +1207,15 @@ const svg=$("mapSvg");
 function toM(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[(q.x-OX)/SC,(OY-q.y)/SC];}
 
 svg.addEventListener("pointerdown",e=>{const g=e.target.closest("[data-drone]");if(!g)return;const d=drones.find(x=>x.id===g.dataset.drone);
-  if(!airborne(d)){if(d.id!==S.video)setVideo(d.id,true);log(`${U(d.id)} is grounded, take off before positioning`,"warn");return;}  // a tap still selects it for Take off
+  if(d.crashed||S.stopped||connState(d)==="lost"){if(d.id!==S.video)setVideo(d.id,true);return;}  // a tap still selects it for Take off
   if([...pointers.values()].includes(d.id))return;
   e.preventDefault();pointers.set(e.pointerId,d.id);svg.setPointerCapture(e.pointerId);
   d.dragStart=[e.clientX,e.clientY];d.dragMoved=false;
   if(OPT.latch&&d.latched){/* tapping a latched drone releases it on pointerup (unless dragged) */}
-  else{if(d.homing){d.homing=false;log(`${U(d.id)} homing cancelled, operator control`);}d.pHeld=true;if(OPT.latch)d.latched=true;log(`${U(d.id)} held`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
+  else{d.pHeld=true;if(OPT.latch)d.latched=true;log(airborne(d)?`${U(d.id)} held`:`${U(d.id)} held on its pad: raise an open palm to lift off`);S.holdOrder=S.holdOrder.filter(x=>x!==d.id);S.holdOrder.push(d.id);followVideo();}});
 svg.addEventListener("pointermove",e=>{if(pointers.has(e.pointerId))e.preventDefault();const[mx,my]=toM(e),a=CONFIG.arena,inside=mx>=a.xMin&&mx<=a.xMax&&my>=a.yMin&&my<=a.yMax,t=inside?`${sg(mx)}, ${sg(my)} m`:"Offscreen";
   $("cursor").textContent=inside?t:"--";
-  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed)return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
+  const id=pointers.get(e.pointerId);if(!id)return;const d=drones.find(x=>x.id===id),m=a.margin;if(d.landing||d.crashed||!airborne(d))return;if(Math.hypot(e.clientX-d.dragStart[0],e.clientY-d.dragStart[1])>6)d.dragMoved=true;if(!d.dragMoved)return;const cx=clamp(mx,a.xMin+m,a.xMax-m),cy=clamp(my,a.yMin+m,a.yMax-m),hit=dragPathBlocked(d.tx,d.ty,cx,cy);
   if(!hit){d.tx=cx;d.ty=cy;d.blocked=null;}
   else{ // reject the part of the drag that enters the restricted zone: the target stops at its edge
     let lo=0,hi=1;for(let i=0;i<14;i++){const t=(lo+hi)/2;if(dragPathBlocked(d.tx,d.ty,d.tx+(cx-d.tx)*t,d.ty+(cy-d.ty)*t))hi=t;else lo=t;}
@@ -1206,25 +1239,11 @@ svg.addEventListener("pointerup",release);svg.addEventListener("pointercancel",r
 /* =====================================================================
    COMMANDS
    ===================================================================== */
-function landOne(d,quiet){if(d.z<=0.02||S.stopped||d.crashed)return;d.homing=false;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;if(!quiet)log(`${U(d.id)} landing`);}
-/* Homing: fly straight back to the drone's own start pad at its current height, then land.
-   Straight line only (no route planning, §1.6.3); the onboard defensive hover still applies on the way.
-   Not available during a trial: returning each drone to its start is part of the scored task (REQ-15, §1.7.6).
-   Holding the drone on the map cancels homing and hands control back to the operator. */
-const padOf=d=>CONFIG.drones[drones.indexOf(d)];
-const canHome=d=>!S.trial.running&&!S.stopped&&airborne(d)&&!d.landing&&!d.homing&&connState(d)!=="lost";
-function homeOne(d,quiet){if(!canHome(d))return false;const p=padOf(d);
-  d.homing=true;d.zTarget=null;d.pHeld=false;d.latched=false;d.blocked=null;d.blockPt=null;d.tx=p.x;d.ty=p.y;
-  const z=restrictedZones()[0],B=CONFIG.zoneMargin,cross=z&&segHitsRect(d.x,d.y,p.x,p.y,z.x,z.y,z.hx+B,z.hy+B);
-  if(!quiet)log(`${U(d.id)} returning home${cross?", path crosses the restricted zone":""}`,cross?"warn":"info");return true;}
-function homeAll(){if(S.trial.running){log("Home is off during a trial: returning to the start is part of the task","warn");return;}
-  const list=drones.filter(canHome);if(!list.length)return;list.forEach(d=>homeOne(d,true));log(`Home all: ${list.map(d=>U(d.id)).join(", ")} returning to their pads`);}
-function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.homing=false;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
+function landOne(d,msg){if(d.z<=0.02||S.stopped||d.crashed)return;d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;log(msg||`${U(d.id)} landing`);}
+function landAll(msg){if(S.stopped)return;log(msg||"Land all");drones.forEach(d=>{if(d.z>0.02&&!d.crashed){d.landing=true;d.zTarget=0;d.tx=d.x;d.ty=d.y;d.pHeld=false;d.latched=false;}});}
 function takeoffOne(d){if(S.stopped||d.z>0.05||d.zTarget!=null||connState(d)==="lost")return;if(d.crashed)S.alert=null;d.crashed=false;d.landing=false;d.zTarget=CONFIG.takeoffZ;d.tx=d.x;d.ty=d.y;log(`${U(d.id)} taking off, target ${CONFIG.takeoffZ.toFixed(2)} m`);}
 $("btnLandSel").addEventListener("click",()=>landOne(videoD()));
 $("btnTakeoffSel").addEventListener("click",()=>takeoffOne(videoD()));
-$("btnHomeSel").addEventListener("click",()=>{if(S.trial.running){log("Home is off during a trial: returning to the start is part of the task","warn");return;}homeOne(videoD());});
-$("btnHome").addEventListener("click",homeAll);
 $("btnLand").addEventListener("click",()=>landAll());
 $("btnTakeoff").addEventListener("click",()=>{
   if(S.stopped){if(drones.some(d=>d.z>0.02)){log("The emergency stop clears only when every drone is grounded","warn");return;}
@@ -1284,7 +1303,7 @@ const estop=$("estop"),ring=$("estopRing"),CIRC=94.25;let hs=null,hr=null;
 function tick(){const p=Math.min(1,(performance.now()-hs)/1000);ring.style.strokeDashoffset=CIRC*(1-p);$("estopSub").textContent=`Arming ${p.toFixed(1)} s`;if(p>=1){fire();cancel();return;}hr=requestAnimationFrame(tick);}
 function start(){if(S.stopped)return;hs=performance.now();hr=requestAnimationFrame(tick);}
 function cancel(){cancelAnimationFrame(hr);hs=null;ring.style.strokeDashoffset=CIRC;if(!S.stopped)$("estopSub").textContent="Hold 1 s";}
-function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.homing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="MOTORS CUT";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
+function fire(){S.stopped=true;drones.forEach(d=>{d.zTarget=null;d.landing=false;d.tx=d.x;d.ty=d.y;});estop.classList.add("fired");$("estopTitle").textContent="MOTORS CUT";$("estopSub").textContent="Take off all to clear";log("Emergency stop, all motors cut","crit");}
 estop.addEventListener("pointerdown",e=>{estop.setPointerCapture(e.pointerId);start();});
 estop.addEventListener("pointerup",cancel);estop.addEventListener("pointercancel",cancel);
 estop.addEventListener("keydown",e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat&&hs==null){e.preventDefault();start();}});
@@ -1392,11 +1411,11 @@ function layout(){
   const vw=STAGE.w,vh=STAGE.h,app=$("app"),fOn=OPT.feeds;
   app.dataset.mode="landscape";
   const st=app.style;
-  // one layout: top bar, then the side panel (cameras, take off / land), the altitude bars and the map
   $("side").classList.remove("wide");
   st.gridTemplateRows="48px 1fr";
-  st.gridTemplateColumns=OPT.lefty?"1fr 88px 200px":"200px 88px 1fr";
-  st.gridTemplateAreas=OPT.lefty?`"top top top" "main alt side"`:`"top top top" "side alt main"`;
+  // three panels (§1.7.3.5): hand camera and altitude on the left, map in the centre, video feed on the right
+  st.gridTemplateColumns=OPT.lefty?"210px 1fr 88px 200px":"200px 88px 1fr 210px";
+  st.gridTemplateAreas=OPT.lefty?`"top top top top" "vid main alt side"`:`"top top top top" "side alt main vid"`;
   requestAnimationFrame(()=>{fitMap();measure();});
 }
 function measure(){
@@ -1410,7 +1429,7 @@ window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 /* =====================================================================
    INIT
    ===================================================================== */
-resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("side"));renderSide();renderTop();requestAnimationFrame(frame);autoCamera();
+resetScenario();syncSettings();applyFeeds();window.__ready=true;ro.observe(document.querySelector(".mapbody"));ro.observe($("tapeSvg"));ro.observe($("side"));ro.observe($("vid"));renderSide();renderTop();requestAnimationFrame(frame);autoCamera();
 // PWA: offline support + home-screen install
 if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Service worker not registered",e));
 </script>

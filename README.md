@@ -15,11 +15,16 @@ When you change `index.html` or the icons, bump `VERSION` in `sw.js` so installe
 
 ## Proposed changes for the project repository
 
-`CONTEXT.md` and `protocol/examples/` are changes staged here first for
-[Shujimaki/touch-vision-drone-control](https://github.com/Shujimaki/touch-vision-drone-control), at the same paths. They are not in that repository yet.
+The `shujimaki/` folder holds changes staged for
+[Shujimaki/touch-vision-drone-control](https://github.com/Shujimaki/touch-vision-drone-control). Each file sits at the path it will have there. None of them are in that repository yet.
 
-- `CONTEXT.md`: adds DEC-13. Only the restricted zone rejects drags, and only in course trials. O1 and O2 are left to the onboard Multi-ranger stop, and there is no route planning.
-- `protocol/examples/welcome.json`: course positions now match proposal Figure 5 (O1 and O2 are 53 x 51 cm, H1 at 1.31, 2.70; H2 and H3 at x 3.99, both yaw 90; pads at y 0.45).
-- `protocol/examples/input-three-drones-climbing.json`, `telemetry-cf3-defensive-hover.json`: drone positions and range readings moved so they stay consistent with the corrected course.
+- `shujimaki/CONTEXT.md`: revises DEC-06 and DEC-08, and adds DEC-13 to DEC-18. These cover obstacles, the panel layout, gesture lift-off and landing, OptiTrack Motive and layout sync, the interim 1.44 m ceiling, and the mockup's status as a design prototype. It also notes these in OPEN-01, OPEN-02, OPEN-05, OPEN-08 and OPEN-10.
+- `shujimaki/README.md`: records OptiTrack Motive and links this mockup.
+- `shujimaki/protocol/README.md`: adds the `course` message, the `layout_read` and `layout_apply` commands, and `drones[].link_quality`.
+- `shujimaki/protocol/examples/`: the complete examples folder. The course follows proposal Figure 5, the altitude limits are 0.5 to 1.44 m, and there are two new examples for layout sync.
 
-The project's `scripts/check.py` passes on these changes.
+The project's `scripts/check.py` passes on these changes: ignored files, secrets, links, JSON and Mermaid.
+
+## Third-party files
+
+`vendor/mediapipe/` holds MediaPipe Tasks Vision 1.0.1 and the `gesture_recognizer.task` float16 v1 model (SHA-256 `97952348cf6a6a4915c2ea1496b4b37ebabc50cbbf80571435643c455f2b0482`). Both are copied unchanged from the pinned versions in the project README. MediaPipe is licensed under the Apache License 2.0; see `vendor/mediapipe/tasks-vision-1.0.1/LICENSE`.
